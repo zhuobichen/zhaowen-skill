@@ -4,6 +4,7 @@
 
 | Skill | 目录 | 用途 |
 |-------|------|------|
+| GPT-5 | [`ylx_ppt_assembler/`](ylx_ppt_assembler/) | GPT-5.5 组装 PPTX——读 PPT 制作指南 → 发 GPT-5.5 生成 python-pptx 代码 →  |
 | MEMORY笔记整理工作流 - 从原始文 | [`ylx_memory_organizer/`](ylx_memory_organizer/) | MEMORY笔记整理工作流 - 从原始文档提取精华、建立链接、定期维护 |
 | > | [`ylx_latex_paper_writing/`](ylx_latex_paper_writing/) | > |
 | This skill should be | [`ylx_process_daily_pm25/`](ylx_process_daily_pm25/) | This skill should be used when converting hourly PM2.5 stati |
