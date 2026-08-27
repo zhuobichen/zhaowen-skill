@@ -4,6 +4,7 @@
 
 | Skill | 目录 | 用途 |
 |-------|------|------|
+| Download a paper PDF | [`ylx_cnki_download/`](ylx_cnki_download/) | Download a paper PDF/CAJ from CNKI. Requires user to be logg |
 | Perform advanced sea | [`ylx_cnki_advanced_search/`](ylx_cnki_advanced_search/) | Perform advanced search on CNKI with field filters like auth |
 | Search CNKI (中国知网) f | [`ylx_cnki_search/`](ylx_cnki_search/) | Search CNKI (中国知网) for papers by keyword. Use when the user  |
 | ABaCAS 平台操纵 | [`abacas-cloud-ops/`](abacas-cloud-ops/) | ABaCAS Cloud 平台任务/文件/费效评估/结果导入与本地可视化（9 个脚本） |
