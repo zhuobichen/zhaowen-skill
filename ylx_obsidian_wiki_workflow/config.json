@@ -1,0 +1,13 @@
+{
+  "vault_path": "",
+  "default_category": "General",
+  "template_category": "Templates",
+  "evergreen_tag": "0🌲",
+  "sources_folder": "Sources",
+  "evergreen_folder": "Evergreen",
+  "categories_folder": "Categories",
+  "daily_folder": "Daily",
+  "index_file": "index.md",
+  "log_file": "log.md",
+  "schema_file": "Templates/SCHEMA.md"
+}

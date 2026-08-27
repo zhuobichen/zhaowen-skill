@@ -4,6 +4,7 @@
 
 | Skill | 目录 | 用途 |
 |-------|------|------|
+| | | [`ylx_obsidian_wiki_workflow/`](ylx_obsidian_wiki_workflow/) | | |
 | | | [`ylx_hv_analysis/`](ylx_hv_analysis/) | | |
 | | | [`ylx_khazix_writer/`](ylx_khazix_writer/) | | |
 | 微信消息桥接 - 在微信中与 Claud | [`ylx_wechat_claude_code/`](ylx_wechat_claude_code/) | 微信消息桥接 - 在微信中与 Claude Code 聊天。支持文字对话、图片识别、权限审批、斜杠命令。 |
