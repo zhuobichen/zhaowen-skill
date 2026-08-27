@@ -4,6 +4,7 @@
 
 | Skill | 目录 | 用途 |
 |-------|------|------|
+| > | [`ylx_wechat_mp_ops/`](ylx_wechat_mp_ops/) | > |
 | > | [`ylx_agent_dialog_management/`](ylx_agent_dialog_management/) | > |
 | Parse current CNKI s | [`ylx_cnki_parse_results/`](ylx_cnki_parse_results/) | Parse current CNKI search results page into structured paper |
 | Extract full paper d | [`ylx_cnki_paper_detail/`](ylx_cnki_paper_detail/) | Extract full paper details from a CNKI paper page including  |
