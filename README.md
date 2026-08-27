@@ -4,6 +4,7 @@
 
 | Skill | 目录 | 用途 |
 |-------|------|------|
+| Search for journals/ | [`ylx_cnki_journal_search/`](ylx_cnki_journal_search/) | Search for journals/publications on CNKI by name, ISSN, CN,  |
 | Query journal indexi | [`ylx_cnki_journal_index/`](ylx_cnki_journal_index/) | Query journal indexing/inclusion status on CNKI - check whic |
 | Export paper from CN | [`ylx_cnki_export/`](ylx_cnki_export/) | Export paper from CNKI and push to Zotero, or save as RIS fi |
 | Download a paper PDF | [`ylx_cnki_download/`](ylx_cnki_download/) | Download a paper PDF/CAJ from CNKI. Requires user to be logg |
