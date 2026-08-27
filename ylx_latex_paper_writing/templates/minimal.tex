@@ -1,0 +1,65 @@
+% Minimal LaTeX Template
+% Starting point for custom paper formats
+
+\documentclass[11pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{
+    amsmath,
+    amssymb,
+    amsthm,
+    geometry,
+    graphicx,
+    hyperref,
+    booktabs,
+    times
+}
+
+\geometry{
+    a4paper,
+    left=1in,
+    right=1in,
+    top=1in,
+    bottom=1in
+}
+
+% Custom commands
+\newcommand{\R}{\mathbb{R}}
+
+% Theorem environments
+\newtheorem theorem}{Theorem}
+\newtheoremlemma}{Lemma}
+\newtheoremdefinition}{Definition}
+
+% Title
+\title{Your Paper Title}
+\author{
+    Author Name \\
+    Affiliation \\
+    \texttt{email@example.com}
+}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+Your abstract here.
+\end{abstract}
+
+\section{Introduction}
+
+\section{Methodology}
+
+\section{Experiments}
+
+\section{Results}
+
+\section{Conclusion}
+
+\section*{Acknowledgments}
+
+\bibliographystyle{plain}
+\bibliography{references}
+
+\end{document}
