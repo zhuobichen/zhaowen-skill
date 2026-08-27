@@ -4,6 +4,7 @@
 
 | Skill | 目录 | 用途 |
 |-------|------|------|
+| This skill should be | [`ylx_process_daily_pm25/`](ylx_process_daily_pm25/) | This skill should be used when converting hourly PM2.5 stati |
 | | | [`ylx_obsidian_wiki_workflow/`](ylx_obsidian_wiki_workflow/) | | |
 | | | [`ylx_hv_analysis/`](ylx_hv_analysis/) | | |
 | | | [`ylx_khazix_writer/`](ylx_khazix_writer/) | | |
