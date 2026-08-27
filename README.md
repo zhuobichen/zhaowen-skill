@@ -4,6 +4,7 @@
 
 | Skill | 目录 | 用途 |
 |-------|------|------|
+| Extract full paper d | [`ylx_cnki_paper_detail/`](ylx_cnki_paper_detail/) | Extract full paper details from a CNKI paper page including  |
 | Navigate CNKI search | [`ylx_cnki_navigate_pages/`](ylx_cnki_navigate_pages/) | Navigate CNKI search result pages (next/previous/specific pa |
 | Browse journal issue | [`ylx_cnki_journal_toc/`](ylx_cnki_journal_toc/) | Browse journal issues, view table of contents, and download  |
 | Search for journals/ | [`ylx_cnki_journal_search/`](ylx_cnki_journal_search/) | Search for journals/publications on CNKI by name, ISSN, CN,  |
