@@ -1,5 +1,5 @@
 ---
-name: research-related-work-evidence-synthesis
+name: ylx_research_evidence_synthesis
 description: >-
   通用科研文献证据工程与Related Work写作工作流。适用于自然科学、工程、医学、计算机、管理学、社会科学等领域。
   当任务涉及研究问题拆解、系统检索、文献筛选、证据矩阵、反证与边界条件、研究缺口识别、文献综述/Related Work写作、引用核验时使用。

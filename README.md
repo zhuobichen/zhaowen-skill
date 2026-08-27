@@ -6,7 +6,7 @@
 |-------|------|------|
 | ABaCAS 平台操纵 | [`abacas-cloud-ops/`](abacas-cloud-ops/) | ABaCAS Cloud 平台任务/文件/费效评估/结果导入与本地可视化（9 个脚本） |
 | n8n 工作流操纵 | [`n8n-web-ops/`](n8n-web-ops/) | n8n 网页操纵：登录、执行记录只读查看、callback_token 自动提取 |
-| 科研文献证据工程 | [`research-related-work-evidence-synthesis/`](research-related-work-evidence-synthesis/) | Research Related Work Evidence Synthesis：Claim-first 的文献综述工作流（证据矩阵 + Related Work 写作），含输出样例 |
+| 科研文献证据工程（ylx） | [`ylx_research_evidence_synthesis/`](ylx_research_evidence_synthesis/) | ylx·科研文献证据工程与 Related Work 写作：Claim-first（证据矩阵 + 逻辑树 + 综述），含输出样例 |
 
 ## 使用方式
 
