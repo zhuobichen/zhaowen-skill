@@ -4,7 +4,7 @@
 
 | Skill | 目录 | 用途 |
 |-------|------|------|
-| > | [`ylx_clz_wechat_mp_ops/`](ylx_clz_wechat_mp_ops/) | > |
+| 微信公众号后台操作 | [`clz_wechat_mp_ops/`](clz_wechat_mp_ops/) | 微信公众号后台操作（登录/草稿/编辑，ProseMirror dispatch+保存按钮唯一可靠改法；配图生成 HTML→截图→PIL 裁剪；WPS 问题 xlsx 用 zipfile XML 解析） |
 | 审计 PPT 提示词准确性——逐条对照源 | [`ylx_prompt_auditor/`](ylx_prompt_auditor/) | 审计 PPT 提示词准确性——逐条对照源码验证每个事实声明（数字/公式/逻辑），给出 ✅/⚠️/❌ 结论及源码行号。当用 |
 | GPT-5 | [`ylx_ppt_assembler/`](ylx_ppt_assembler/) | GPT-5.5 组装 PPTX——读 PPT 制作指南 → 发 GPT-5.5 生成 python-pptx 代码 →  |
 | MEMORY笔记整理工作流 - 从原始文 | [`ylx_memory_organizer/`](ylx_memory_organizer/) | MEMORY笔记整理工作流 - 从原始文档提取精华、建立链接、定期维护 |
@@ -14,7 +14,6 @@
 | | | [`ylx_hv_analysis/`](ylx_hv_analysis/) | | |
 | | | [`ylx_khazix_writer/`](ylx_khazix_writer/) | | |
 | 微信消息桥接 - 在微信中与 Claud | [`ylx_wechat_claude_code/`](ylx_wechat_claude_code/) | 微信消息桥接 - 在微信中与 Claude Code 聊天。支持文字对话、图片识别、权限审批、斜杠命令。 |
-| > | [`ylx_wechat_mp_ops/`](ylx_wechat_mp_ops/) | > |
 | > | [`ylx_agent_dialog_management/`](ylx_agent_dialog_management/) | > |
 | Parse current CNKI s | [`ylx_cnki_parse_results/`](ylx_cnki_parse_results/) | Parse current CNKI search results page into structured paper |
 | Extract full paper d | [`ylx_cnki_paper_detail/`](ylx_cnki_paper_detail/) | Extract full paper details from a CNKI paper page including  |
