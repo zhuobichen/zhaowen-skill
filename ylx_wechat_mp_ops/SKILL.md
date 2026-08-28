@@ -7,7 +7,8 @@ description: >
   涵盖：stealth/chrome-direct 登录与扫码、token 过期处理、草稿编辑页 URL 结构、ProseMirror 编辑器 DOM 结构、
   EditorView 实例获取、**修改正文唯一可靠方式（dispatch + 点"保存为草稿"按钮）**、标题修改、验证持久化、
   获取草稿 appmsgid（Vue 实例 $data.appid）、上传图片（file input 设可见 + upload）、图片删除/移动（inline image dispatch）、
-  常见陷阱（直接改 DOM 部分保存 / 自动保存不监听 dispatch / token 过期回退）等经验。
+  常见陷阱（直接改 DOM 部分保存 / 自动保存不监听 dispatch / token 过期回退）、
+  配套技能（生成公众号配图 HTML→整页截图→PIL 裁剪 / 解析 WPS 问题 xlsx 用 zipfile XML）等经验。
 ---
 
 # 微信公众号后台操作 Skill
@@ -193,3 +194,37 @@ browser-act stealth-extract "https://mp.weixin.qq.com/s/xxx" --content-type mark
 6. **多个 ProseMirror**：标题短、正文长，用 innerText 长度区分
 7. **正文图片勿动**：替换文字时用文本节点遍历（`NodeFilter.SHOW_TEXT`），不碰 `img`
 8. **发表地区（位置）是自动定位，非手动设置**：编辑器底部「位置」设置 `#js_btm-poi-container` 默认 `display:none`；点「添加当前位置信息」若提示「未开启位置信息授权」，是浏览器 Geolocation 权限被拒（`navigator.permissions.query({name:'geolocation'})` 返回 `denied`）。文章标题下的省份（如「广东」）是发布时按 IP 自动定位的，改不了；要让某地区显示，就用该地区网络 + 已授权位置的浏览器（本地 Chrome）发布
+
+## 9. 配套：用 HTML 生成公众号配图（如日程表图）
+
+要放图（日程表/名单等）时，先生成 HTML 再用 browser-act 整页截图，比直接画图灵活、可复用。
+
+- 样式模板（精致商务风，已验证）：深蓝渐变标题栏（`linear-gradient(135deg,#14304F,#2E5B9A,#3A6EA8)`）+ 底部金色分隔线 + 胶囊徽标；白色圆角胶囊信息条；渐变浅蓝表头；**日程行隔行变色**（`row-even`/`row-odd`）＋茶歇/午餐等休息行浅蓝灰；时间列金色加粗；整体 `.card` 圆角+阴影
+- 宽度：正文配图设 **1400px**（公众号清晰度上限附近），字号标题 26px / 正文 16~17px
+- **标题栏 td 必须 `colspan="4"`**（漏了会只占一列宽导致换行）
+- 截图：`browser-act --session X screenshot --full <out.png>`（headless 视口固定 1902，无法 `resizeTo`）
+- 截图会含背景 → 用 PIL 自动裁剪内容区（扫描非背景色列的左右边界）得到干净整图
+- 生成脚本可用 `openpyxl`/`pandas` 读数据 + Python 拼 HTML；数据里空题目/空单位照实留空
+
+## 10. 配套：解析 WPS 生成的问题 xlsx
+
+`openpyxl` 读取部分 WPS 生成的 xlsx 会报 `TypeError: Fill() takes no arguments`（样式解析 bug，`pandas` 底层也用 openpyxl，同样失败）。替代方案——**用 zipfile 直接解析 XML**：
+
+```python
+import zipfile, re, xml.etree.ElementTree as ET
+M = '{http://schemas.openxmlformats.org/spreadsheetml/2006/main}'
+z = zipfile.ZipFile('xxx.xlsx')
+# 共享字符串
+shared = [''.join(t.text or '' for t in si.iter(M+'t'))
+          for si in ET.fromstring(z.read('xl/sharedStrings.xml').decode('utf-8')).findall(M+'si')]
+# 单元格（sheet 名→文件见 xl/_rels/workbook.xml.rels，sheet 内 rId 见 workbook.xml）
+root = ET.fromstring(z.read('xl/worksheets/sheet2.xml').decode('utf-8'))
+for row in root.iter(M+'row'):
+    for c in row.iter(M+'c'):
+        v = c.find(M+'v')
+        val = shared[int(v.text)] if c.get('t')=='s' and v is not None else (v.text if v is not None else '')
+        # col = re.match(r'([A-Z]+)', c.get('r')).group(1)
+```
+
+- 列位置不固定（有的日程在 A-D 列、有的在 I-M 列）→ **定位含「时间 Time」的表头行，从该单元格列号 +1/+2/+3 推断题目/报告人/单位列**
+- 大段数据先 dump 成 JSON 再喂给 HTML 生成脚本，避免命令行超长被截断（base64 传长文本也会被截断）
