@@ -1,5 +1,5 @@
 ---
-name: ylx_wechat_mp_ops
+name: ylx_clz_wechat_mp_ops
 description: >
   操作微信公众号后台（mp.weixin.qq.com）：登录、查看草稿箱/发表记录、读取图文草稿内容、编辑修改草稿文字（标题/正文）。
   当用户要求：修改微信公众号文章/草稿、把某篇草稿从旧版更新到新版、对比公众号文章与文档差异、
