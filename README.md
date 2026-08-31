@@ -4,6 +4,7 @@
 
 | Skill | 目录 | 用途 |
 |-------|------|------|
+| 监测 one-hub API 用量与费用 | [`ylx_onehub_usage_monitor/`](ylx_onehub_usage_monitor/) | 监测 one-hub API 用量与费用：查询总额度/已用/剩余(美元+人民币)、每日/每月记账、各模型 one-hub |
 | 微信公众号后台操作 | [`clz_wechat_mp_ops/`](clz_wechat_mp_ops/) | 微信公众号后台操作（登录/草稿/编辑，ProseMirror dispatch+保存按钮唯一可靠改法；配图生成 HTML→截图→PIL 裁剪；WPS 问题 xlsx 用 zipfile XML 解析） |
 | 审计 PPT 提示词准确性——逐条对照源 | [`ylx_prompt_auditor/`](ylx_prompt_auditor/) | 审计 PPT 提示词准确性——逐条对照源码验证每个事实声明（数字/公式/逻辑），给出 ✅/⚠️/❌ 结论及源码行号。当用 |
 | GPT-5 | [`ylx_ppt_assembler/`](ylx_ppt_assembler/) | GPT-5.5 组装 PPTX——读 PPT 制作指南 → 发 GPT-5.5 生成 python-pptx 代码 →  |
