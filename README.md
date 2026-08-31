@@ -2,33 +2,40 @@
 
 可复用 Skill 集合（Claude Code / Agent Skill 格式）。
 
+## 带来源前缀（作者标明归属）
+
 | Skill | 目录 | 用途 |
 |-------|------|------|
-| 监测 one-hub API 用量与费用 | [`ylx_onehub_usage_monitor/`](ylx_onehub_usage_monitor/) | 监测 one-hub API 用量与费用：查询总额度/已用/剩余(美元+人民币)、每日/每月记账、各模型 one-hub |
-| 微信公众号后台操作 | [`clz_wechat_mp_ops/`](clz_wechat_mp_ops/) | 微信公众号后台操作（登录/草稿/编辑，ProseMirror dispatch+保存按钮唯一可靠改法；配图生成 HTML→截图→PIL 裁剪；WPS 问题 xlsx 用 zipfile XML 解析） |
-| 审计 PPT 提示词准确性——逐条对照源 | [`ylx_prompt_auditor/`](ylx_prompt_auditor/) | 审计 PPT 提示词准确性——逐条对照源码验证每个事实声明（数字/公式/逻辑），给出 ✅/⚠️/❌ 结论及源码行号。当用 |
-| GPT-5 | [`ylx_ppt_assembler/`](ylx_ppt_assembler/) | GPT-5.5 组装 PPTX——读 PPT 制作指南 → 发 GPT-5.5 生成 python-pptx 代码 →  |
-| MEMORY笔记整理工作流 - 从原始文 | [`ylx_memory_organizer/`](ylx_memory_organizer/) | MEMORY笔记整理工作流 - 从原始文档提取精华、建立链接、定期维护 |
-| > | [`ylx_latex_paper_writing/`](ylx_latex_paper_writing/) | > |
-| This skill should be | [`ylx_process_daily_pm25/`](ylx_process_daily_pm25/) | This skill should be used when converting hourly PM2.5 stati |
-| | | [`ylx_obsidian_wiki_workflow/`](ylx_obsidian_wiki_workflow/) | | |
-| | | [`ylx_hv_analysis/`](ylx_hv_analysis/) | | |
-| | | [`ylx_khazix_writer/`](ylx_khazix_writer/) | | |
-| 微信消息桥接 - 在微信中与 Claud | [`ylx_wechat_claude_code/`](ylx_wechat_claude_code/) | 微信消息桥接 - 在微信中与 Claude Code 聊天。支持文字对话、图片识别、权限审批、斜杠命令。 |
-| > | [`ylx_agent_dialog_management/`](ylx_agent_dialog_management/) | > |
-| Parse current CNKI s | [`ylx_cnki_parse_results/`](ylx_cnki_parse_results/) | Parse current CNKI search results page into structured paper |
-| Extract full paper d | [`ylx_cnki_paper_detail/`](ylx_cnki_paper_detail/) | Extract full paper details from a CNKI paper page including  |
-| Navigate CNKI search | [`ylx_cnki_navigate_pages/`](ylx_cnki_navigate_pages/) | Navigate CNKI search result pages (next/previous/specific pa |
-| Browse journal issue | [`ylx_cnki_journal_toc/`](ylx_cnki_journal_toc/) | Browse journal issues, view table of contents, and download  |
-| Search for journals/ | [`ylx_cnki_journal_search/`](ylx_cnki_journal_search/) | Search for journals/publications on CNKI by name, ISSN, CN,  |
-| Query journal indexi | [`ylx_cnki_journal_index/`](ylx_cnki_journal_index/) | Query journal indexing/inclusion status on CNKI - check whic |
-| Export paper from CN | [`ylx_cnki_export/`](ylx_cnki_export/) | Export paper from CNKI and push to Zotero, or save as RIS fi |
-| Download a paper PDF | [`ylx_cnki_download/`](ylx_cnki_download/) | Download a paper PDF/CAJ from CNKI. Requires user to be logg |
-| Perform advanced sea | [`ylx_cnki_advanced_search/`](ylx_cnki_advanced_search/) | Perform advanced search on CNKI with field filters like auth |
-| Search CNKI (中国知网) f | [`ylx_cnki_search/`](ylx_cnki_search/) | Search CNKI (中国知网) for papers by keyword. Use when the user  |
+| 科研文献证据工程（ylx） | [`ylx_research_evidence_synthesis/`](ylx_research_evidence_synthesis/) | ylx·科研文献证据工程与 Related Work 写作：Claim-first（证据矩阵 + 逻辑树 + 综述），含输出样例 |
+| one-hub 用量监测（ylx） | [`ylx_onehub_usage_monitor/`](ylx_onehub_usage_monitor/) | 监测 one-hub API 用量与费用：总额度/已用/剩余、每日每月记账、各模型单价对比 |
+| 微信公众号后台（clz） | [`clz_wechat_mp_ops/`](clz_wechat_mp_ops/) | 微信公众号后台操作（登录/草稿/编辑，ProseMirror dispatch+保存；配图 HTML→截图→裁剪；xlsx 保真处理） |
+
+## 其他自制 Skill（无前缀）
+
+| Skill | 目录 | 用途 |
+|-------|------|------|
 | ABaCAS 平台操纵 | [`abacas-cloud-ops/`](abacas-cloud-ops/) | ABaCAS Cloud 平台任务/文件/费效评估/结果导入与本地可视化（9 个脚本） |
 | n8n 工作流操纵 | [`n8n-web-ops/`](n8n-web-ops/) | n8n 网页操纵：登录、执行记录只读查看、callback_token 自动提取 |
-| 科研文献证据工程（ylx） | [`ylx_research_evidence_synthesis/`](ylx_research_evidence_synthesis/) | ylx·科研文献证据工程与 Related Work 写作：Claim-first（证据矩阵 + 逻辑树 + 综述），含输出样例 |
+| CNKI 基础搜索 | [`cnki-search/`](cnki-search/) | CNKI 关键词检索论文 |
+| CNKI 高级搜索 | [`cnki-advanced-search/`](cnki-advanced-search/) | 字段过滤（作者/标题/期刊/日期/来源类别） |
+| CNKI 论文下载 | [`cnki-download/`](cnki-download/) | 下载论文 PDF/CAJ（需登录态） |
+| CNKI 导出 | [`cnki-export/`](cnki-export/) | 导出到 Zotero / 保存 RIS |
+| CNKI 期刊收录 | [`cnki-journal-index/`](cnki-journal-index/) | 北大核心/CSSCI/CSCD/SCI/EI 收录查询 |
+| CNKI 期刊搜索 | [`cnki-journal-search/`](cnki-journal-search/) | 期刊搜索 |
+| CNKI 期刊目录 | [`cnki-journal-toc/`](cnki-journal-toc/) | 期刊目录浏览 / TOC PDF 下载 |
+| CNKI 翻页排序 | [`cnki-navigate-pages/`](cnki-navigate-pages/) | 翻页 / 排序 |
+| CNKI 论文详情 | [`cnki-paper-detail/`](cnki-paper-detail/) | 标题/作者/单位/摘要/关键词/基金提取 |
+| CNKI 结果解析 | [`cnki-parse-results/`](cnki-parse-results/) | 解析搜索结果列表为结构化数据 |
+| 智能体对话管理 | [`agent-dialog_management/`](agent-dialog_management/) | Claude Code + Codex 对话统一列表/搜索/恢复/导出 |
+| 横纵分析法 | [`hv-analysis/`](hv-analysis/) | 系统性深度研究（产品/公司/概念/人物） |
+| 公众号长文写作 | [`khazix-writer/`](khazix-writer/) | 数字生命卡兹克公众号长文（四层自检） |
+| LaTeX 论文写作 | [`latex-paper-writing/`](latex-paper-writing/) | LaTeX 论文写作 / 编译 PDF |
+| MEMORY 整理 | [`memory-organizer/`](memory-organizer/) | MEMORY 笔记整理工作流 |
+| Obsidian 知识库工作流 | [`obsidian-wiki-workflow/`](obsidian-wiki-workflow/) | LLM Wiki 知识库构建 / MEMORY→OUTPUT 同步 |
+| PPT 双卡片组装 | [`ppt-assembler/`](ppt-assembler/) | 读指南→GPT 生成 python-pptx 代码→.pptx |
+| PM2.5 日均浓度 | [`process-daily-pm25/`](process-daily-pm25/) | 小时监测数据转日均（≥20 有效小时质控） |
+| PPT 提示词审计 | [`prompt-auditor/`](prompt-auditor/) | 逐条对照源码验证提示词事实声明 |
+| 微信消息桥接 | [`wechat-claude-code/`](wechat-claude-code/) | 微信中与 Claude Code 聊天 |
 
 ## 使用方式
 
