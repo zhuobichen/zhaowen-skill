@@ -8,7 +8,7 @@
 |-------|------|------|
 | 科研文献证据工程（ylx） | [`ylx_research_evidence_synthesis/`](ylx_research_evidence_synthesis/) | ylx·科研文献证据工程与 Related Work 写作：Claim-first（证据矩阵 + 逻辑树 + 综述），含输出样例 |
 | one-hub 用量监测（ylx） | [`ylx_onehub_usage_monitor/`](ylx_onehub_usage_monitor/) | 监测 one-hub API 用量与费用：总额度/已用/剩余、每日每月记账、各模型单价对比 |
-| 微信公众号后台（clz） | [`clz_wechat_mp_ops/`](clz_wechat_mp_ops/) | 微信公众号后台操作（登录/草稿/编辑，ProseMirror dispatch+保存；配图 HTML→截图→裁剪；xlsx 保真处理） |
+| > | [`clz_wechat_mp_ops/`](clz_wechat_mp_ops/) | > |
 
 ## 其他自制 Skill（无前缀）
 

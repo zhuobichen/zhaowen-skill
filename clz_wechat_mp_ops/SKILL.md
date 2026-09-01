@@ -8,7 +8,9 @@ description: >
   EditorView 实例获取、**修改正文唯一可靠方式（dispatch + 点"保存为草稿"按钮）**、标题修改、验证持久化、
   获取草稿 appmsgid（Vue 实例 $data.appid）、上传图片（file input 设可见 + upload）、图片删除/移动（inline image dispatch）、
   常见陷阱（直接改 DOM 部分保存 / 自动保存不监听 dispatch / token 过期回退）、
-  配套技能（生成公众号配图 HTML→整页截图→PIL 裁剪 / 解析 WPS 问题 xlsx 用 zipfile XML）等经验。
+  配套技能（生成公众号配图 HTML→整页截图→PIL 裁剪 / 解析 WPS 问题 xlsx 用 zipfile XML / ABaCAS 日程图生成工具：
+  gen_session_agenda.py 生成页眉+分会场合并图、diff_session_agenda.py 版本对比、update_mp_agenda.py 一键更新草稿，
+  含 4 层发布前校验机制）等经验。
 ---
 
 # 微信公众号后台操作 Skill
@@ -199,12 +201,93 @@ browser-act stealth-extract "https://mp.weixin.qq.com/s/xxx" --content-type mark
 
 要放图（日程表/名单等）时，先生成 HTML 再用 browser-act 整页截图，比直接画图灵活、可复用。
 
-- 样式模板（精致商务风，已验证）：深蓝渐变标题栏（`linear-gradient(135deg,#14304F,#2E5B9A,#3A6EA8)`）+ 底部金色分隔线 + 胶囊徽标；白色圆角胶囊信息条；渐变浅蓝表头；**日程行隔行变色**（`row-even`/`row-odd`）＋茶歇/午餐等休息行浅蓝灰；时间列金色加粗；整体 `.card` 圆角+阴影
-- 宽度：正文配图设 **1400px**（公众号清晰度上限附近），字号标题 26px / 正文 16~17px
-- **标题栏 td 必须 `colspan="4"`**（漏了会只占一列宽导致换行）
+- 样式模板（精致商务风·方角版，已验证）：深蓝渐变标题栏（`linear-gradient(135deg,#14304F,#2E5B9A,#3A6EA8)`，白字）+ 白色方形标签（无圆角）；信息条方形白底；**表头蓝色渐变白字**（`linear-gradient(180deg,#4A7DBD,#2E5B9A)`）；正文全黑字（时间/题目粗体 20px、报告人/单位加粗 19px，靠粗体区分主次：题目→报告人/单位→时间）；休息行浅蓝灰；**整体不用圆角用方角**
+- 宽度：正文配图设 **1400px**（公众号清晰度上限附近）；**标题栏 td 必须 `colspan="4"`**（漏了会只占一列宽导致换行）
 - 截图：`browser-act --session X screenshot --full <out.png>`（headless 视口固定 1902，无法 `resizeTo`）
-- 截图会含背景 → 用 PIL 自动裁剪内容区（扫描非背景色列的左右边界）得到干净整图
+- 截图会含背景 → 用 PIL 自动裁剪**上下+左右**边界（扫描非背景色行列）得到干净整图；页眉矮图尤其要裁上下
 - 生成脚本可用 `openpyxl`/`pandas` 读数据 + Python 拼 HTML；数据里空题目/空单位照实留空
+
+## 11. 批量替换草稿中的配图（如更新日程图）
+
+数据表更新→重新生成图后，把草稿里的一组旧图整体替换为新图（保留装饰小图/文字）：
+
+1. 定位草稿 image 节点，**只删要替换的旧图**（如日程图），保留装饰小图（svg 尺寸小，如 63x150）：
+   ```js
+   // 收集所有 image 节点，保留前 N 张装饰图，删除其余（从后往前删避免 pos 偏移）
+   var imgs=[]; view.state.doc.descendants(function(n,p){if(n.type.name==='image')imgs.push(p);return true;});
+   var tr=view.state.tr;
+   for(var i=imgs.length-1;i>=N;i--){ tr.delete(imgs[i],imgs[i]+1); }
+   view.dispatch(tr);
+   ```
+2. file input 设可见（`opacity:1;position:fixed;top:0;left:0;z-index:99999`），`state` 找 index
+3. **把光标设到文档末尾**再逐张上传，保证顺序：
+   ```js
+   var doc=view.state.doc; var Sel=view.state.selection.constructor;
+   view.dispatch(view.state.tr.setSelection(Sel.create(doc,doc.content.size))); view.focus();
+   ```
+4. `browser-act upload <index> <图路径>` 逐张上传（上传后微信自动压到 1080 宽；立即检查 src 可能是 base64 占位，等几秒加载完变 CDN）
+5. 点「保存为草稿」→ 重新加载验证：图片自然宽 1080、顺序对应内容
+6. 删除时保留的装饰图（svg）尺寸小（63x150），别误删
+
+## 12. 校验机制（发布前必检，严肃对待）
+
+日程/通知要正式发布，必须多层检查，任何 ⚠️/❌ 都要人工确认后才发布：
+
+### 第 1 层：数据校验（生成脚本内）
+`gen_session_agenda.py` 解析后自动检查，输出需人工确认项：
+- 每个分会场有名称 / 时间 / 日程行
+- 题目为空（TBD/未填）、报告人为空（非茶歇午餐）→ ⚠️
+- **空时段**（题目+报告人都空，如分会场1 的 17:35~17:50）→ ❌ 重点核实，可能是数据删除/未填
+
+### 第 2 层：生成校验（生成脚本内）
+- 12 张 PNG 都生成（合并图 + 分会场2~12）
+- 每张宽 1406（截图正常），文件名对应
+- 输出 `✅ [生成] 检查通过` 才算完成
+
+### 第 3 层：上传校验（update_mp_agenda.py）
+上传后等 8 秒（DATA 占位→CDN），检查：
+- 图片总数 = 预期（如 2 svg + 12 = 14）
+- 开头 2 张是装饰小图（63x150）
+- **无 DATA 占位**（上传未完成必须重试）
+- 首张日程图宽 1080（微信压缩，顺序正确）
+- 有 ⚠️ 必须人工复核草稿，不能直接发布
+
+### 第 4 层：版本差异核对
+数据表更新后，用 `diff_session_agenda.py` 对比新旧版本，确认：
+- 报告人/单位变化、新增/删除行（逐条看）
+- **中英双语化**（题目从纯中/英文→双语，大量 [~] 属正常）
+- 时间/地点/主席变化
+- 发现"整体顺移/空时段"要回到原表核实数据
+
+### 发布前最终清单
+1. ✅ 生成校验通过（12 图全、宽 1406）
+2. ✅ 上传校验通过（图数对、无占位、顺序对）
+3. ✅ 数据层无 ❌（无空时段等硬伤）
+4. ⚠️ 人工复核 TBD 题目/空项是否允许发布
+5. 草稿重新加载，肉眼过一遍每张图（尺寸 1080 宽、内容对应）
+
+> 任何一步出现 ⚠️/❌，宁可暂停核实，也不要带错发布。
+
+## 13. ABaCAS 日程图生成工具（配套脚本）
+
+位置: `E:/CodeProject/ABaCaS/ABaCAS会议数据/分会场拟邀请人与日程/日程图生成工具/`
+
+| 脚本 | 作用 |
+|------|------|
+| `gen_session_agenda.py` | 解析分会场日程 xlsx → 生成 **页眉+分会场1 合并图** + 分会场2~12（精致商务风方角版，1400 宽）；内置数据校验 + 生成校验 |
+| `diff_session_agenda.py` | 版本差异对比：区分报告人/单位变化、仅题目双语化、增删行、时间/地点/主席变化 |
+| `update_mp_agenda.py` | 一键流程：重新生成图 → 打开公众号（扫码）→ 定位会议议程草稿 → 删旧图 → 上传新图 → 上传校验 → 保存 |
+
+用法：
+```bash
+python gen_session_agenda.py <xlsx>           # 生成图 + 校验
+python update_mp_agenda.py <xlsx>             # 生成图 + 自动更新公众号草稿
+python diff_session_agenda.py <旧> <新> [更多] # 版本差异
+```
+
+- 输入 xlsx 为 WPS/Excel 生成的「分会场拟邀请人与日程安排」表（13 sheet：概览+12 分会场），用「时间 Time」表头行自动定位列，兼容 openpyxl 读不动的样式怪文件
+- **头图方案**：页眉（会议议程·持续更新说明）与分会场1 合并成一张图，避免公众号图片间距（约 27px 平台固定）影响头部紧凑感
+- 数据表更新后跑 `update_mp_agenda.py` 即可全自动完成「生成→更新草稿」
 
 ## 10. 配套：解析 WPS 生成的问题 xlsx
 
