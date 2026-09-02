@@ -9,8 +9,8 @@ description: >
   获取草稿 appmsgid（Vue 实例 $data.appid）、上传图片（file input 设可见 + upload）、图片删除/移动（inline image dispatch）、
   常见陷阱（直接改 DOM 部分保存 / 自动保存不监听 dispatch / token 过期回退）、
   配套技能（生成公众号配图 HTML→整页截图→PIL 裁剪 / 解析 WPS 问题 xlsx 用 zipfile XML / ABaCAS 日程图生成工具：
-  gen_session_agenda.py 生成页眉+分会场合并图、diff_session_agenda.py 版本对比、update_mp_agenda.py 一键更新草稿，
-  含 4 层发布前校验机制）等经验。
+  gen_session_agenda.py 纯中文版、extract_bi_map.py 提取中英文映射、gen_session_agenda_bi.py 中英双语版（中文上英文下、主席先中后英）、
+  diff_session_agenda.py 版本对比、update_mp_agenda.py 一键更新草稿，含 4 层发布前校验机制）等经验。
 ---
 
 # 微信公众号后台操作 Skill
@@ -275,12 +275,16 @@ browser-act stealth-extract "https://mp.weixin.qq.com/s/xxx" --content-type mark
 | 脚本 | 作用 |
 |------|------|
 | `gen_session_agenda.py` | 解析分会场日程 xlsx → 生成 **页眉+分会场1 合并图** + 分会场2~12（精致商务风方角版，1400 宽）；内置数据校验 + 生成校验 |
+| `extract_bi_map.py` | 从第四轮通知 docx 提取「中英文映射」文档（严格取 docx 原文，不自行翻译）：题目/报告人/单位中英 + 时间/地点/主席中英 |
+| `gen_session_agenda_bi.py` | 中英双语版：`<最新xlsx> <中英文映射json>` → 生成中英双语日程图（中文上英文下） |
 | `diff_session_agenda.py` | 版本差异对比：区分报告人/单位变化、仅题目双语化、增删行、时间/地点/主席变化 |
 | `update_mp_agenda.py` | 一键流程：重新生成图 → 打开公众号（扫码）→ 定位会议议程草稿 → 删旧图 → 上传新图 → 上传校验 → 保存 |
 
 用法：
 ```bash
-python gen_session_agenda.py <xlsx>           # 生成图 + 校验
+python gen_session_agenda.py <xlsx>           # 纯中文版，生成图 + 校验
+python extract_bi_map.py <第四轮docx>          # 提取中英文映射（严格 docx 原文）
+python gen_session_agenda_bi.py <xlsx> <映射json>  # 中英双语版
 python update_mp_agenda.py <xlsx>             # 生成图 + 自动更新公众号草稿
 python diff_session_agenda.py <旧> <新> [更多] # 版本差异
 ```
@@ -288,6 +292,15 @@ python diff_session_agenda.py <旧> <新> [更多] # 版本差异
 - 输入 xlsx 为 WPS/Excel 生成的「分会场拟邀请人与日程安排」表（13 sheet：概览+12 分会场），用「时间 Time」表头行自动定位列，兼容 openpyxl 读不动的样式怪文件
 - **头图方案**：页眉（会议议程·持续更新说明）与分会场1 合并成一张图，避免公众号图片间距（约 27px 平台固定）影响头部紧凑感
 - 数据表更新后跑 `update_mp_agenda.py` 即可全自动完成「生成→更新草稿」
+
+### 中英双语版规则（用户确认）
+
+- **中英顺序**：题目/报告人/单位 **中文上、英文下**；本来就是英文的不加中文（如纯英文题目/外文名）
+- **主席/召集人/主持人（特殊）**：**先全部中文（3行）再全部英文（3行）**，中间空一行（不用逐行对应）
+- **中英来源优先级**：优先 xlsx 本身的中英（`split_cn_en` 提取原文）；xlsx 缺的中/英文才从第四轮映射补（`extract_bi_map.py` 严格取 docx 原文，**无自译**）；数据源都没有的 → 不补（留中文）
+- **6 列错位表格**（如分会场12）：时间/题目/题目重复/报告人+英文/重复/单位+英文 → 用 列0/1/3/5 提取（`extract_bi_map.py` 已支持）
+- **信息行**：每张图含 标题栏（中英主题）+ 时间/地点（中英）+ 主席/召集人/主持人（先中后英）+ 完整日程（题目/报告人/单位中英）
+- **v10 值清洗为空须从映射补**：xlsx 里 `Venue:`（空值）不能被当成有值，清洗前缀后为空则用第四轮映射补
 
 ## 10. 配套：解析 WPS 生成的问题 xlsx
 
