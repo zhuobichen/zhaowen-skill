@@ -41,20 +41,20 @@ THEME = {
     'frame_border': '#0F4C81',    # 边框色 = 主色
     'frame_shadow': '#C9DBEC',    # 硬投影色（浅蓝灰）
     'frame_offset': 7,            # 投影偏移 px（0 模糊 = 硬投影）
-    # 框内「纸」色。参考文章用纯白，但整篇会白得没有层次 —— 改成明确的浅蓝底
-    # （深浅实测对照后选定；改这一个值即可整体调深调浅）
-    'frame_bg': '#DCE9F7',
+    # 框内「纸」色：偏白，只带一点蓝（深浅实测后按用户口径定）
+    # 改这一个值就要连带检查下面的 primary_soft / caption 对比度
+    'frame_bg': '#F0F6FC',
     'card_bg': '#FFFFFF',
     # —— 主色 ——
     'primary': '#0F4C81',        # 藏青蓝
     'primary_mid': '#2E5B9A',
-    # 标题胶囊底色要比页面底色更「亮」，才能从蓝底里跳出来
-    'primary_soft': '#EDF5FC',
+    # 底色越白，胶囊要越「蓝」才能分得出来（不能比底色更白，否则糊成一片）
+    'primary_soft': '#DEEBF8',
     'link': '#576b95',           # 微信官方链接蓝
     # —— 文本 ——
     'text': '#3e3e3e',
-    # 图注：底色改成浅蓝后 #9AA5B1 对比度只有 1.9:1（太浅），必须加深
-    'caption': '#5C6B7A',
+    # 图注：跟随底色调整。底色白 → 用中灰；底色蓝 → 必须加深
+    'caption': '#6E7B89',
     'caption_size': 13,
     'divider': '#E5E7EB',
     'font_size': 16,

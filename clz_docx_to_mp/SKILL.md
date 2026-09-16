@@ -156,7 +156,7 @@ if (ta) { ta.value = title; ta.dispatchEvent(new Event('input', {bubbles:true}))
 | 元素 | 参考文章实取值 |
 |---|---|
 | 外框 | `background:#fff; padding:15px 10px; border:1px solid #1893AF;`<br>`box-shadow: #BAE7EC 7px 7px 0px 0px` ← **硬投影（0 模糊），不是柔和阴影** |
-| 框内底色 | 参考文章是**纯白**。本 skill 改成 `#DCE9F7` 浅蓝——纯白会被用户反馈「背景还是白色」 |
+| 框内底色 | 参考文章是**纯白**。本 skill 用 `#F0F6FC`——**偏白、只带一点蓝**（用户口径：「背景偏白，带一点蓝即可」） |
 | 正文 | `text-indent:2.125em; margin:0; line-height:2; letter-spacing:1px; color:#3e3e3e; font-size:16px` |
 | 分节标题 | 浅色胶囊：`background:#CDF1F9; padding:10px 0; border-radius:20px` + 居中主色字 `letter-spacing:2px` + 菱形点缀（`transform:rotateZ(45deg)` 的小方块） |
 | 图片 | 通栏 `width:100%`，**无独立卡片、无边框**，跟随正文流动 |
@@ -166,10 +166,10 @@ if (ta) { ta.value = title; ta.dispatchEvent(new Event('input', {bubbles:true}))
 
 `THEME['frame_bg']` 调深调浅时，**另两个颜色的对比度会跟着变**，必须一起调：
 
-| 元素 | 浅底（`#DCE9F7`，当前） | 若换成更深的底，要相应调整 |
+| 元素 | 当前（`#F0F6FC` 近白） | 若换更深的底，要相应调整 |
 |---|---|---|
-| 标题胶囊 `primary_soft` | `#EDF5FC`（比底色更亮，才跳得出来） | 底色一深就会糊在一起，需再调亮 |
-| 图注 `caption` | `#5C6B7A` | 底色变白时可退回 `#9AA5B1` |
+| 标题胶囊 `primary_soft` | `#DEEBF8`（**比底色更蓝**才跳得出来） | 底色变深时要相应调浅 |
+| 图注 `caption` | `#6E7B89` | 底色变深时必须加深，否则糊在底上 |
 
 > 实测教训：底色从纯白改成浅蓝后，图注原用 `#9AA5B1` 在蓝底上**对比度只剩 1.9:1**（WCAG AA 要 4.5:1），
 > 肉眼看就是「灰字糊在蓝底上」。改底色务必顺手检查所有前置色的对比度。
