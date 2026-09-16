@@ -226,8 +226,10 @@ def frame_wrap(html, theme, first=True, last=True):
     # 批间接缝处只向右侧投影，末批才补右下角，拼起来才是一条连续的硬投影
     shadow = ('box-shadow:%dpx %dpx 0px 0px %s;' % (o, o, s) if last
               else 'box-shadow:%dpx 0px 0px 0px %s;' % (o, s))
+    # ⚠️ `margin:0` 不能省：微信编辑器给 <section> 默认加了 margin-bottom:24px，
+    # 不显式清零，每批之间就会出现 24px 的缝——框就「断」成一节一节了（实测踩过）。
     return (
-        '<section style="background-color:%s;padding:8px 12px;%s%s'
+        '<section style="margin:0;background-color:%s;padding:8px 12px;%s%s'
         'font-size:%dpx;line-height:%s;color:%s;letter-spacing:%s;'
         'word-break:break-word;text-align:justify;">%s</section>'
         % (theme['frame_bg'], border, shadow,

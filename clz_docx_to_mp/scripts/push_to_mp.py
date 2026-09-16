@@ -80,6 +80,50 @@ JS_GET_VIEW = JS_ENSURE_FN + r'''
 (function(){ return window.__ensureView() ? 'VIEW_OK' : 'NO_VIEW'; })()
 '''
 
+# 校验：外框各批次之间有没有缝隙（微信给 <section> 默认加了 margin-bottom:24px，
+# 不显式 margin:0 就会断成一节一节）+ 图片是否全部上了 CDN + 题注/标题是否在
+JS_VERIFY = r'''
+(function(){
+  var pms = document.querySelectorAll('.ProseMirror'), body = null;
+  for (var i = 0; i < pms.length; i++) {
+    var par = pms[i].parentElement;
+    if (par && (par.className || '').indexOf('rich_media_content') !== -1) body = pms[i];
+  }
+  if (!body) return JSON.stringify({err: 'NO_BODY'});
+  var fr = [];
+  body.querySelectorAll('section').forEach(function (s) {
+    if ((s.getAttribute('style') || '').indexOf('border-left:1px solid') !== -1) {
+      var r = s.getBoundingClientRect();
+      fr.push({top: r.top + window.scrollY, bottom: r.bottom + window.scrollY,
+               left: Math.round(r.left), w: Math.round(r.width)});
+    }
+  });
+  var gaps = [];
+  for (var i = 1; i < fr.length; i++) {
+    var g = Math.round(fr[i].top - fr[i - 1].bottom);
+    if (g !== 0) gaps.push(g);
+  }
+  var imgs = 0, dataN = 0, cdn = 0;
+  body.querySelectorAll('img').forEach(function (im) {
+    if ((im.className || '').indexOf('ProseMirror-separator') !== -1) return;
+    imgs++;
+    var src = im.getAttribute('src') || '';
+    if (src.indexOf('data:') === 0) dataN++;
+    if (src.indexOf('mmbiz.qpic.cn') !== -1) cdn++;
+  });
+  var lefts = {}, widths = {};
+  fr.forEach(function (f) { lefts[f.left] = 1; widths[f.w] = 1; });
+  return JSON.stringify({
+    frames: fr.length, gaps: gaps,
+    lefts: Object.keys(lefts), widths: Object.keys(widths),
+    imgs: imgs, cdn: cdn, stillData: dataN,
+    captions: body.querySelectorAll('figcaption').length,
+    headings: body.querySelectorAll('section[style*="border-radius:20px"]').length,
+    hasEnd: body.innerText.indexOf('END') !== -1
+  });
+})()
+'''
+
 
 def ba(args, cmd, stdin_data=None, timeout=600):
     """调用 browser-act"""
@@ -306,8 +350,44 @@ def main():
     m = re.search(r'appmsgid=(\d+)', out2)
     if m:
         print('✅ 已保存为草稿，appmsgid =', m.group(1))
+        appmsgid = m.group(1)
+    else:
+        print('⚠️ 未见 appmsgid，请到草稿箱确认是否保存成功')
         return 0
-    print('⚠️ 未见 appmsgid，请到草稿箱确认是否保存成功')
+
+    # ---- 7) 自动校验（别靠肉眼）----
+    print('⑦ 自动校验 …')
+    rc, out, err = eval_js(args, JS_VERIFY)
+    try:
+        v = json.loads(out.split('\n')[-1])
+    except Exception:
+        print('   ⚠️ 校验解析失败:', out[:160])
+        return 0
+    problems = []
+    if v.get('gaps'):
+        problems.append('外框接缝有 %s px 的缝（应为 0）——多半是外框样式漏了 margin:0'
+                        % '/'.join(str(g) for g in v['gaps'][:5]))
+    if len(v.get('lefts', [])) > 1:
+        problems.append('各段左边距不一致 %s，框会左右错位' % v['lefts'])
+    if len(v.get('widths', [])) > 1:
+        problems.append('各段宽度不一致 %s' % v['widths'])
+    if v.get('stillData'):
+        problems.append('%d 张图仍是 data: 未传完' % v['stillData'])
+    if v.get('imgs') and v.get('cdn') != v.get('imgs'):
+        problems.append('图片 CDN 数 %s ≠ 总数 %s' % (v.get('cdn'), v.get('imgs')))
+    if not v.get('hasEnd'):
+        problems.append('没找到文末 END 线')
+    print('   外框 %s 段 / 接缝 %s / 图 %s（CDN %s）/ 图注 %s / 分节标题 %s'
+          % (v.get('frames'), v.get('gaps') or '无', v.get('imgs'), v.get('cdn'),
+             v.get('captions'), v.get('headings')))
+    if problems:
+        print('   ❌ 发现问题：')
+        for p in problems:
+            print('      -', p)
+    else:
+        print('   ✅ 校验通过：无断缝、图片齐、结构完整')
+    print('   草稿地址: https://mp.weixin.qq.com/cgi-bin/appmsg?t=media/appmsg_edit'
+          '&action=edit&type=77&appmsgid=%s&token=%s&lang=zh_CN' % (appmsgid, args.token))
     return 0
 
 
