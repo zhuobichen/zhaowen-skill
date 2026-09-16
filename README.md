@@ -6,6 +6,7 @@
 
 | Skill | 目录 | 用途 |
 |-------|------|------|
+| | | [`clz_docx_to_mp/`](clz_docx_to_mp/) | | |
 | 科研文献证据工程（ylx） | [`ylx_research_evidence_synthesis/`](ylx_research_evidence_synthesis/) | ylx·科研文献证据工程与 Related Work 写作：Claim-first（证据矩阵 + 逻辑树 + 综述），含输出样例 |
 | one-hub 用量监测（ylx） | [`ylx_onehub_usage_monitor/`](ylx_onehub_usage_monitor/) | 监测 one-hub API 用量与费用：总额度/已用/剩余、每日每月记账、各模型单价对比 |
 | > | [`clz_wechat_mp_ops/`](clz_wechat_mp_ops/) | > |
