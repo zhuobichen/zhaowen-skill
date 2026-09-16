@@ -86,8 +86,14 @@ def esc(s):
 
 
 # ---------------------------------------------------------------- 图片压缩
-def compress_images(images_dir, out_dir, max_width=1440, quality=88):
-    """压缩图片到适合公众号的尺寸，返回 {原文件名: 新文件名}"""
+def compress_images(images_dir, out_dir, max_width=1080, quality=92):
+    """压缩图片到适合公众号的尺寸，返回 {原文件名: 新文件名}
+
+    为什么是 1080：微信正文图**宽度超过 1080px 一律压到 1080px**（平台硬顶）。
+    与其让微信去缩（不可控），不如自己用 LANCZOS 高质量缩好再传。
+    宽度本来就 ≤1080 的图，微信不再缩放，只做重编码 —— 所以质量给高一点（92）
+    留出余量，抵消微信那次重编码的损失。
+    """
     os.makedirs(out_dir, exist_ok=True)
     mapping = {}
     total_before = total_after = 0
@@ -132,9 +138,11 @@ def render_block(b, theme, img_dir, embed, strip_brackets, heading_no=None):
     if t == 'heading':
         # 参考文章的「胶囊标题条」：浅底 + 大圆角 + 居中主色字 + 菱形点缀
         # 编号 01/02 是纯装饰，不引入原文之外的内容
-        num = ('<span style="color:%s;font-size:13px;font-weight:bold;'
-               'letter-spacing:1px;vertical-align:middle;margin-right:8px;'
-               'opacity:0.75;">%02d</span>' % (theme['primary'], heading_no)) if heading_no else ''
+        # 编号与标题**同字号同字重同色**：之前用 13px + 半透明，视觉上「比旁边小一号」，
+        # 看着像出错而不是设计。要突出就整体突出，不要靠缩字号。
+        num = ('<span style="color:%s;font-size:16px;font-weight:bold;'
+               'letter-spacing:2px;vertical-align:middle;margin-right:6px;">%02d</span>'
+               % (theme['primary'], heading_no)) if heading_no else ''
         diamond = ('<span style="display:inline-block;width:8px;height:8px;'
                    'background-color:%s;transform:rotate(45deg);'
                    'vertical-align:middle;%s"></span>')
@@ -248,7 +256,8 @@ def main():
     ap.add_argument('--out', default=None)
     ap.add_argument('--embed', action='store_true')
     ap.add_argument('--strip-brackets', action='store_true')
-    ap.add_argument('--max-width', type=int, default=1440)
+    # 默认 1080 = 微信正文图宽度硬顶，超过必被它压（见 compress_images 注释）
+    ap.add_argument('--max-width', type=int, default=1080)
     args = ap.parse_args()
 
     build = args.build_dir
