@@ -36,10 +36,12 @@ from PIL import Image  # noqa: E402
 THEME = {
     'name': 'blue',
     'primary': '#0F4C81',        # 主色（藏青蓝）
+    'primary_mid': '#2E5B9A',    # 渐变末端
     'primary_soft': '#E8F0F7',   # 浅底
     'link': '#576b95',           # 微信官方链接蓝
     'text': '#3f3f3f',
-    'caption': '#888888',
+    'caption': '#999999',        # 图注灰（惯例 14px/#999）
+    'caption_size': 14,
     'divider': '#E5E7EB',
     'font_size': 16,
     'line_height': 1.75,
@@ -47,6 +49,20 @@ THEME = {
 
 # 首尾空行占位（借鉴 doocs/md）：保住微信编辑器首尾空行
 EMPTY_NODE = '<p style="font-size:0;line-height:0;margin:0;padding:0;"><br></p>'
+
+# 文末 END 装饰线。用 table 而不是 flex —— 微信对 flex 支持有限，table 最稳
+END_LINE = (
+    '<section style="margin:44px 0 30px;">'
+    '<table style="width:100%;border-collapse:collapse;border:none;"'
+    ' cellspacing="0" cellpadding="0" border="0"><tr>'
+    '<td style="border:none;height:1px;line-height:1px;font-size:0;'
+    'background:linear-gradient(to right,rgba(15,76,129,0),#0F4C81);">&nbsp;</td>'
+    '<td style="border:none;width:76px;text-align:center;font-size:11px;'
+    'color:#0F4C81;letter-spacing:4px;font-weight:bold;">END</td>'
+    '<td style="border:none;height:1px;line-height:1px;font-size:0;'
+    'background:linear-gradient(to left,rgba(15,76,129,0),#0F4C81);">&nbsp;</td>'
+    '</tr></table></section>'
+)
 
 
 def esc(s):
@@ -90,7 +106,7 @@ def to_data_uri(path):
 
 
 # ---------------------------------------------------------------- 渲染
-def render_block(b, theme, img_dir, embed, strip_brackets):
+def render_block(b, theme, img_dir, embed, strip_brackets, heading_no=None):
     t = b['type']
 
     if t == 'title':
@@ -98,11 +114,19 @@ def render_block(b, theme, img_dir, embed, strip_brackets):
         return ''
 
     if t == 'heading':
+        # 编号是纯装饰（01/02），不引入任何原文之外的内容
+        num = ('%02d' % heading_no) if heading_no else ''
+        badge = (
+            '<span style="display:inline-block;background:rgba(255,255,255,0.22);'
+            'border-radius:4px;padding:1px 9px;margin-right:10px;font-size:14px;'
+            'letter-spacing:1px;">%s</span>' % num
+        ) if num else ''
         return (
-            '<p style="margin:36px 0 24px;padding:11px 0;background:%s;'
-            'color:#ffffff;font-size:17px;font-weight:bold;text-align:center;'
-            'letter-spacing:2px;border-radius:4px;">%s</p>'
-            % (theme['primary'], esc(b['text']))
+            '<section style="margin:38px 0 26px;padding:14px 18px;'
+            'background:linear-gradient(135deg,%s 0%%,%s 100%%);border-radius:6px;">'
+            '<p style="margin:0;color:#ffffff;font-size:17px;font-weight:bold;'
+            'letter-spacing:1px;line-height:1.5;">%s%s</p></section>'
+            % (theme['primary'], theme['primary_mid'], badge, esc(b['text']))
         )
 
     if t == 'para':
@@ -132,21 +156,32 @@ def render_block(b, theme, img_dir, embed, strip_brackets):
             # figure/figcaption 已实测可在微信编辑器中存活并持久化
             return (
                 '<figure style="margin:24px 0 28px;">%s'
-                '<figcaption style="margin-top:10px;font-size:13px;color:%s;'
+                '<figcaption style="margin-top:10px;font-size:%dpx;color:%s;'
                 'text-align:center;line-height:1.6;letter-spacing:0.5px;">%s</figcaption>'
-                '</figure>' % (img_tag, theme['caption'], esc(cap))
+                '</figure>' % (img_tag, theme['caption_size'], theme['caption'], esc(cap))
             )
         return '<figure style="margin:24px 0 28px;">%s</figure>' % img_tag
 
     return ''
 
 
+def render_blocks(content, theme, img_dir, embed=False, strip_brackets=False):
+    """按顺序渲染所有 block，返回 HTML 片段列表（标题编号在这里统一分配）"""
+    out, hno = [], 0
+    for b in content['blocks']:
+        if b['type'] == 'heading':
+            hno += 1
+        html = render_block(b, theme, img_dir, embed, strip_brackets,
+                            heading_no=hno if b['type'] == 'heading' else None)
+        if html:
+            out.append(html)
+    return out
+
+
 def render(content, theme, img_dir, embed=False, strip_brackets=False):
     parts = [EMPTY_NODE]
-    for b in content['blocks']:
-        html = render_block(b, theme, img_dir, embed, strip_brackets)
-        if html:
-            parts.append(html)
+    parts.extend(render_blocks(content, theme, img_dir, embed, strip_brackets))
+    parts.append(END_LINE)
     parts.append(EMPTY_NODE)
     # 整体包一层 section（比 div 更被微信友好）
     body = ''.join(parts)

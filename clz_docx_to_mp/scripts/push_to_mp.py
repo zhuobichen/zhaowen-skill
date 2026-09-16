@@ -31,7 +31,8 @@ if sys.platform == 'win32':
     sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8', errors='replace')
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from render_wechat import THEME, render_block, to_data_uri, EMPTY_NODE  # noqa: E402
+from render_wechat import (THEME, render_block, render_blocks, to_data_uri,  # noqa: E402
+                           EMPTY_NODE, END_LINE)
 
 DEFAULT_BA = r'C:\Users\Administrator\.local\bin\browser-act.exe'
 
@@ -43,10 +44,31 @@ EDIT_DRAFT_URL = ('https://mp.weixin.qq.com/cgi-bin/appmsg'
                   '?t=media/appmsg_edit&action=edit&type=77'
                   '&appmsgid=%s&token=%s&lang=zh_CN')
 
+# 统一的取 view 逻辑。
+# ⚠️ 必须每步都自愈式重取，不能只在开头取一次：微信编辑页加载完成后可能还有一次
+#    客户端重定向，会把 window 上的全局变量冲掉，导致后续步骤拿到 NO_VIEW。
+JS_ENSURE_FN = r'''
+window.__ensureView = function(){
+  if (window.__mpView && window.__mpView.state) return window.__mpView;
+  var pms = document.querySelectorAll('.ProseMirror'), body = null;
+  for (var i = 0; i < pms.length; i++) {
+    var par = pms[i].parentElement;
+    if (par && (par.className || '').indexOf('rich_media_content') !== -1) body = pms[i];
+  }
+  if (!body) return null;
+  var el = body, vue = null;
+  for (var k = 0; k < 12 && el; k++) { if (el.__vue__) { vue = el.__vue__; break; } el = el.parentElement; }
+  if (!vue) return null;
+  var view = vue['$options']['parent']['$parent']['__editorView'];
+  if (view) window.__mpView = view;
+  return view || null;
+};
+'''
+
 # 清空正文：直接对 ProseMirror doc 做整段删除，比模拟全选+退格可靠
-JS_CLEAR_BODY = r'''
+JS_CLEAR_BODY = JS_ENSURE_FN + r'''
 (function(){
-  var v = window.__mpView;
+  var v = window.__ensureView();
   if (!v) return 'NO_VIEW';
   var size = v.state.doc.content.size;
   try { v.dispatch(v.state.tr.delete(0, size)); } catch(e) { return 'ERR:' + e.message; }
@@ -54,24 +76,8 @@ JS_CLEAR_BODY = r'''
 })()
 '''
 
-# 取得正文 EditorView（走 Vue 实例链，父容器 .rich_media_content 是正文）
-JS_GET_VIEW = r'''
-(function(){
-  var pms = document.querySelectorAll('.ProseMirror');
-  var body = null;
-  for (var i = 0; i < pms.length; i++) {
-    var par = pms[i].parentElement;
-    if (par && (par.className || '').indexOf('rich_media_content') !== -1) body = pms[i];
-  }
-  if (!body) return 'NO_BODY';
-  var el = body, vue = null;
-  for (var k = 0; k < 12 && el; k++) { if (el.__vue__) { vue = el.__vue__; break; } el = el.parentElement; }
-  if (!vue) return 'NO_VUE';
-  var view = vue['$options']['parent']['$parent']['__editorView'];
-  if (!view) return 'NO_VIEW';
-  window.__mpView = view;
-  return 'VIEW_OK';
-})()
+JS_GET_VIEW = JS_ENSURE_FN + r'''
+(function(){ return window.__ensureView() ? 'VIEW_OK' : 'NO_VIEW'; })()
 '''
 
 
@@ -106,12 +112,15 @@ def eval_js(args, js, timeout=600):
 
 
 def chunk_blocks(content, theme, img_dir, budget_bytes, strip_brackets=False):
-    """按 HTML 体积切块，保证每块 < budget_bytes"""
+    """按 HTML 体积切块，保证每块 < budget_bytes
+
+    走 render_blocks（与预览同一套渲染逻辑），保证标题编号在推送稿里也一致。
+    """
+    htmls = render_blocks(content, theme, img_dir, embed=True, strip_brackets=strip_brackets)
+    htmls.append(END_LINE)
+    # END_LINE 不含图片，体积可忽略，直接并入最后一块
     chunks, cur, cur_len = [], [], 0
-    for b in content['blocks']:
-        html = render_block(b, theme, img_dir, embed=True, strip_brackets=strip_brackets)
-        if not html:
-            continue
+    for html in htmls:
         n = len(json.dumps(html))
         if cur and cur_len + n > budget_bytes:
             chunks.append(cur)
@@ -204,7 +213,8 @@ def main():
     print('③ 分批灌入正文 …')
     for i, blocks in enumerate(chunks, 1):
         html = EMPTY_NODE + ''.join(blocks) if i == 1 else ''.join(blocks)
-        js = ('(function(){var v=window.__mpView; if(!v) return "NO_VIEW";'
+        js = (JS_ENSURE_FN +
+              '(function(){var v=window.__ensureView(); if(!v) return "NO_VIEW";'
               'try{v.pasteHTML(%s);}catch(e){return "ERR:"+e.message;}'
               'return "OK:"+v.state.doc.content.size;})()' % json.dumps(html))
         rc, out, err = eval_js(args, js, timeout=900)
