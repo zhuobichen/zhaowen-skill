@@ -38,8 +38,12 @@ description: >
 | 草稿箱 | `https://mp.weixin.qq.com/cgi-bin/appmsg?begin=0&count=10&type=77&action=list_card&token=TOKEN&lang=zh_CN` |
 | 发表记录 | `https://mp.weixin.qq.com/cgi-bin/appmsgpublish?sub=list&begin=0&count=10&token=TOKEN&lang=zh_CN` |
 | 草稿编辑页 | `https://mp.weixin.qq.com/cgi-bin/appmsg?t=media/appmsg_edit&action=edit&type=77&appmsgid=APPMSGID&token=TOKEN&lang=zh_CN` |
+| **新建草稿** | `https://mp.weixin.qq.com/cgi-bin/appmsg?t=media/appmsg_edit_v2&action=edit&isNew=1&type=77&createType=0&token=TOKEN&lang=zh_CN` |
 
 - 草稿 `type=77`，`appmsgid` 是草稿 ID
+- **新建草稿**：`isNew=1` 直达全新空编辑器；保存后 URL 自动变为 `...appmsgid=N`。
+  空正文可用 `view.pasteHTML(html)` 灌入（比 dispatch 替换更适合从零建稿）。
+  完整流程见配套 skill `clz_docx_to_mp`（docx → 公众号图文，含 43 图批量推送实测）
 - 发表记录列表里，文章标题是 `<a class=weui-desktop-mass-appmsg__title>`，点击进入的是预览页；编辑草稿要进草稿箱点标题卡（`<a class=weui-desktop-publish__cover__title>`）
 
 ### 获取草稿 appmsgid（卡片 href 是 javascript:void，data 属性里也没有）
@@ -163,6 +167,28 @@ f.style.cssText = 'display:block;opacity:1;position:fixed;top:0;left:0;width:200
 
 - `window.__mpTitleEditor.getContent()` 可读；`setContent()` **不生效**（勿用）
 - 可靠方式：直接改 `textarea#title.value` + 标题 ProseMirror 文本节点 + 触发 input（本次实测生效）；改完同样点保存
+
+### 空标题 → 必须先 insertText（2026-09 补充实测）
+
+对**空草稿**设标题时，上面「改 textarea + 触发 input」**不落库**——保存后重载标题仍为空。
+必须把文本**真正写进标题 ProseMirror**：
+
+```js
+var pms = document.querySelectorAll('.ProseMirror'), pm = null;
+for (var i = 0; i < pms.length; i++) {
+  var par = pms[i].parentElement;
+  if (par && (par.className || '').indexOf('title-editor') !== -1) pm = pms[i];
+}
+pm.focus();
+var r = document.createRange(); r.selectNodeContents(pm);
+var s = window.getSelection(); s.removeAllRanges(); s.addRange(r);
+document.execCommand('insertText', false, 标题);   // ← 关键，别漏
+var ta = document.getElementById('title');
+if (ta) { ta.value = 标题; ta.dispatchEvent(new Event('input', {bubbles:true})); }
+```
+
+> 只有「全选 + `deleteFromDocument()`」而不 insertText 同样不落库——等于把标题清空。
+> 校验务必**重载草稿**后读 `textarea#title.value`，别信脚本自己返回的 "已设置"。
 
 ```js
 var ta = document.getElementById('title');
