@@ -41,15 +41,20 @@ THEME = {
     'frame_border': '#0F4C81',    # 边框色 = 主色
     'frame_shadow': '#C9DBEC',    # 硬投影色（浅蓝灰）
     'frame_offset': 7,            # 投影偏移 px（0 模糊 = 硬投影）
+    # 框内「纸」色。参考文章用纯白，但整篇会白得没有层次 —— 改成明确的浅蓝底
+    # （深浅实测对照后选定；改这一个值即可整体调深调浅）
+    'frame_bg': '#DCE9F7',
     'card_bg': '#FFFFFF',
     # —— 主色 ——
     'primary': '#0F4C81',        # 藏青蓝
     'primary_mid': '#2E5B9A',
-    'primary_soft': '#E4EEF8',   # 浅底（标题胶囊底）
+    # 标题胶囊底色要比页面底色更「亮」，才能从蓝底里跳出来
+    'primary_soft': '#EDF5FC',
     'link': '#576b95',           # 微信官方链接蓝
     # —— 文本 ——
     'text': '#3e3e3e',
-    'caption': '#9AA5B1',
+    # 图注：底色改成浅蓝后 #9AA5B1 对比度只有 1.9:1（太浅），必须加深
+    'caption': '#5C6B7A',
     'caption_size': 13,
     'divider': '#E5E7EB',
     'font_size': 16,
@@ -210,7 +215,7 @@ def frame_wrap(html, theme, first=True, last=True):
         '<section style="background-color:%s;padding:8px 12px;%s%s'
         'font-size:%dpx;line-height:%s;color:%s;letter-spacing:%s;'
         'word-break:break-word;text-align:justify;">%s</section>'
-        % (theme['card_bg'], border, shadow,
+        % (theme['frame_bg'], border, shadow,
            theme['font_size'], theme['line_height'], theme['text'],
            theme['letter_spacing'], html)
     )

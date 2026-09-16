@@ -156,10 +156,25 @@ if (ta) { ta.value = title; ta.dispatchEvent(new Event('input', {bubbles:true}))
 | 元素 | 参考文章实取值 |
 |---|---|
 | 外框 | `background:#fff; padding:15px 10px; border:1px solid #1893AF;`<br>`box-shadow: #BAE7EC 7px 7px 0px 0px` ← **硬投影（0 模糊），不是柔和阴影** |
+| 框内底色 | 参考文章是**纯白**。本 skill 改成 `#DCE9F7` 浅蓝——纯白会被用户反馈「背景还是白色」 |
 | 正文 | `text-indent:2.125em; margin:0; line-height:2; letter-spacing:1px; color:#3e3e3e; font-size:16px` |
 | 分节标题 | 浅色胶囊：`background:#CDF1F9; padding:10px 0; border-radius:20px` + 居中主色字 `letter-spacing:2px` + 菱形点缀（`transform:rotateZ(45deg)` 的小方块） |
 | 图片 | 通栏 `width:100%`，**无独立卡片、无边框**，跟随正文流动 |
 | 主色 | `#1893AF`（青蓝）。本 skill 默认换成 `#0F4C81` 藏青蓝，更学术正式；换回青色只需改 `THEME['primary']` 及 `frame_border` / `primary_soft` / `frame_shadow` |
+
+### ⚠️ 底色深浅：改一个值要连带改两个
+
+`THEME['frame_bg']` 调深调浅时，**另两个颜色的对比度会跟着变**，必须一起调：
+
+| 元素 | 浅底（`#DCE9F7`，当前） | 若换成更深的底，要相应调整 |
+|---|---|---|
+| 标题胶囊 `primary_soft` | `#EDF5FC`（比底色更亮，才跳得出来） | 底色一深就会糊在一起，需再调亮 |
+| 图注 `caption` | `#5C6B7A` | 底色变白时可退回 `#9AA5B1` |
+
+> 实测教训：底色从纯白改成浅蓝后，图注原用 `#9AA5B1` 在蓝底上**对比度只剩 1.9:1**（WCAG AA 要 4.5:1），
+> 肉眼看就是「灰字糊在蓝底上」。改底色务必顺手检查所有前置色的对比度。
+
+> 深浅是主观的：先给用户看几档对照（用同一段内容并排渲染）再定，别一轮轮试。
 
 ### ⚠️ 不要「每元素一张卡片」
 
@@ -291,6 +306,15 @@ if (ta) { ta.value = title; ta.dispatchEvent(new Event('input', {bubbles:true}))
 9. **`NO_VIEW`／清空失败**：微信编辑页加载完成后可能还有一次客户端重定向，会冲掉
    `window.__mpView`。**每一步都要自愈式重取**（`window.__ensureView()`），
    不能只在开头取一次——已踩过：开头取到 view、下一步清空就 NO_VIEW
+10. **⚠️ 千万不要中断正在推送的任务**（已踩，代价大）：中途 kill 掉推送脚本，会留下
+   **挂起的 `uploadimg2cdn` 请求**，那篇草稿的编辑页从此**永久卡在 `readyState=loading`**，
+   换会话、重开浏览器都救不回来（同一篇的编辑页再也打不开）。
+   诊断特征：`network requests --filter uploadimg2cdn` 里那批请求**有 URL 但没有 status**。
+   处理：**放弃那篇草稿，推到一篇新草稿**（新建草稿的编辑器秒开，可用来确认是草稿坏了
+   而非浏览器坏了）；坏掉的旧草稿只能人工去草稿箱删。
+   预防：推送要么跑完，要么在**开始前**就决定不做——不要跑到一半喊停
+11. **编辑页 navigate 报「未到达 DOMContentLoaded」**：编辑页很重时常见**误报**，
+   页面其实已经可用。不要直接判死——等一下再验 `__ensureView()` 能不能取到编辑器即可
 
 ## 相关
 

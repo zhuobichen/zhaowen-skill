@@ -191,9 +191,13 @@ def main():
         print('① 新建草稿 …')
     rc, out, err = ba(args, ['navigate', url], timeout=180)
     if rc != 0:
-        print('   navigate 失败:', err[:300])
-        return 1
-    time.sleep(6)
+        # 编辑页很重，navigate 常报「未在超时前到达 DOMContentLoaded」，
+        # 但页面其实已经可用。这里不直接判死，改为等一下再验编辑器是否真的在里面。
+        print('   ⚠️ navigate 报错（页面重时常见误报），继续验证编辑器是否可用')
+        print('     ', err[:160])
+        time.sleep(8)
+    else:
+        time.sleep(6)
 
     # ---- 2) 取得 EditorView ----
     print('② 取得正文 EditorView …')
