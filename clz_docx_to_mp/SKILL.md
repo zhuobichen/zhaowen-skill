@@ -146,6 +146,37 @@ if (ta) { ta.value = title; ta.dispatchEvent(new Event('input', {bubbles:true}))
 > 若原图比 2.35:1 更宽（如合影长图），裁剪会切掉左右各约 6%，微信默认居中裁——
 > 一般可接受；要精确构图得手工拖裁剪框。
 
+## 版式蓝本：中国环境科学学会（同为该体裁的官方号）
+
+**参考文章**：`https://mp.weixin.qq.com/s/zm07cyQ2W0IDoXL2x9lAiQ`
+（中国环境科学学会 · 青年科技人才国情研修活动在重庆举办）
+
+这是本 skill 默认主题的直接来源。**核心特征：整篇只用一个边框容器，内容在框内连续流淌。**
+
+| 元素 | 参考文章实取值 |
+|---|---|
+| 外框 | `background:#fff; padding:15px 10px; border:1px solid #1893AF;`<br>`box-shadow: #BAE7EC 7px 7px 0px 0px` ← **硬投影（0 模糊），不是柔和阴影** |
+| 正文 | `text-indent:2.125em; margin:0; line-height:2; letter-spacing:1px; color:#3e3e3e; font-size:16px` |
+| 分节标题 | 浅色胶囊：`background:#CDF1F9; padding:10px 0; border-radius:20px` + 居中主色字 `letter-spacing:2px` + 菱形点缀（`transform:rotateZ(45deg)` 的小方块） |
+| 图片 | 通栏 `width:100%`，**无独立卡片、无边框**，跟随正文流动 |
+| 主色 | `#1893AF`（青蓝）。本 skill 默认换成 `#0F4C81` 藏青蓝，更学术正式；换回青色只需改 `THEME['primary']` 及 `frame_border` / `primary_soft` / `frame_shadow` |
+
+### ⚠️ 不要「每元素一张卡片」
+
+早期版本给每张图、每段正文各套一张白色圆角卡片 + 柔和阴影。**实测反馈是「连贯性不强，有点隔开」**——
+43 张图变成 43 张卡，文章被切成一节一节。参考文章的做法恰恰相反：**一个框，内容连续**。
+卡片化只在极少数「需要强调的独立信息块」上才用。
+
+### 分批推送时怎么做出「一个框」
+
+推送要分多批 `pasteHTML`，而 `pasteHTML` 会自动闭合未闭合标签，跨批次的单个 `<section>` 包不住。
+解法（`frame_wrap(html, theme, first, last)` 已实现）：
+
+- **每批**都带 `border-left` + `border-right`
+- **首批**额外带 `border-top`
+- **末批**额外带 `border-bottom`，并补上右下角的硬投影
+- 中间批只向右侧投影（`box-shadow:7px 0 0 0`），拼起来才是一条连续的硬投影
+
 ## 背景色与卡片化（「白花花」的解法与最大的坑）
 
 **症状**：整篇纯白，只有零星主色点缀，显得寡淡。根因是**最外层容器没有底色**。
@@ -180,15 +211,8 @@ if (ta) { ta.value = title; ta.dispatchEvent(new Event('input', {bubbles:true}))
 | 装饰性空元素内部不放假内容 | 节点被剥、样式一起消失 → 要塞 `<span leaf=""><br></span>` |
 | 字号 > 24px | 容易被编辑器改写 |
 
-**会议通稿的卡片化配方**（本 skill 默认）：
-
-| 元素 | 处理 |
-|---|---|
-| 页面底色 | `#F2F6FA` 冷调浅蓝灰（比纯白有质感，且不与照片里的蓝冲突） |
-| 图片 | 白色卡片 `radius 12px` + `box-shadow 0 4px 16px rgba(15,76,129,.10)` |
-| 图注 | 放在图片卡片**内部**下方居中，13px `#9AA5B1` |
-| 正文 | 白色卡片，`padding 18px 16px` |
-| 分节标题 | 实底蓝兜底 + 135° 渐变 + 编号徽标 |
+**（历史方案，已被上方「版式蓝本」取代）** 曾用过「页面底色 `#F2F6FA` + 每个元素一张白卡片」，
+底色确实解决了「白花花」，但卡片切碎了连贯性。**现在默认走「单外框 + 连续流淌」**。
 
 > 设计参考：`laogou717/md-wechat`（**MIT**，26 套主题）、`chuanfan-ai/wechat-typesetter`（**MIT**）、
 > `AAAAAnson/mbeditor`（**MIT**）。**不要用** `isjiamu/gzh-design-skill`（AGPL 传染）、

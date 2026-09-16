@@ -32,7 +32,7 @@ if sys.platform == 'win32':
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from render_wechat import (THEME, render_block, render_blocks, to_data_uri,  # noqa: E402
-                           EMPTY_NODE, END_LINE, _wrap_block)
+                           EMPTY_NODE, END_LINE, frame_wrap)
 
 DEFAULT_BA = r'C:\Users\Administrator\.local\bin\browser-act.exe'
 
@@ -117,19 +117,21 @@ def chunk_blocks(content, theme, img_dir, budget_bytes, strip_brackets=False):
     走 render_blocks（与预览同一套渲染逻辑），保证标题编号在推送稿里也一致。
     """
     htmls = render_blocks(content, theme, img_dir, embed=True, strip_brackets=strip_brackets)
-    htmls.append(_wrap_block(END_LINE, theme))
-    # END_LINE 不含图片，体积可忽略，直接并入最后一块
-    chunks, cur, cur_len = [], [], 0
+    htmls.append(END_LINE)
+    # 先按体积切块，再给每块套上「外框的一段」（首批顶边、末批底边+右下投影）
+    raw, cur, cur_len = [], [], 0
     for html in htmls:
         n = len(json.dumps(html))
         if cur and cur_len + n > budget_bytes:
-            chunks.append(cur)
+            raw.append(cur)
             cur, cur_len = [], 0
         cur.append(html)
         cur_len += n
     if cur:
-        chunks.append(cur)
-    return chunks
+        raw.append(cur)
+    return [frame_wrap(''.join(blocks), theme,
+                       first=(i == 0), last=(i == len(raw) - 1))
+            for i, blocks in enumerate(raw)]
 
 
 def main():

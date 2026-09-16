@@ -34,24 +34,28 @@ from PIL import Image  # noqa: E402
 
 # ---------------------------------------------------------------- 主题（藏青蓝）
 THEME = {
-    'name': 'blue-card',
-    # —— 页面与卡片：整篇「白花花」的根因是最外层容器没刷底色 ——
-    'page_bg': '#F2F6FA',        # 冷调浅蓝灰，比纯白有质感
+    'name': 'blue-frame',
+    # —— 结构：整篇一个边框容器 + 硬投影（对齐中国环境科学学会的真实排版）——
+    # 参考：mp.weixin.qq.com/s/zm07cyQ2W0IDoXL2x9lAiQ
+    #   border:1px solid 主色; box-shadow: 浅色 7px 7px 0px 0px  ← 硬投影，不是模糊阴影
+    'frame_border': '#0F4C81',    # 边框色 = 主色
+    'frame_shadow': '#C9DBEC',    # 硬投影色（浅蓝灰）
+    'frame_offset': 7,            # 投影偏移 px（0 模糊 = 硬投影）
     'card_bg': '#FFFFFF',
-    'card_radius': 12,
-    'card_shadow': '0 4px 16px rgba(15,76,129,0.10)',
     # —— 主色 ——
     'primary': '#0F4C81',        # 藏青蓝
-    'primary_mid': '#2E5B9A',    # 渐变末端
-    'primary_soft': '#E8F0F7',   # 浅底
+    'primary_mid': '#2E5B9A',
+    'primary_soft': '#E4EEF8',   # 浅底（标题胶囊底）
     'link': '#576b95',           # 微信官方链接蓝
     # —— 文本 ——
-    'text': '#3f3f3f',
+    'text': '#3e3e3e',
     'caption': '#9AA5B1',
     'caption_size': 13,
     'divider': '#E5E7EB',
     'font_size': 16,
-    'line_height': 1.75,
+    'line_height': 2,            # 参考文章用 2，很透气
+    'letter_spacing': '1px',
+    'text_indent': '2.125em',    # 参考文章的首行缩进
 }
 
 # 首尾空行占位（借鉴 doocs/md）：保住微信编辑器首尾空行
@@ -121,31 +125,34 @@ def render_block(b, theme, img_dir, embed, strip_brackets, heading_no=None):
         return ''
 
     if t == 'heading':
-        # 编号是纯装饰（01/02），不引入任何原文之外的内容
-        num = ('%02d' % heading_no) if heading_no else ''
-        badge = (
-            '<span style="display:inline-block;background:rgba(255,255,255,0.22);'
-            'border-radius:4px;padding:1px 9px;margin-right:10px;font-size:14px;'
-            'letter-spacing:1px;">%s</span>' % num
-        ) if num else ''
-        # 先给纯色兜底再叠渐变：万一微信剥掉 background-image，还有实底蓝顶住
+        # 参考文章的「胶囊标题条」：浅底 + 大圆角 + 居中主色字 + 菱形点缀
+        # 编号 01/02 是纯装饰，不引入原文之外的内容
+        num = ('<span style="color:%s;font-size:13px;font-weight:bold;'
+               'letter-spacing:1px;vertical-align:middle;margin-right:8px;'
+               'opacity:0.75;">%02d</span>' % (theme['primary'], heading_no)) if heading_no else ''
+        diamond = ('<span style="display:inline-block;width:8px;height:8px;'
+                   'background-color:%s;transform:rotate(45deg);'
+                   'vertical-align:middle;%s"></span>')
         return (
-            '<section style="margin:0;padding:14px 18px;background-color:%s;'
-            'background-image:linear-gradient(135deg,%s 0%%,%s 100%%);'
-            'border-radius:6px;">'
-            '<p style="margin:0;color:#ffffff;font-size:17px;font-weight:bold;'
-            'letter-spacing:1px;line-height:1.5;">%s%s</p></section>'
-            % (theme['primary'], theme['primary'], theme['primary_mid'], badge, esc(b['text']))
+            '<section style="margin:30px 0 18px;padding:9px 6px;'
+            'background-color:%s;border-radius:20px;text-align:center;">'
+            '%s%s<span style="color:%s;font-size:16px;font-weight:bold;'
+            'letter-spacing:2px;vertical-align:middle;">%s</span>%s</section>'
+            % (theme['primary_soft'],
+               diamond % (theme['primary'], 'margin-right:10px;'),
+               num,
+               theme['primary'], esc(b['text']),
+               diamond % (theme['primary'], 'margin-left:10px;'))
         )
 
     if t == 'para':
-        # 正文也做成白卡片，浮在底色上
+        # 与参考文章一致：无卡片、首行缩进、行高 2、字距 1px，正文连续流淌
         return (
-            '<p style="margin:0;padding:18px 16px;background-color:%s;'
-            'border-radius:%dpx;box-shadow:%s;font-size:%dpx;line-height:%s;'
-            'color:%s;text-align:justify;letter-spacing:0.5px;">%s</p>'
-            % (theme['card_bg'], theme['card_radius'], theme['card_shadow'],
-               theme['font_size'], theme['line_height'], theme['text'], esc(b['text']))
+            '<p style="margin:0 0 0.9em;text-indent:%s;font-size:%dpx;'
+            'line-height:%s;color:%s;text-align:justify;'
+            'letter-spacing:%s;">%s</p>'
+            % (theme['text_indent'], theme['font_size'], theme['line_height'],
+               theme['text'], theme['letter_spacing'], esc(b['text']))
         )
 
     if t == 'image':
@@ -164,40 +171,52 @@ def render_block(b, theme, img_dir, embed, strip_brackets, heading_no=None):
             '<img src="%s" style="max-width:100%%;height:auto;display:block;'
             'margin:0 auto;border-radius:4px;">' % src
         )
+        # 与参考文章一致：图片通栏、无卡片，让图文连续
         if cap:
             # figure/figcaption 已实测可在微信编辑器中存活并持久化
             return (
-                '<figure style="margin:0;padding:8px 8px 0;background-color:%s;'
-                'border-radius:%dpx;box-shadow:%s;">%s'
-                '<figcaption style="margin:10px 0 10px;font-size:%dpx;color:%s;'
+                '<figure style="margin:14px 0 18px;">%s'
+                '<figcaption style="margin:8px 0 0;font-size:%dpx;color:%s;'
                 'text-align:center;line-height:1.6;letter-spacing:0.5px;">%s</figcaption>'
                 '</figure>'
-                % (theme['card_bg'], theme['card_radius'], theme['card_shadow'], img_tag,
-                   theme['caption_size'], theme['caption'], esc(cap))
+                % (img_tag, theme['caption_size'], theme['caption'], esc(cap))
             )
-        return (
-            '<figure style="margin:0;padding:8px;background-color:%s;'
-            'border-radius:%dpx;box-shadow:%s;">%s</figure>'
-            % (theme['card_bg'], theme['card_radius'], theme['card_shadow'], img_tag)
-        )
+        return '<figure style="margin:14px 0 18px;">%s</figure>' % img_tag
 
     return ''
 
 
-def _wrap_block(html, theme):
-    """给每个顶层块刷底色。
+def frame_wrap(html, theme, first=True, last=True):
+    """给一段内容套上「外框」的一段。
 
-    ⚠️ 关键：**不能只在最外层容器上刷一次**。微信会解包语义标签并把 style 一起丢掉，
-    导致「整页背景变白、内层背景还在」。可靠做法是每个顶层块各自重复 background-color；
-    块之间不留 margin（间隙由各块自身的 padding 提供），相邻同色块视觉上就连成一片。
+    对齐中国环境科学学会的真实排版（mp.weixin.qq.com/s/zm07cyQ2W0IDoXL2x9lAiQ）：
+    整篇**只用一个边框容器**，内容在框内连续流淌——这是「连贯」的关键。
+    之前「每个元素各一张卡片」会把文章切成一节一节。
+
+    ⚠️ 推送要分多批 pasteHTML，而 `pasteHTML` 会自动闭合未闭合标签，
+    跨批次的单个 <section> 是包不住的。所以改成：**每批各带框的左右边，
+    首批加顶边、末批加底边与右下投影**，视觉上拼成完整的一个框。
     """
+    b, s, o = theme['frame_border'], theme['frame_shadow'], theme['frame_offset']
+    border = 'border-left:1px solid %s;border-right:1px solid %s;' % (b, b)
+    if first:
+        border += 'border-top:1px solid %s;' % b
+    if last:
+        border += 'border-bottom:1px solid %s;' % b
+    # 批间接缝处只向右侧投影，末批才补右下角，拼起来才是一条连续的硬投影
+    shadow = ('box-shadow:%dpx %dpx 0px 0px %s;' % (o, o, s) if last
+              else 'box-shadow:%dpx 0px 0px 0px %s;' % (o, s))
     return (
-        '<section style="background-color:%s;padding:9px 12px;">%s</section>'
-        % (theme['page_bg'], html)
+        '<section style="background-color:%s;padding:8px 12px;%s%s'
+        'font-size:%dpx;line-height:%s;color:%s;letter-spacing:%s;'
+        'word-break:break-word;text-align:justify;">%s</section>'
+        % (theme['card_bg'], border, shadow,
+           theme['font_size'], theme['line_height'], theme['text'],
+           theme['letter_spacing'], html)
     )
 
 
-def render_blocks(content, theme, img_dir, embed=False, strip_brackets=False, wrap=True):
+def render_blocks(content, theme, img_dir, embed=False, strip_brackets=False):
     """按顺序渲染所有 block，返回 HTML 片段列表（标题编号在这里统一分配）"""
     out, hno = [], 0
     for b in content['blocks']:
@@ -206,22 +225,16 @@ def render_blocks(content, theme, img_dir, embed=False, strip_brackets=False, wr
         html = render_block(b, theme, img_dir, embed, strip_brackets,
                             heading_no=hno if b['type'] == 'heading' else None)
         if html:
-            out.append(_wrap_block(html, theme) if wrap else html)
+            out.append(html)
     return out
 
 
 def render(content, theme, img_dir, embed=False, strip_brackets=False):
-    parts = [_wrap_block(EMPTY_NODE, theme)]
+    parts = [EMPTY_NODE]
     parts.extend(render_blocks(content, theme, img_dir, embed, strip_brackets))
-    parts.append(_wrap_block(END_LINE, theme))
-    parts.append(_wrap_block(EMPTY_NODE, theme))
-    # 外面再套一层同色容器：即便微信只保留最外层或只保留内层，底色都还在
-    return (
-        '<section style="background-color:%s;font-size:%dpx;line-height:%s;'
-        'color:%s;word-break:break-word;">%s</section>'
-        % (theme['page_bg'], theme['font_size'], theme['line_height'], theme['text'],
-           ''.join(parts))
-    )
+    parts.append(END_LINE)
+    parts.append(EMPTY_NODE)
+    return frame_wrap(''.join(parts), theme)
 
 
 def main():
