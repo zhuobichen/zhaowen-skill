@@ -245,19 +245,27 @@ def main():
   return JSON.stringify({total:imgs.length, local:local, cdn:cdn});
 })()
 '''
-    for attempt in range(30):
+    # 图片多 + 质量高时（如 q95/4:4:4，43 图约 16MB base64）上传会明显变慢，
+    # 等待窗口要给足，否则会误报「仍有图片未上传」——实测最后一张常在此之后才传完。
+    MAX_WAIT = 240
+    waited = 0
+    done = False
+    while waited < MAX_WAIT:
         rc, out, err = eval_js(args, wait_js)
         try:
             st = json.loads(out.split('\n')[-1])
         except Exception:
             time.sleep(4)
+            waited += 4
             continue
         print('   %d 张：CDN %d，本地待传 %d' % (st['total'], st['cdn'], st['local']))
         if st['local'] == 0 and st['total'] > 0:
+            done = True
             break
         time.sleep(4)
-    else:
-        print('   ⚠️ 仍有图片未上传，继续保存（保存后可在编辑页复查）')
+        waited += 4
+    if not done:
+        print('   ⚠️ 等待 %ds 后仍有图未上传；继续保存，保存后再复查一次' % MAX_WAIT)
 
     # ---- 5) 设置标题 ----
     if not args.no_title and content.get('title'):

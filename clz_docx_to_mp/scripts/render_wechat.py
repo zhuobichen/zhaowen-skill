@@ -86,13 +86,19 @@ def esc(s):
 
 
 # ---------------------------------------------------------------- 图片压缩
-def compress_images(images_dir, out_dir, max_width=1080, quality=92):
+def compress_images(images_dir, out_dir, max_width=1080, quality=95, subsampling=0):
     """压缩图片到适合公众号的尺寸，返回 {原文件名: 新文件名}
 
-    为什么是 1080：微信正文图**宽度超过 1080px 一律压到 1080px**（平台硬顶）。
-    与其让微信去缩（不可控），不如自己用 LANCZOS 高质量缩好再传。
-    宽度本来就 ≤1080 的图，微信不再缩放，只做重编码 —— 所以质量给高一点（92）
-    留出余量，抵消微信那次重编码的损失。
+    目标是「在微信的硬限制内，最大化保留原始画质」：
+
+    - **宽度 1080**：微信正文图 >1080px 一律压到 1080（平台硬顶）。与其让微信缩
+      （不可控），不如自己用 LANCZOS 缩好，且宽度 ≤1080 的图微信不再缩放。
+    - **quality=95**：微信收到后还会重编码一次，输入质量给足才有余量。
+    - **subsampling=0（4:4:4）**：**关键项**。JPEG 默认 4:2:0 会把色度分辨率砍半，
+      是文字/图表发糊的主因。关掉它体积略增，但色彩与文字边缘明显更实。
+    - `optimize=True` 无损瘦身，`progressive=True` 手机端渐进加载更友好。
+
+    max_width<=0 表示不缩放（保留原尺寸交给微信处理）。
     """
     os.makedirs(out_dir, exist_ok=True)
     mapping = {}
@@ -108,9 +114,10 @@ def compress_images(images_dir, out_dir, max_width=1080, quality=92):
             im = Image.open(src)
             im = im.convert('RGB')
             w, h = im.size
-            if w > max_width:
+            if max_width and w > max_width:
                 im = im.resize((max_width, int(h * max_width / w)), Image.LANCZOS)
-            im.save(dst, 'JPEG', quality=quality, optimize=True, progressive=True)
+            im.save(dst, 'JPEG', quality=quality, subsampling=subsampling,
+                    optimize=True, progressive=True)
             mapping[name] = dst_name
             total_before += os.path.getsize(src)
             total_after += os.path.getsize(dst)

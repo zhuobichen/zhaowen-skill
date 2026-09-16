@@ -32,13 +32,14 @@ SKILL=~/.claude/skills/clz_docx_to_mp/scripts
 python $SKILL/parse_docx.py <input.docx> <build_dir>
 
 # ② 渲染 → 微信兼容 HTML（同时压缩图片到 images_web/）
-python $SKILL/render_wechat.py <build_dir> [--embed] [--strip-brackets] [--max-width 1440]
+python $SKILL/render_wechat.py <build_dir> [--embed] [--strip-brackets] [--max-width 1080]
 
 # ③ 推送草稿箱（需先登录拿到当前 token）
 python $SKILL/push_to_mp.py <build_dir> --token <TOKEN> --session <SESSION>
 ```
 
 - `render_wechat.py` 不带 `--embed` 产出 `article.html`（相对路径，供浏览器预览）；带 `--embed` 产出单文件（推送用，`push_to_mp.py` 内部自行内嵌，不必手动生成）
+- `--max-width 0` 表示不缩放（原尺寸交给微信处理）
 - `--strip-brackets` 去掉题注外层【】，视觉更干净；**默认保留原文**
 - 推送前可 `--dry-run` 看分批情况
 
@@ -56,7 +57,33 @@ python $SKILL/push_to_mp.py <build_dir> --token <TOKEN> --session <SESSION>
 
 **关键认知**：**「让图片更完整地上传」在宽度上没有空间**——1080 是平台硬顶，
 原图再大也会被压。能做的是**别让微信做那个缩放**，自己用高质量重采样缩到 1080，
-再把 JPEG 质量给高一点（本 skill 用 q92），抵消微信那次重编码的损失。
+再把质量给足，抵消微信那次重编码的损失。
+
+### ⭐ 画质杀手：JPEG 色度子采样（`subsampling`）
+
+**这是最容易被忽略、但对「清晰度」观感影响最大的一项。**
+
+PIL 的 `Image.save(..., 'JPEG')` 默认用 **4:2:0 色度子采样**——把色彩分辨率砍掉一半。
+后果：**彩色背景上的细白字会拖出红橙色边**（色度伪影），看起来就是「图糊」「不清晰」。
+
+```python
+im.save(dst, 'JPEG', quality=95, subsampling=0,   # 0 = 4:4:4，关闭子采样
+        optimize=True, progressive=True)
+```
+
+实测对照（演示文稿截图，蓝底白字）：
+
+| 版本 | 单图体积 | 白字边缘 |
+|---|---|---|
+| 原图 PNG | — | 干净 |
+| q92 + **4:2:0**（旧） | 118 KB | ❌ 明显红橙彩边 |
+| q95 + **4:4:4**（现） | 230 KB | ✅ 接近原图 |
+| q85 + 4:2:0 | 82 KB | ❌ 最差 |
+
+代价是体积约翻倍（43 图 6.8MB → 11.9MB），推送批数变多、更慢。**值得**——
+尤其通稿里有大量「彩色背景 + 白字」的演示文稿截图时。
+
+> 若体积不可接受，优先保 `subsampling=0`、降 `quality` 到 90，而不要反过来。
 
 > 实测：上传 1269px 的图，微信存下来是 **1080px**（`naturalWidth` 实测确认）。
 > 另注：社区实测 JPG/PNG 在宽度 ≤1080 时**不被缩放**，只做重编码；
@@ -118,7 +145,7 @@ view.pasteHTML('<p style="color:#0F4C81;font-size:16px;">正文</p>');
 
 - 渲染时把图片转成 `data:image/jpeg;base64,...` 内嵌进 HTML
 - `pasteHTML` 后微信自动调 `uploadimg2cdn` 上传，几秒后 src 变成 `mmbiz.qpic.cn`
-- 推送后需**轮询等待**所有图 `data:` 前缀消失（`push_to_mp.py` 已内置，最多等约 2 分钟）
+- 推送后需**轮询等待**所有图 `data:` 前缀消失（`push_to_mp.py` 已内置，最多等 240s——高画质模式下 43 图约 16MB base64，上传明显更慢，等待窗口要给足否则误报）
 
 ### 4. 分批推送
 
@@ -298,7 +325,7 @@ if (ta) { ta.value = title; ta.dispatchEvent(new Event('input', {bubbles:true}))
 | 文末 | **END 渐隐装饰线**（用 table 实现，flex 在微信支持有限） |
 
 - 编号 `01/02` 是**纯装饰**，不引入原文之外的内容。**不要自作主张给分节标题加英文译名**——那是替作者翻译，违反「内容不变」
-- 图片默认压到**最大宽 1080**（微信硬顶，见上表）、JPEG q92（实测 29.5MB → 6.8MB）
+- 图片默认压到**最大宽 1080**（微信硬顶，见上表）、**JPEG q95 + （4:4:4）**（实测 29.5MB → 11.9MB）
 - **分节标题的编号 `01/02` 必须与标题同字号同字重同色**。曾用 13px + 半透明，
   用户反馈「明显比旁边的小」——那看着像出错而不是设计。要突出就整体突出，别缩字号
 - 标题**不进正文**——写进微信「标题」字段，避免与平台标题重复
