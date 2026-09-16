@@ -32,7 +32,7 @@ if sys.platform == 'win32':
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from render_wechat import (THEME, render_block, render_blocks, to_data_uri,  # noqa: E402
-                           EMPTY_NODE, END_LINE)
+                           EMPTY_NODE, END_LINE, _wrap_block)
 
 DEFAULT_BA = r'C:\Users\Administrator\.local\bin\browser-act.exe'
 
@@ -117,7 +117,7 @@ def chunk_blocks(content, theme, img_dir, budget_bytes, strip_brackets=False):
     走 render_blocks（与预览同一套渲染逻辑），保证标题编号在推送稿里也一致。
     """
     htmls = render_blocks(content, theme, img_dir, embed=True, strip_brackets=strip_brackets)
-    htmls.append(END_LINE)
+    htmls.append(_wrap_block(END_LINE, theme))
     # END_LINE 不含图片，体积可忽略，直接并入最后一块
     chunks, cur, cur_len = [], [], 0
     for html in htmls:

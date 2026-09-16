@@ -146,6 +146,54 @@ if (ta) { ta.value = title; ta.dispatchEvent(new Event('input', {bubbles:true}))
 > 若原图比 2.35:1 更宽（如合影长图），裁剪会切掉左右各约 6%，微信默认居中裁——
 > 一般可接受；要精确构图得手工拖裁剪框。
 
+## 背景色与卡片化（「白花花」的解法与最大的坑）
+
+**症状**：整篇纯白，只有零星主色点缀，显得寡淡。根因是**最外层容器没有底色**。
+
+**但背景色有个大坑**（来源：`AAAAAnson/mbeditor` MIT，2026-06 实测）：
+
+> 微信会**解包** `<article>` `<main>` `<header>` `<footer>` `<aside>` `<nav>` 等语义标签——
+> 子内容保留，但**标签连同 style 一起被丢**。页面级背景写在单一外层容器上，
+> 一旦该标签被解包，**整页背景变白、内层背景还在**。
+
+**可靠做法：每个顶层块各自重复写 `background-color`**，且：
+
+- 块之间**不留 margin**，间隙由各块自身的 `padding` 提供 → 相邻同色块视觉连成一片
+- 用 `<section>` 而非 `<div>`（`div` 的样式继承在微信里有时会丢）
+- 本 skill 还额外套了一层同色外层容器：**外层被剥还有内层，内层被剥还有外层**，双保险
+
+```html
+<!-- 每个顶层块长这样 -->
+<section style="background-color:#F2F6FA;padding:9px 12px;">
+  <figure style="margin:0;padding:8px;background-color:#FFFFFF;border-radius:12px;
+                 box-shadow:0 4px 16px rgba(15,76,129,0.10);">…</figure>
+</section>
+```
+
+**其余已知约束**：
+
+| 约束 | 后果 |
+|---|---|
+| `background-image` 加在 `section` 上 | 有「整个 section 被删」的社区报告 → **渐变前先给 `background-color` 兜底** |
+| 正文卡片用网格/条纹 `background-image` | 深色模式下文字配色会错，别用 |
+| `<body>` / 完整 HTML 文档背景 | 被剥，必须搬到 `section` 上 |
+| 装饰性空元素内部不放假内容 | 节点被剥、样式一起消失 → 要塞 `<span leaf=""><br></span>` |
+| 字号 > 24px | 容易被编辑器改写 |
+
+**会议通稿的卡片化配方**（本 skill 默认）：
+
+| 元素 | 处理 |
+|---|---|
+| 页面底色 | `#F2F6FA` 冷调浅蓝灰（比纯白有质感，且不与照片里的蓝冲突） |
+| 图片 | 白色卡片 `radius 12px` + `box-shadow 0 4px 16px rgba(15,76,129,.10)` |
+| 图注 | 放在图片卡片**内部**下方居中，13px `#9AA5B1` |
+| 正文 | 白色卡片，`padding 18px 16px` |
+| 分节标题 | 实底蓝兜底 + 135° 渐变 + 编号徽标 |
+
+> 设计参考：`laogou717/md-wechat`（**MIT**，26 套主题）、`chuanfan-ai/wechat-typesetter`（**MIT**）、
+> `AAAAAnson/mbeditor`（**MIT**）。**不要用** `isjiamu/gzh-design-skill`（AGPL 传染）、
+> `xiaohuailabs/xiaohu-wechat-format`（无 License）、`geekjourneyx/md2wechat-skill`（BUSL，禁商用）。
+
 ## docx 图片的旋转与裁剪（最容易踩的保真坑）
 
 **症状**：导出的图里，本来竖着的照片变成了横躺的。
