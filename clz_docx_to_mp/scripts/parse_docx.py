@@ -30,6 +30,7 @@ if sys.platform == 'win32' and __name__ == '__main__':
     sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8', errors='replace')
 
 from docx import Document  # noqa: E402
+from PIL import Image  # noqa: E402
 
 # 见过的样式名（不写死，仅作默认值；可用 --map 覆盖）
 DEFAULT_STYLES = {
@@ -53,9 +54,53 @@ def _style_kind(style_name, style_map):
 
 
 def _paragraph_images(para, doc_part):
-    """返回该段落里的图片关系 id 列表（保持出现顺序）"""
+    """返回该段落里的图片信息（保持出现顺序）
+
+    每项：{'rid': rId, 'rot': 度, 'src': srcRect 属性字典}
+
+    ⚠️ 必须连 rot / srcRect 一起取。docx 允许图片带旋转与裁剪：
+    Word 里「转正过的竖图」在文件里存的是**躺倒的横图** + 一个 rot 属性，
+    只取 r:embed 会把这类图原样导成横躺的，看起来就是「竖图变横图」。
+    """
     xml = para._p.xml
-    return re.findall(r'r:embed="(rId\d+)"', xml)
+    out = []
+    for dr in re.findall(r'<w:drawing>.*?</w:drawing>', xml, re.S):
+        m = re.search(r'r:embed="(rId\d+)"', dr)
+        if not m:
+            continue
+        rot_m = re.search(r'<a:xfrm[^>]*\brot="(-?\d+)"', dr)
+        sr_m = re.search(r'<a:srcRect([^/>]*)/?>', dr)
+        src = {}
+        if sr_m:
+            for k, v in re.findall(r'(\w+)="(-?\d+)"', sr_m.group(1)):
+                src[k] = int(v)
+        out.append({
+            'rid': m.group(1),
+            # OOXML 角度单位 1/60000 度，顺时针为正
+            'rot': int(rot_m.group(1)) / 60000.0 if rot_m else 0.0,
+            'src': src,
+        })
+    return out
+
+
+def _apply_transform(im, rot_deg, src):
+    """按 docx 的 rot / srcRect 把图片还原成 Word 里看到的样子
+
+    顺序：先按 srcRect 裁剪源图，再旋转（与 OOXML 的语义一致）。
+    """
+    if src:
+        l = src.get('l', 0) / 100000.0     # srcRect 单位是 1/1000 百分号
+        r = src.get('r', 0) / 100000.0
+        t = src.get('t', 0) / 100000.0
+        b = src.get('b', 0) / 100000.0
+        w, h = im.size
+        box = (int(w * l), int(h * t), int(w * (1 - r)), int(h * (1 - b)))
+        if box[2] - box[0] > 1 and box[3] - box[1] > 1:
+            im = im.crop(box)
+    if rot_deg:
+        # OOXML rot 顺时针为正，PIL rotate 逆时针为正 → 取负
+        im = im.rotate(-rot_deg, expand=True)
+    return im
 
 
 def _is_placeholder_only(text):
@@ -76,32 +121,50 @@ def parse(docx_path, out_dir, style_map=None):
     zf = zipfile.ZipFile(docx_path)
     media_names = [n for n in zf.namelist() if n.startswith('word/media/')]
 
-    # ---- 预扫描：按文档顺序建立「关系id → 媒体文件」映射，并把图片抽到 images/ ----
-    ordered = []          # [(rId, media_name)]
+    # ---- 预扫描：按文档顺序抽图片到 images/，并应用 rot / srcRect ----
+    ordered = []          # [(rId, media_name, rot, src)]
     for para in doc.paragraphs:
-        for rid in _paragraph_images(para, doc.part):
+        for info in _paragraph_images(para, doc.part):
             try:
-                target = rels[rid].target_ref          # 形如 media/image1.jpeg
+                target = rels[info['rid']].target_ref   # 形如 media/image1.jpeg
             except KeyError:
                 continue
-            ordered.append((rid, target))
+            ordered.append((info['rid'], target, info['rot'], info['src']))
 
     rid_to_extracted = {}
     used_names = set()
-    for idx, (rid, target) in enumerate(ordered, 1):
+    n_transformed = 0
+    for idx, (rid, target, rot, src) in enumerate(ordered, 1):
         zip_path = 'word/' + target if not target.startswith('word/') else target
         if zip_path not in media_names:
             continue
-        ext = os.path.splitext(target)[1] or '.png'
         # 抽出的文件名按出现顺序，保留 docx 内原名便于溯源
         base = os.path.basename(target)
         out_name = '%03d_%s' % (idx, base)
         while out_name in used_names:
             out_name = '%03d_b_%s' % (idx, base)
         used_names.add(out_name)
-        with open(os.path.join(img_dir, out_name), 'wb') as f:
-            f.write(zf.read(zip_path))
+        raw = zf.read(zip_path)
+        dest = os.path.join(img_dir, out_name)
+        if rot or src:
+            # 有旋转/裁剪：解出来处理后另存（保持原扩展名）
+            try:
+                im = Image.open(io.BytesIO(raw))
+                im = _apply_transform(im, rot, src)
+                fmt = 'PNG' if out_name.lower().endswith('.png') else 'JPEG'
+                im.save(dest, fmt)
+                n_transformed += 1
+            except Exception as e:
+                print('  ⚠️ 变换失败 %s（按原图输出）: %s' % (out_name, e))
+                with open(dest, 'wb') as f:
+                    f.write(raw)
+        else:
+            with open(dest, 'wb') as f:
+                f.write(raw)
         rid_to_extracted[rid] = out_name
+
+    if n_transformed:
+        print('   已按 docx 的旋转/裁剪还原 %d 张图' % n_transformed)
 
     # ---- 主扫描：按顺序产 blocks ----
     blocks = []
@@ -115,7 +178,8 @@ def parse(docx_path, out_dir, style_map=None):
 
         # 图片段落
         if rid_list:
-            for rid in rid_list:
+            for _info in rid_list:
+                rid = _info['rid']
                 if rid not in rid_to_extracted:
                     continue
                 blk = {

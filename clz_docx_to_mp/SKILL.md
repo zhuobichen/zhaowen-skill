@@ -146,6 +146,27 @@ if (ta) { ta.value = title; ta.dispatchEvent(new Event('input', {bubbles:true}))
 > 若原图比 2.35:1 更宽（如合影长图），裁剪会切掉左右各约 6%，微信默认居中裁——
 > 一般可接受；要精确构图得手工拖裁剪框。
 
+## docx 图片的旋转与裁剪（最容易踩的保真坑）
+
+**症状**：导出的图里，本来竖着的照片变成了横躺的。
+
+**根因**：Word 里「转正过的竖图」，在 docx 文件里存的是**躺倒的横图** + 一个旋转属性；
+只取 `r:embed` 拿原始像素，就会把这类图原样导成横躺的。
+
+`parse_docx.py` 已处理这两个属性：
+
+| 属性 | 位置 | 含义 |
+|---|---|---|
+| `a:xfrm/@rot` | `<w:drawing>` 内 | 旋转角，单位 **1/60000 度，顺时针为正** |
+| `a:srcRect` | `<w:drawing>` 内 | 裁剪，`l/r/t/b` 单位 **1/1000 百分号**（100000 = 100%） |
+
+关键换算：`PIL` 的 `rotate()` **逆时针为正**，与 OOXML 相反 → 用 `im.rotate(-rot_deg, expand=True)`。
+处理顺序是**先按 srcRect 裁剪，再旋转**。
+
+> 本次实测：43 张图里 3 张带 `rot="16200000"`（270°）、其中 1 张还带 `srcRect` 裁剪。
+> 不处理就会静默出错——图不会报错，只是方向不对，很容易漏过去。
+> **验收时务必逐张看图**，别只看数量对不对。
+
 ## 题注归属规则（docx 常见歧义）
 
 会议通稿常见「一张图配一条题注」，但原文经常不规整。`parse_docx.py` 的规则：
@@ -187,6 +208,11 @@ if (ta) { ta.value = title; ta.dispatchEvent(new Event('input', {bubbles:true}))
 4. **screenshot 超时**：页面含几十张图时浏览器截图会超时（100s），重试一次通常能成；预览长文建议只截视口
 5. **`images_web/` 与 `content.json` 文件名不一致**：压缩后统一改成 `.jpg`，`push_to_mp.py` 会自行重映射；若报「没有一张图匹配」，先跑 `render_wechat.py`
 6. **`import render_wechat` 时 stdout 报 closed**：模块级 `TextIOWrapper` 重复包装所致，已加 `__name__ == '__main__'` 守卫，勿删
+7. **`UnicodeEncodeError: 'ascii' codec can't encode ...`**：传给 `eval --stdin` 的 JS 含非 ASCII。
+   中文一律用 `json.dumps(s)` 转义成 `\uXXXX`；**JS 注释里也不能写中文**（已踩过：一行中文注释
+   导致推送在第 ⑤ 步崩掉，且因为崩在保存之前，整篇内容没落库）
+8. **改动后重推别新建草稿**：加 `--appmsgid N` 复用已有草稿，会先清空正文再灌，
+   避免草稿箱堆一串半成品。封面不会因此丢失
 
 ## 相关
 

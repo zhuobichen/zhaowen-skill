@@ -39,6 +39,21 @@ NEW_DRAFT_URL = ('https://mp.weixin.qq.com/cgi-bin/appmsg'
                  '?t=media/appmsg_edit_v2&action=edit&isNew=1&type=77'
                  '&createType=0&token=%s&lang=zh_CN')
 
+EDIT_DRAFT_URL = ('https://mp.weixin.qq.com/cgi-bin/appmsg'
+                  '?t=media/appmsg_edit&action=edit&type=77'
+                  '&appmsgid=%s&token=%s&lang=zh_CN')
+
+# 清空正文：直接对 ProseMirror doc 做整段删除，比模拟全选+退格可靠
+JS_CLEAR_BODY = r'''
+(function(){
+  var v = window.__mpView;
+  if (!v) return 'NO_VIEW';
+  var size = v.state.doc.content.size;
+  try { v.dispatch(v.state.tr.delete(0, size)); } catch(e) { return 'ERR:' + e.message; }
+  return 'CLEARED:' + v.state.doc.content.size;
+})()
+'''
+
 # 取得正文 EditorView（走 Vue 实例链，父容器 .rich_media_content 是正文）
 JS_GET_VIEW = r'''
 (function(){
@@ -77,8 +92,17 @@ def eval_js(args, js, timeout=600):
       2. Windows 命令行长度上限约 32767 字符，1MB 的 payload 用 argv 必然
          报 WinError 206「文件名或扩展名太长」→ 走 eval --stdin 管道
     """
-    # 传进来的 js 本身已是纯 ASCII（所有中文都由调用方用 json.dumps 转义过）
-    return ba(args, ['eval', '--stdin'], stdin_data=js.encode('ascii'), timeout=timeout)
+    # 传进来的 js 必须是纯 ASCII：所有中文都要由调用方用 json.dumps 转义，
+    # JS 里不能出现裸中文（**包括注释**——js.encode('ascii') 会因为注释里的中文直接抛错）
+    try:
+        payload = js.encode('ascii')
+    except UnicodeEncodeError as e:
+        bad = js[e.start:e.end]
+        raise SystemExit(
+            '❌ 传给 eval 的 JS 含非 ASCII 字符 %r（位置 %d）。\n'
+            '   中文必须用 json.dumps(s) 转义成 \\uXXXX 字面量；JS 注释里也不能有中文。'
+            % (bad, e.start))
+    return ba(args, ['eval', '--stdin'], stdin_data=payload, timeout=timeout)
 
 
 def chunk_blocks(content, theme, img_dir, budget_bytes, strip_brackets=False):
@@ -108,6 +132,8 @@ def main():
     ap.add_argument('--chunk-mb', type=float, default=1.2)
     ap.add_argument('--dry-run', action='store_true')
     ap.add_argument('--no-title', action='store_true', help='不设置标题（调试用）')
+    ap.add_argument('--appmsgid', default=None,
+                    help='复用已有草稿（清空正文后重推），避免每次改动都新建一篇')
     args = ap.parse_args()
 
     build = args.build_dir
@@ -145,9 +171,13 @@ def main():
             print('  批 %d: %d 块, %.2f MB' % (i, len(c), len(json.dumps(''.join(c))) / 1048576.0))
         return 0
 
-    # ---- 1) 新建草稿 ----
-    url = NEW_DRAFT_URL % args.token
-    print('① 新建草稿 …')
+    # ---- 1) 新建草稿 / 或复用已有草稿 ----
+    if args.appmsgid:
+        url = EDIT_DRAFT_URL % (args.appmsgid, args.token)
+        print('① 复用已有草稿 appmsgid=%s …' % args.appmsgid)
+    else:
+        url = NEW_DRAFT_URL % args.token
+        print('① 新建草稿 …')
     rc, out, err = ba(args, ['navigate', url], timeout=180)
     if rc != 0:
         print('   navigate 失败:', err[:300])
@@ -161,6 +191,14 @@ def main():
         print('   ❌ 取 view 失败:', out[:300], err[:200])
         return 1
     print('   OK')
+
+    # 复用草稿时先清空原正文，否则内容会叠加
+    if args.appmsgid:
+        rc, out, err = eval_js(args, JS_CLEAR_BODY)
+        print('   清空原正文:', out[:60])
+        if 'CLEARED' not in out:
+            print('   ❌ 清空失败，中止以免内容叠加')
+            return 1
 
     # ---- 3) 分批灌入正文 ----
     print('③ 分批灌入正文 …')
@@ -223,7 +261,7 @@ def main():
   pm.focus();
   var r = document.createRange(); r.selectNodeContents(pm);
   var s = window.getSelection(); s.removeAllRanges(); s.addRange(r);
-  document.execCommand('insertText', false, t);   // 真正写入编辑器
+  document.execCommand('insertText', false, t);
   var ta = document.getElementById('title');
   if (ta) { ta.value = t; ta.dispatchEvent(new Event('input', {bubbles:true})); }
   return 'TITLE_SET:' + pm.innerText.slice(0, 20);
