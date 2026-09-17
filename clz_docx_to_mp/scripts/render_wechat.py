@@ -279,15 +279,21 @@ def render_gallery(items, theme, img_dir, embed, strip_brackets):
                 b = dict(b, file=os.path.basename(v))
         fig = render_block(b, theme, img_dir, embed, strip_brackets)
         if fig:
-            cells.append(('<section style="vertical-align:top;width:__W__%25;'
-                          'scroll-snap-align:center;max-width:__W__%25 !important;">'
+            # ⚠️ 这里是字面量 '%'，不要写成 '%25'——Python 不会做百分号解码，
+            #    写成 %25 会产出非法 CSS 值（width:3.84615%25），浏览器整条忽略，
+            #    各项就按图片自然尺寸各算各的，宽度参差不齐（踩过）
+            cells.append(('<section style="vertical-align:top;width:__W__%;'
+                          'scroll-snap-align:center;max-width:__W__% !important;">'
                           '__FIG__</section>')
                          .replace('__W__', ('%g' % (100.0 / n)))
                          .replace('__FIG__', fig))
     if len(cells) < 2:
         return None
+    # scrollbar-width / -ms-overflow-style 用来隐藏滚动条：移动端本来就自动隐藏，
+    # 桌面端会露出一条灰条很难看。滑动的可发现性由下方的「◁ 左右滑动查看更多 ▷」承担。
     return ('<section style="width:100%;vertical-align:top;overflow:auto;'
-            'scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;">'
+            'scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;'
+            'scrollbar-width:none;-ms-overflow-style:none;">'
             '<section style="width:__ROW__%;display:flex;flex-flow:row;'
             'max-width:__ROW__% !important;">__CELLS__</section></section>'
             ).replace('__ROW__', str(n * 100)).replace('__CELLS__', ''.join(cells))

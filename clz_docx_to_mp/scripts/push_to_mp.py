@@ -122,11 +122,12 @@ JS_VERIFY = r'''
       s.querySelectorAll('img').forEach(function (im) {
         if ((im.className || '').indexOf('ProseMirror-separator') === -1) real++;
       });
-      var hs = {};
+      var hs = {}, wsx = {};
       if (s.children[0]) {
         Array.prototype.slice.call(s.children[0].children).forEach(function (k) {
-          var h = Math.round(k.getBoundingClientRect().height);
-          hs[h] = (hs[h] || 0) + 1;
+          var b = k.getBoundingClientRect();
+          hs[Math.round(b.height)] = (hs[Math.round(b.height)] || 0) + 1;
+          wsx[Math.round(b.width)] = (wsx[Math.round(b.width)] || 0) + 1;
         });
       }
       var hKeys = Object.keys(hs);
@@ -134,7 +135,9 @@ JS_VERIFY = r'''
                  n: real,
                  ok: s.scrollWidth > r.width * 1.5,
                  heights: hKeys.length,   // 1 == all equal height (no blank-gap risk)
-                 hDetail: hKeys.slice(0, 4)});
+                 hDetail: hKeys.slice(0, 4),
+                 widths: Object.keys(wsx).length,
+                 wDetail: Object.keys(wsx).slice(0, 4)});
     }
   });
   var hasEnd = body.innerText.indexOf('END') !== -1
@@ -413,6 +416,10 @@ def main():
         if not g.get('ok'):
             problems.append('第 %d 个横滑相册滑不动（可见 %s / 滚动 %s）——多半是行宽或项宽没配套'
                             % (i + 1, g.get('vis'), g.get('scroll')))
+        if g.get('widths', 1) > 1:
+            problems.append('第 %d 个相册各项不等宽（%s 种宽度 %s）——项宽 CSS 没生效，'
+                            '多半是写成了非法值（如 %25）'
+                            % (i + 1, g['widths'], g.get('wDetail')))
         if g.get('heights', 1) > 1:
             problems.append('第 %d 个相册各项不等高（%s 种高度 %s）——横竖混排会留大片空白，'
                             '需先把比例裁齐（gallery_variant）'
