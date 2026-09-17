@@ -104,8 +104,10 @@ def esc(s):
 # 素材由 gen_deco_gifs.py **本 skill 原创生成**——不引用第三方素材，无授权风险，
 # 而且配色/形状与主题一致（星形与章节标题的 SVG 星形同款）。
 ASSETS_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'assets')
-DECO_STAR = 'deco-star-pulse.gif'        # 60x60 / 12 帧 —— 内容块右上角，呼吸缩放
-DECO_CHEVRON = 'deco-chevron-bounce.gif'  # 64x64 / 11 帧 —— 分节之间的下滑引导
+# ⚠️ deco-bird.gif 是**第三方素材**（提取自 2024 那篇公众号文章，授权不明），
+#    按用户要求使用；self-generated 的 deco-star-pulse.gif 保留备用，换回来只需改这一行。
+DECO_STAR = 'deco-bird.gif'              # 466x343 / 67 帧 —— 内容块右上角（用户选定）
+DECO_CHEVRON = 'deco-chevron-bounce.gif'  # 64x64 / 11 帧 —— 分节之间的下滑引导（本 skill 原创）
 
 
 def _deco(name, width, align_right, theme, build_dir, embed, pull_up=0):
