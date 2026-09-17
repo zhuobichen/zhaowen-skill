@@ -196,16 +196,19 @@ def parse(docx_path, out_dir, style_map=None):
                     title = text
                 else:
                     pending_images[-1]['caption'] = text
-                    pending_images = []
+                    # 只把「这一张」移出待配列表，其余仍等题注
+                    pending_images.pop()
             continue
 
         if not text:
             continue  # 空段落跳过
 
-        # 题注段落：配给紧邻的前一张图
+        # 题注段落 → 配给**最近一张还没题注的图**
+        # （不能要求「紧跟」：docx 常见「图A、图B+自带题注、题注B」的错位排布，
+        #   v6 稿里就是这样，紧跟规则会把题注变成孤儿正文段）
         if kind == 'caption' and pending_images:
             pending_images[-1]['caption'] = text
-            pending_images = []
+            pending_images.pop()
             continue
 
         # 标题
@@ -228,6 +231,14 @@ def parse(docx_path, out_dir, style_map=None):
         # 普通正文
         blocks.append({'type': 'para', 'text': text})
         pending_images = []
+
+    # 标题兜底：v6 这类稿子把标题写成了普通段落（Normal），没有 Title 样式。
+    # 此时把**第一个** block（且足够短、像标题）提升为 title，否则标题会整条丢失。
+    if title is None and blocks and blocks[0]['type'] == 'para':
+        first = blocks[0]['text']
+        if len(first) <= 80 and ('研讨会' in first or '会议' in first or '召开' in first or '举行' in first):
+            title = first
+            blocks[0] = {'type': 'title', 'text': first}
 
     result = {
         'source': os.path.abspath(docx_path),

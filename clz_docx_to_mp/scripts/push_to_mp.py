@@ -113,12 +113,23 @@ JS_VERIFY = r'''
   });
   var lefts = {}, widths = {};
   fr.forEach(function (f) { lefts[f.left] = 1; widths[f.w] = 1; });
+  var gals = [];
+  body.querySelectorAll('section').forEach(function (s) {
+    var st = s.getAttribute('style') || '';
+    if (st.indexOf('scroll-snap-type') !== -1) {
+      var r = s.getBoundingClientRect();
+      gals.push({vis: Math.round(r.width), scroll: s.scrollWidth,
+                 n: s.querySelectorAll('img').length,
+                 ok: s.scrollWidth > r.width * 1.5});
+    }
+  });
   return JSON.stringify({
     frames: fr.length, gaps: gaps,
     lefts: Object.keys(lefts), widths: Object.keys(widths),
     imgs: imgs, cdn: cdn, stillData: dataN,
     captions: body.querySelectorAll('figcaption').length,
     headings: body.querySelectorAll('section[style*="border-radius:20px"]').length,
+    galleries: gals,
     hasEnd: body.innerText.indexOf('END') !== -1
   });
 })()
@@ -160,7 +171,9 @@ def chunk_blocks(content, theme, img_dir, budget_bytes, strip_brackets=False):
 
     走 render_blocks（与预览同一套渲染逻辑），保证标题编号在推送稿里也一致。
     """
-    htmls = render_blocks(content, theme, img_dir, embed=True, strip_brackets=strip_brackets)
+    htmls = render_blocks(content, theme, img_dir, embed=True,
+                          strip_brackets=strip_brackets, gallery=True,
+                          gallery_anchor='主旨报告')
     htmls.append(END_LINE)
     # 先按体积切块，再给每块套上「外框的一段」（首批顶边、末批底边+右下投影）
     raw, cur, cur_len = [], [], 0
@@ -377,9 +390,17 @@ def main():
         problems.append('图片 CDN 数 %s ≠ 总数 %s' % (v.get('cdn'), v.get('imgs')))
     if not v.get('hasEnd'):
         problems.append('没找到文末 END 线')
+    gals = v.get('galleries') or []
+    for i, g in enumerate(gals):
+        if not g.get('ok'):
+            problems.append('第 %d 个横滑相册滑不动（可见 %s / 滚动 %s）——多半是行宽或项宽没配套'
+                            % (i + 1, g.get('vis'), g.get('scroll')))
     print('   外框 %s 段 / 接缝 %s / 图 %s（CDN %s）/ 图注 %s / 分节标题 %s'
           % (v.get('frames'), v.get('gaps') or '无', v.get('imgs'), v.get('cdn'),
              v.get('captions'), v.get('headings')))
+    if gals:
+        print('   横滑相册 %d 组：%s'
+              % (len(gals), ', '.join('%d 张(%s)' % (g['n'], '可滑' if g['ok'] else '不可滑') for g in gals)))
     if problems:
         print('   ❌ 发现问题：')
         for p in problems:

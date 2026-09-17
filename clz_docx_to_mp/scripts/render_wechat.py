@@ -12,7 +12,7 @@
 
 用法：
     python render_wechat.py <build_dir> [--out article.html] [--embed] [--strip-brackets]
-                            [--indent 2em|0] [--max-width 1440]
+                            [--max-width 1080] [--no-gallery]
 
     <build_dir>  含 content.json / images/ 的目录（parse_docx.py 的产出）
     --embed      图片以 base64 内嵌，产出单文件 HTML（推送用）
@@ -206,6 +206,40 @@ def render_block(b, theme, img_dir, embed, strip_brackets, heading_no=None):
     return ''
 
 
+def render_gallery(items, theme, img_dir, embed, strip_brackets):
+    """把一组图渲染成「横向可滑相册」。
+
+    结构实测自 2024 年同系列会议文章（mp.weixin.qq.com/s/NK6oHHieNbtPrSTAl3wBmg）：
+
+        [外层] width:100%; overflow:auto; scroll-snap-type:x mandatory;
+          └ [行] width:{N*100}%; display:flex; flex-flow:row; max-width:{N*100}% !important;
+               └ [项] width:{100/N}%; scroll-snap-align:center; max-width:{100/N}% !important;
+                    └ <figure> 图片 + 图注
+
+    关键点：**行宽 = 100% × 图片数**，**每项宽 = 100% ÷ 图片数**，两者必须配套，
+    缺一个就滑不动或挤在一起。`overflow:auto`（不是 overflow-x）才对——实测微信认这个。
+    """
+    n = len(items)
+    if n < 2:
+        return None
+    cells = []
+    for b in items:
+        fig = render_block(b, theme, img_dir, embed, strip_brackets)
+        if fig:
+            cells.append(('<section style="vertical-align:top;width:__W__%25;'
+                          'scroll-snap-align:center;max-width:__W__%25 !important;">'
+                          '__FIG__</section>')
+                         .replace('__W__', ('%g' % (100.0 / n)))
+                         .replace('__FIG__', fig))
+    if len(cells) < 2:
+        return None
+    return ('<section style="width:100%;vertical-align:top;overflow:auto;'
+            'scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;">'
+            '<section style="width:__ROW__%;display:flex;flex-flow:row;'
+            'max-width:__ROW__% !important;">__CELLS__</section></section>'
+            ).replace('__ROW__', str(n * 100)).replace('__CELLS__', ''.join(cells))
+
+
 def frame_wrap(html, theme, first=True, last=True):
     """给一段内容套上「外框」的一段。
 
@@ -238,22 +272,68 @@ def frame_wrap(html, theme, first=True, last=True):
     )
 
 
-def render_blocks(content, theme, img_dir, embed=False, strip_brackets=False):
-    """按顺序渲染所有 block，返回 HTML 片段列表（标题编号在这里统一分配）"""
-    out, hno = [], 0
-    for b in content['blocks']:
+def render_blocks(content, theme, img_dir, embed=False, strip_brackets=False,
+                  gallery=False, gallery_anchor=None):
+    """按顺序渲染所有 block，返回 HTML 片段列表（标题编号在这里统一分配）
+
+    gallery=True 时的分组规则：
+      **分组线之前**的图 → 逐张平铺（通稿里这段是「开幕式致辞」，
+      读者要一眼看全每位致辞人，不该藏进相册）
+      **分组线之后**连续的一组图 → 合成一个横向可滑相册
+
+    分组线怎么定（两种稿子结构不同）：
+      - 有分节标题的稿子 → 第一个 Heading 之后开始合组
+      - **没有分节标题的稿子**（如 v6 稿）→ 用 `gallery_anchor` 指定一段文字，
+        遇到含该文字的段落之后开始合组（默认「主旨报告」）
+    """
+    blocks = content['blocks']
+    out, hno, gallery_on = [], 0, False
+    i = 0
+    while i < len(blocks):
+        b = blocks[i]
+
         if b['type'] == 'heading':
             hno += 1
-        html = render_block(b, theme, img_dir, embed, strip_brackets,
-                            heading_no=hno if b['type'] == 'heading' else None)
+            gallery_on = True
+            html = render_block(b, theme, img_dir, embed, strip_brackets, heading_no=hno)
+            if html:
+                out.append(html)
+            i += 1
+            continue
+
+        if b['type'] == 'image':
+            j = i
+            while j < len(blocks) and blocks[j]['type'] == 'image':
+                j += 1
+            run = blocks[i:j]
+            gal = render_gallery(run, theme, img_dir, embed, strip_brackets) \
+                if (gallery and gallery_on and len(run) > 1) else None
+            if gal:
+                out.append(gal)
+            else:
+                for x in run:
+                    h = render_block(x, theme, img_dir, embed, strip_brackets)
+                    if h:
+                        out.append(h)
+            i = j
+            continue
+
+        # 没有分节标题的稿子：靠文锚点开启合组
+        if (not gallery_on) and gallery and gallery_anchor and b['type'] == 'para'                 and gallery_anchor in (b.get('text') or ''):
+            gallery_on = True
+
+        html = render_block(b, theme, img_dir, embed, strip_brackets)
         if html:
             out.append(html)
+        i += 1
     return out
 
 
-def render(content, theme, img_dir, embed=False, strip_brackets=False):
+def render(content, theme, img_dir, embed=False, strip_brackets=False,
+           gallery=False, gallery_anchor=None):
     parts = [EMPTY_NODE]
-    parts.extend(render_blocks(content, theme, img_dir, embed, strip_brackets))
+    parts.extend(render_blocks(content, theme, img_dir, embed, strip_brackets,
+                                gallery=gallery, gallery_anchor=gallery_anchor))
     parts.append(END_LINE)
     parts.append(EMPTY_NODE)
     return frame_wrap(''.join(parts), theme)
@@ -267,6 +347,10 @@ def main():
     ap.add_argument('--strip-brackets', action='store_true')
     # 默认 1080 = 微信正文图宽度硬顶，超过必被它压（见 compress_images 注释）
     ap.add_argument('--max-width', type=int, default=1080)
+    ap.add_argument('--no-gallery', action='store_true',
+                    help='关闭横滑相册，所有图逐张平铺')
+    ap.add_argument('--gallery-anchor', default='主旨报告',
+                    help='无分节标题的稿子用：遇到含此文字的段落之后才开始合组相册')
     args = ap.parse_args()
 
     build = args.build_dir
@@ -286,7 +370,8 @@ def main():
             b['file'] = mapping[b['file']]
 
     # 3) 渲染
-    html = render(content, THEME, web_img_dir, args.embed, args.strip_brackets)
+    html = render(content, THEME, web_img_dir, args.embed, args.strip_brackets,
+                  gallery=not args.no_gallery, gallery_anchor=args.gallery_anchor)
 
     out = args.out or os.path.join(build, 'article_embed.html' if args.embed else 'article.html')
     with open(out, 'w', encoding='utf-8') as f:

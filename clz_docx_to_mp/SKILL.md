@@ -260,6 +260,51 @@ if (ta) { ta.value = title; ta.dispatchEvent(new Event('input', {bubbles:true}))
 
 > 判据来自真实教训：`gaps:[]` 才算过；出现任何非 0 值，**优先怀疑外框样式漏了 `margin:0`**。
 
+## 横向可滑相册（图多时用）
+
+结构实测自 **2024 年同系列会议文章**（`mp.weixin.qq.com/s/NK6oHHieNbtPrSTAl3wBmg`），
+那篇里有两个相册：8 张和 11 张。
+
+```html
+<!-- 外层：横向滚动容器 -->
+<section style="width:100%;vertical-align:top;overflow:auto;
+                scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;">
+  <!-- 行宽 = 100% × 图片数（8 张就写 800%） -->
+  <section style="width:800%;display:flex;flex-flow:row;max-width:800% !important;">
+    <!-- 每项宽 = 100% ÷ 图片数（8 张就写 12.5%） -->
+    <section style="vertical-align:top;width:12.5%;scroll-snap-align:center;
+                    max-width:12.5% !important;">
+      <figure>…图片 + 图注…</figure>
+    </section>
+    …
+  </section>
+</section>
+```
+
+**三个必须配套的点，缺一个就滑不动**：
+
+1. **外层用 `overflow:auto`（不是 `overflow-x`）**——实测微信只认 `overflow:auto`
+   （这也是一个排查坑：搜 `overflow-x` 找不到任何相册）
+2. **行宽 = `100% × N`，项宽 = `100% ÷ N`**，两者必须配套；`max-width` 也要跟 `!important`
+3. 外层要有 `scroll-snap-type:x mandatory`，滑动才会一屏一屏对齐
+
+### 哪些图进相册、哪些平铺
+
+用户口径：**「致辞的六个人都放出来，不用滚动，其余的是滚动」**——通稿的开幕式致辞段，
+读者要一眼看全每位致辞人，不该藏进相册。
+
+`render_blocks(gallery=True)` 的分组线判定：
+
+| 稿子类型 | 分组线 |
+|---|---|
+| 有分节标题（`Heading 1`） | **第一个标题之后**开始合组 |
+| **没有分节标题**（如 v6 稿） | 用 `gallery_anchor` 指定文字，**遇到含该文字的段落之后**开始合组（默认「主旨报告」） |
+
+`--no-gallery` 可整体关掉相册、全部平铺；`--gallery-anchor "xxx"` 换锚点。
+
+> 校验：`push_to_mp.py` 第 ⑦ 步会量每个相册的 `scrollWidth` 与可见宽，
+> `scrollWidth > 可见宽 × 1.5` 才算「真的能滑」。
+
 ## 背景色与卡片化（「白花花」的解法与最大的坑）
 
 **症状**：整篇纯白，只有零星主色点缀，显得寡淡。根因是**最外层容器没有底色**。
@@ -324,12 +369,21 @@ if (ta) { ta.value = title; ta.dispatchEvent(new Event('input', {bubbles:true}))
 
 ## 题注归属规则（docx 常见歧义）
 
-会议通稿常见「一张图配一条题注」，但原文经常不规整。`parse_docx.py` 的规则：
+**规则**：题注段落配给**最近一张还没题注的图**（不是「紧跟的那张」）。
+
+> 踩坑（v6 稿）：原实现要求题注紧跟图片，但 v6 是「图A、图B+自带题注、题注B」的错位排布——
+> 上一张图配完自带题注后待配列表被清空，导致题注B 变成**孤儿正文段**。
+> 改成「配给最近一张无题注的图」后，42 张图 42 条题注全中。
+
+**标题兜底**：v6 这类稿子把标题写成普通段落（`Normal`），没有 `Title` 样式。
+解析器会在末尾兜底：整篇没有 title、且**第一个 block** 是短段落且含
+「研讨会/会议/召开/举行」→ 提升为 title，否则标题会整条丢失。
+
+**其余细则**：
 
 - 图片段落**自带文字** → 该文字即题注（如 `[我的题注][IMG]【xx致辞】`）
-- **题注段落紧跟图片段落** → 归给紧邻的**前一张**图
-- **两张图共用一条题注** → 题注归**最后一张**，前面的图**保持无题注**（不臆造、不复制）
-- 无题注的图会在解析结果里列出来供人工确认
+- 正文段**不清空**待配列表——「图、正文、题注」也是合法排布
+- 实在配不上题注的图，解析结果里会列出来供人工确认
 
 > ⚠️ 脚本**从不自行编造题注**。原文没有的就留空——宁可难看，也不要通顺但可能错的文字。
 
