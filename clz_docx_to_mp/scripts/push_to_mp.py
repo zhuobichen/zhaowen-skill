@@ -122,9 +122,19 @@ JS_VERIFY = r'''
       s.querySelectorAll('img').forEach(function (im) {
         if ((im.className || '').indexOf('ProseMirror-separator') === -1) real++;
       });
+      var hs = {};
+      if (s.children[0]) {
+        Array.prototype.slice.call(s.children[0].children).forEach(function (k) {
+          var h = Math.round(k.getBoundingClientRect().height);
+          hs[h] = (hs[h] || 0) + 1;
+        });
+      }
+      var hKeys = Object.keys(hs);
       gals.push({vis: Math.round(r.width), scroll: s.scrollWidth,
                  n: real,
-                 ok: s.scrollWidth > r.width * 1.5});
+                 ok: s.scrollWidth > r.width * 1.5,
+                 heights: hKeys.length,   // 1 == all equal height (no blank-gap risk)
+                 hDetail: hKeys.slice(0, 4)});
     }
   });
   var hasEnd = body.innerText.indexOf('END') !== -1
@@ -403,6 +413,10 @@ def main():
         if not g.get('ok'):
             problems.append('第 %d 个横滑相册滑不动（可见 %s / 滚动 %s）——多半是行宽或项宽没配套'
                             % (i + 1, g.get('vis'), g.get('scroll')))
+        if g.get('heights', 1) > 1:
+            problems.append('第 %d 个相册各项不等高（%s 种高度 %s）——横竖混排会留大片空白，'
+                            '需先把比例裁齐（gallery_variant）'
+                            % (i + 1, g['heights'], g.get('hDetail')))
     print('   外框 %s 段 / 接缝 %s / 图 %s（CDN %s）/ 图注 %s / 分节标题 %s'
           % (v.get('frames'), v.get('gaps') or '无', v.get('imgs'), v.get('cdn'),
              v.get('captions'), v.get('headings')))

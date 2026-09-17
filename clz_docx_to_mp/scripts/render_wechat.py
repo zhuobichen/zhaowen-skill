@@ -71,6 +71,13 @@ END_LINE = (
     'border-bottom:1px solid #4F81BD;margin-top:24px;"></section>'
 )
 
+# 相册下方的滑动提示 —— 2024 模板原样（相册的**后一个兄弟节点**）
+GALLERY_HINT = (
+    '<section><p style="text-align:center;vertical-align:inherit;font-size:15px;'
+    'letter-spacing:2px;line-height:1.6em;">'
+    '<span style="color:#888888;letter-spacing:1px;">◁ 左右滑动查看更多 ▷</span></p></section>'
+)
+
 # 分段装饰：两枚渐变小竖条 + 一条蓝细线（2024 模板用它在段与段之间做呼吸）
 DIVIDER = (
     '<section style="margin:10px auto;padding:0 7px;">'
@@ -211,6 +218,41 @@ def render_block(b, theme, img_dir, embed, strip_brackets, heading_no=None):
     return ''
 
 
+GALLERY_RATIO = 1.5   # 相册统一比例（2024 模板的图都是 3:2）
+
+
+def gallery_variant(path, target=GALLERY_RATIO):
+    """把比例与 target 不符的图**居中裁**成 target，返回可用文件路径。
+
+    为什么要裁：相册是 flex 行，行高由**最高的一项**决定。横竖混排时，
+    竖图把行撑高，横图下方就会空出一大片（实测：26 张里混 2 张竖图，
+    横图下方各空约 300px）。统一比例后行高才整齐。
+    只裁进相册的图——平铺的图是纵向堆叠的，比例不同不影响观感。
+    """
+    try:
+        im = Image.open(path)
+    except Exception:
+        return path
+    w, h = im.size
+    if not h:
+        return path
+    r = w / float(h)
+    if abs(r - target) < 0.02:
+        return path                      # 比例本来就对，不动它
+    if r > target:                       # 太宽 → 裁左右
+        nw = int(h * target)
+        left = (w - nw) // 2
+        im = im.crop((left, 0, left + nw, h))
+    else:                                # 太高 → 裁上下（人物多在中间带，居中裁最稳）
+        nh = int(w / target)
+        top = (h - nh) // 2
+        im = im.crop((0, top, w, top + nh))
+    out = path[:-4] + '_gal.jpg'
+    im.convert('RGB').save(out, 'JPEG', quality=95, subsampling=0,
+                           optimize=True, progressive=True)
+    return out
+
+
 def render_gallery(items, theme, img_dir, embed, strip_brackets):
     """把一组图渲染成「横向可滑相册」。
 
@@ -229,6 +271,12 @@ def render_gallery(items, theme, img_dir, embed, strip_brackets):
         return None
     cells = []
     for b in items:
+        # 进相册前统一裁成同一比例，否则行高被最高项撑开、矮图下方留大片空白
+        p = os.path.join(img_dir, b['file'])
+        if os.path.exists(p):
+            v = gallery_variant(p)
+            if v != p:
+                b = dict(b, file=os.path.basename(v))
         fig = render_block(b, theme, img_dir, embed, strip_brackets)
         if fig:
             cells.append(('<section style="vertical-align:top;width:__W__%25;'
@@ -306,6 +354,7 @@ def render_blocks(content, theme, img_dir, embed=False, strip_brackets=False,
                 # 用装饰件而不是加标题——标题会引入原文没有的文字。
                 out.append(DIVIDER)
                 out.append(gal)
+                out.append(GALLERY_HINT)   # 相册下方紧跟「◁ 左右滑动查看更多 ▷」
             else:
                 for x in run:
                     h = render_block(x, theme, img_dir, embed, strip_brackets)

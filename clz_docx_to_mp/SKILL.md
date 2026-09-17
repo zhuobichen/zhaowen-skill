@@ -287,6 +287,28 @@ if (ta) { ta.value = title; ta.dispatchEvent(new Event('input', {bubbles:true}))
 2. **行宽 = `100% × N`，项宽 = `100% ÷ N`**，两者必须配套；`max-width` 也要跟 `!important`
 3. 外层要有 `scroll-snap-type:x mandatory`，滑动才会一屏一屏对齐
 
+### ⚠️ 相册内必须等高，否则矮图下方留大片空白
+
+相册是 flex 行，**行高由最高的一项决定**。横竖混排时竖图把行撑高，
+横图下方就空出一大块——实测 26 张里混 2 张竖图，横图下方各空约 300px。
+
+**解法**：进相册前把比例统一裁成 `GALLERY_RATIO`（3:2，与 2024 模板一致），
+`gallery_variant()` 已实现（居中裁；比例本来就对的原样不动）。
+**只裁进相册的图**——平铺的图是纵向堆叠的，比例不同不影响观感。
+
+> 校验：`push_to_mp.py` 第 ⑦ 步的 `heights` 字段，**必须为 1**（全等高）；
+> >1 就是混排，会报问题。
+
+### 相册下方要有滑动提示
+
+2024 模板在相册**后一个兄弟节点**放了提示，原文照抄：
+
+```html
+<section><p style="text-align:center;font-size:15px;letter-spacing:2px;line-height:1.6em;">
+  <span style="color:#888888;letter-spacing:1px;">◁ 左右滑动查看更多 ▷</span>
+</p></section>
+```
+
 ### 哪些图进相册、哪些平铺
 
 用户口径：**「致辞的六个人都放出来，不用滚动，其余的是滚动」**——通稿的开幕式致辞段，
