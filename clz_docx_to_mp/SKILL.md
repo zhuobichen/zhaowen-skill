@@ -315,15 +315,18 @@ if (ta) { ta.value = title; ta.dispatchEvent(new Event('input', {bubbles:true}))
 | 文件 | 来源 | 尺寸/帧数 | 用途与摆法 |
 |---|---|---|---|
 | `deco-bird.gif` | ⚠️ **第三方**（提取自 2024 那篇文章，授权不明） | 466×343 / 67 帧 | **内容块右上角**：`width:46px; margin-left:auto; margin-bottom:-15px`（负边距压住卡片上沿） |
-| `deco-chevron-bounce.gif` | ✅ 本 skill 原创 | 64×64 / 11 帧 | **分节之间的下滑引导**：`width:40px; margin:0 auto`（居中） |
+| `deco-arrow-down.gif` | ⚠️ **第三方**（同上，用户选定） | 200×269 / 13 帧 | **分节之间的下滑引导**：`width:40px; margin:0 auto`（居中） |
+| `deco-chevron-bounce.gif` | ✅ 本 skill 原创（**备用**） | 64×64 / 11 帧 | 与箭头同位的替代品 |
 | `deco-star-pulse.gif` | ✅ 本 skill 原创（**备用**） | 60×60 / 12 帧 | 与鸟同位的替代品，形状呼应章节标题的星形 |
 
 > **⚠️ 素材来源与替换**：`deco-bird.gif` 是从 2024 年那篇文章里提取的**第三方素材，
 > 授权不明**。用户明确表示「无所谓」并选定使用它，故保留；但要知道：
 > **用在文章里是自己的判断，提交进公开仓库属于「再分发」，性质不同。**
 >
-> 若日后要换成原创版：`gen_deco_gifs.py` 已能生成 `deco-star-pulse.gif`（形状呼应章节标题的星形），
-> **换回来只需改 `render_wechat.py` 里 `DECO_STAR` 指向的文件名一行**。
+> 目前鸟和箭头**都用 2024 那篇的素材**（用户明确选定）。
+> 想换回原创版：`gen_deco_gifs.py` 能生成两个替代品
+> （`deco-star-pulse.gif` 星形呼应章节标题、`deco-chevron-bounce.gif` 三箭头），
+> **只需改 `render_wechat.py` 里 `DECO_STAR` / `DECO_CHEVRON` 两行常量**。
 
 **管线接线要点**：
 

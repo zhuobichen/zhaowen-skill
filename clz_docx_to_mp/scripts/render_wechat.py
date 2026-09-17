@@ -107,7 +107,7 @@ ASSETS_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file
 # ⚠️ deco-bird.gif 是**第三方素材**（提取自 2024 那篇公众号文章，授权不明），
 #    按用户要求使用；self-generated 的 deco-star-pulse.gif 保留备用，换回来只需改这一行。
 DECO_STAR = 'deco-bird.gif'              # 466x343 / 67 帧 —— 内容块右上角（用户选定）
-DECO_CHEVRON = 'deco-chevron-bounce.gif'  # 64x64 / 11 帧 —— 分节之间的下滑引导（本 skill 原创）
+DECO_CHEVRON = 'deco-arrow-down.gif'     # 200x269 / 13 帧 —— 分节之间的下滑引导（同 2024 素材）
 
 
 def _deco(name, width, align_right, theme, build_dir, embed, pull_up=0):
