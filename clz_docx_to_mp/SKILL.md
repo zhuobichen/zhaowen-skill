@@ -299,6 +299,23 @@ if (ta) { ta.value = title; ta.dispatchEvent(new Event('input', {bubbles:true}))
 > 校验：`push_to_mp.py` 第 ⑦ 步的 `heights` 字段，**必须为 1**（全等高）；
 > >1 就是混排，会报问题。
 
+### 动效：正文做不了，别浪费时间试
+
+**用户问过「别人的背景块有动效，我们能加吗」——答案是做不了**，两条硬约束：
+
+1. **`@keyframes` 只能写在 `<style>` 里，而微信会剥掉 `<style>`** → 内联写
+   `animation:xxx 2s` 也没用，动画名根本没定义。
+2. **`transition` 虽然能内联，但需要状态变化（hover/active）触发**，而内联样式
+   定义不了伪类；移动端也没有 hover。
+
+**实证**：实解 2024 年那篇参考文章（`mp.weixin.qq.com/s/NK6oHHieNbtPrSTAl3wBmg`），
+**文章正文里 `animation` / `transition` 各 0 处**；页面上那 5 个 `@keyframes`
+全在 `<head>` 里，是微信自己的 UI（`weuiAudioPlaying`、`scaleUpDown`）。
+用户看到的「动效」多半是微信页面自带的。
+
+正文里唯一算「动感」的是 **`scroll-snap-type:x mandatory`**——滑动结束自动吸附对齐，
+本 skill 已默认开启。
+
 ### 滚动条美化：只能用可内联的标准属性
 
 微信会剥掉 `<style>`，所以 `::-webkit-scrollbar` 那套自定义样式**用不上**。
