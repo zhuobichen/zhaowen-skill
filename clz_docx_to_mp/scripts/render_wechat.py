@@ -34,50 +34,57 @@ from PIL import Image  # noqa: E402
 
 # ---------------------------------------------------------------- 主题（藏青蓝）
 THEME = {
-    'name': 'blue-frame',
-    # —— 结构：整篇一个边框容器 + 硬投影（对齐中国环境科学学会的真实排版）——
-    # 参考：mp.weixin.qq.com/s/zm07cyQ2W0IDoXL2x9lAiQ
-    #   border:1px solid 主色; box-shadow: 浅色 7px 7px 0px 0px  ← 硬投影，不是模糊阴影
-    'frame_border': '#0F4C81',    # 边框色 = 主色
-    'frame_shadow': '#C9DBEC',    # 硬投影色（浅蓝灰）
-    'frame_offset': 7,            # 投影偏移 px（0 模糊 = 硬投影）
-    # 框内「纸」色：偏白，只带一点蓝（深浅实测后按用户口径定）
-    # 改这一个值就要连带检查下面的 primary_soft / caption 对比度
-    'frame_bg': '#F0F6FC',
-    'card_bg': '#FFFFFF',
-    # —— 主色 ——
-    'primary': '#0F4C81',        # 藏青蓝
-    'primary_mid': '#2E5B9A',
-    # 底色越白，胶囊要越「蓝」才能分得出来（不能比底色更白，否则糊成一片）
-    'primary_soft': '#DEEBF8',
-    'link': '#576b95',           # 微信官方链接蓝
+    'name': 'abaas2024',
+    # —— 完全对齐 2024 年同系列会议文章（领导要求）——
+    # 来源：mp.weixin.qq.com/s/NK6oHHieNbtPrSTAl3wBmg
+    # 详见 references/template-2024-abaas.md
+    #
+    # 结构要点：**没有外层边框、没有整篇底色**；
+    # 正文包在 #F4F8FC 浅蓝圆角卡片里，章节标题是「SVG 星形 + 蓝字 + 渐变下划线」。
+    'primary': '#4F81BD',        # 主蓝（标题、星形图标）
+    'bright': '#1D81E6',         # 亮蓝（渐变下划线起点）
+    'teal': '#76C5CB',           # 青（装饰小竖条）
+    'line_color': '#4E83BC',     # 细线
+    # —— 正文卡片 ——
+    'card_bg': '#F4F8FC',
+    'card_radius': 10,
+    'card_padding': 15,
     # —— 文本 ——
-    'text': '#3e3e3e',
-    # 图注：跟随底色调整。底色白 → 用中灰；底色蓝 → 必须加深
-    'caption': '#6E7B89',
-    'caption_size': 13,
-    'divider': '#E5E7EB',
+    'text': '#3F3F3F',
+    'caption': '#888888',        # 图注 15px #888（模板原值）
+    'caption_size': 15,
+    'link': '#576b95',           # 微信官方链接蓝
+    'font_family': "微软雅黑, 'Microsoft YaHei'",   # 模板设在最外层 section 上
     'font_size': 16,
-    'line_height': 2,            # 参考文章用 2，很透气
-    'letter_spacing': '1px',
-    'text_indent': '2.125em',    # 参考文章的首行缩进
+    'line_height': 2,
+    'letter_spacing': '1.5px',
+    'text_indent': '2.1875em',   # 模板原值
 }
 
 # 首尾空行占位（借鉴 doocs/md）：保住微信编辑器首尾空行
 EMPTY_NODE = '<p style="font-size:0;line-height:0;margin:0;padding:0;"><br></p>'
 
 # 文末 END 装饰线。用 table 而不是 flex —— 微信对 flex 支持有限，table 最稳
+# 文末收尾线 —— 2024 模板原样（不是「END」字样，是一条蓝线）
 END_LINE = (
-    '<section style="margin:44px 0 30px;">'
-    '<table style="width:100%;border-collapse:collapse;border:none;"'
-    ' cellspacing="0" cellpadding="0" border="0"><tr>'
-    '<td style="border:none;height:1px;line-height:1px;font-size:0;'
-    'background:linear-gradient(to right,rgba(15,76,129,0),#0F4C81);">&nbsp;</td>'
-    '<td style="border:none;width:76px;text-align:center;font-size:11px;'
-    'color:#0F4C81;letter-spacing:4px;font-weight:bold;">END</td>'
-    '<td style="border:none;height:1px;line-height:1px;font-size:0;'
-    'background:linear-gradient(to left,rgba(15,76,129,0),#0F4C81);">&nbsp;</td>'
-    '</tr></table></section>'
+    '<section style="width:100%;height:3px;overflow:hidden;'
+    'border-bottom:1px solid #4F81BD;margin-top:24px;"></section>'
+)
+
+# 分段装饰：两枚渐变小竖条 + 一条蓝细线（2024 模板用它在段与段之间做呼吸）
+DIVIDER = (
+    '<section style="margin:10px auto;padding:0 7px;">'
+    '<section style="display:flex;align-items:center;">'
+    '<section style="flex-shrink:0;padding-right:7px;">'
+    '<section style="display:flex;">'
+    '<section style="width:10px;height:26px;border-radius:25px;'
+    'background-image:linear-gradient(#4F81BD,#ffffff);"></section>'
+    '<section style="width:10px;height:26px;border-radius:25px;'
+    'background-image:linear-gradient(#76C5CB,#ffffff);"></section>'
+    '</section></section>'
+    '<section style="width:100%;height:1px;overflow:hidden;'
+    'border-top:1px solid #4E83BC;"></section>'
+    '</section></section>'
 )
 
 
@@ -143,35 +150,34 @@ def render_block(b, theme, img_dir, embed, strip_brackets, heading_no=None):
         return ''
 
     if t == 'heading':
-        # 参考文章的「胶囊标题条」：浅底 + 大圆角 + 居中主色字 + 菱形点缀
-        # 编号 01/02 是纯装饰，不引入原文之外的内容
-        # 编号与标题**同字号同字重同色**：之前用 13px + 半透明，视觉上「比旁边小一号」，
-        # 看着像出错而不是设计。要突出就整体突出，不要靠缩字号。
-        num = ('<span style="color:%s;font-size:16px;font-weight:bold;'
-               'letter-spacing:2px;vertical-align:middle;margin-right:6px;">%02d</span>'
-               % (theme['primary'], heading_no)) if heading_no else ''
-        diamond = ('<span style="display:inline-block;width:8px;height:8px;'
-                   'background-color:%s;transform:rotate(45deg);'
-                   'vertical-align:middle;%s"></span>')
+        # 2024 模板原样：内联 SVG 星形 + 蓝色加粗标题 + 向右渐隐的渐变下划线。
+        # 星形用内联 SVG 而非图片——SVG 在微信里最稳（不受深色模式影响、不被压缩、不占图片额度）。
+        # 模板里没有编号，这里也不加。
         return (
-            '<section style="margin:30px 0 18px;padding:9px 6px;'
-            'background-color:%s;border-radius:20px;text-align:center;">'
-            '%s%s<span style="color:%s;font-size:16px;font-weight:bold;'
-            'letter-spacing:2px;vertical-align:middle;">%s</span>%s</section>'
-            % (theme['primary_soft'],
-               diamond % (theme['primary'], 'margin-right:10px;'),
-               num,
-               theme['primary'], esc(b['text']),
-               diamond % (theme['primary'], 'margin-left:10px;'))
-        )
+            '<section style="margin:20px auto 10px;">'
+            '<section style="display:flex;justify-content:flex-start;align-items:center;">'
+            '<section style="flex-shrink:0;"><section style="width:20px;">'
+            '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 35 33.01" '
+            'style="display:block;"><path '
+            'd="M35,12.31l-10.54,8L28,32.71l-10.71-7.2L6.39,33l3.92-12.48L0,12.79'
+            'l13.13-.51L17.68,0l4.2,12.16Z" style="fill:__P__;fill-rule:evenodd;">'
+            '</path></svg></section></section>'
+            '<section style="font-size:16px;color:__P__;text-align:left;'
+            'padding-right:10px;padding-left:10px;"><strong>__T__</strong></section>'
+            '</section>'
+            '<section style="width:100%;height:6px;overflow:hidden;'
+            'background-image:linear-gradient(to right,__B__,transparent);"><br></section>'
+            '</section>'
+        ).replace('__P__', theme['primary']).replace('__B__', theme['bright']) \
+         .replace('__T__', esc(b['text']))
 
     if t == 'para':
-        # 与参考文章一致：无卡片、首行缩进、行高 2、字距 1px，正文连续流淌
+        # 只产出 <p>，外面那层浅蓝卡片由 render_blocks 把**连续的段落**合成一张
+        # （2024 模板里一张卡片装多段，不是一段一张卡）
         return (
-            '<p style="margin:0 0 0.9em;text-indent:%s;font-size:%dpx;'
-            'line-height:%s;color:%s;text-align:justify;'
-            'letter-spacing:%s;">%s</p>'
-            % (theme['text_indent'], theme['font_size'], theme['line_height'],
+            '<p style="line-height:%sem;text-indent:%s;margin:0 0 0.5em;">'
+            '<span style="font-size:%dpx;color:%s;letter-spacing:%s;">%s</span></p>'
+            % (theme['line_height'], theme['text_indent'], theme['font_size'],
                theme['text'], theme['letter_spacing'], esc(b['text']))
         )
 
@@ -188,20 +194,19 @@ def render_block(b, theme, img_dir, embed, strip_brackets, heading_no=None):
             if c.startswith('【') and c.endswith('】'):
                 cap = c[1:-1]
         img_tag = (
-            '<img src="%s" style="max-width:100%%;height:auto;display:block;'
-            'margin:0 auto;border-radius:4px;">' % src
+            '<img src="%s" style="width:100%%;height:auto;display:block;'
+            'vertical-align:baseline;">' % src
         )
-        # 与参考文章一致：图片通栏、无卡片，让图文连续
+        # 2024 模板：图片通栏，图注 15px #888 居中、字距 1px、下方留 10px
         if cap:
-            # figure/figcaption 已实测可在微信编辑器中存活并持久化
             return (
-                '<figure style="margin:14px 0 18px;">%s'
-                '<figcaption style="margin:8px 0 0;font-size:%dpx;color:%s;'
-                'text-align:center;line-height:1.6;letter-spacing:0.5px;">%s</figcaption>'
-                '</figure>'
+                '<figure style="margin:10px 0;text-align:center;">%s'
+                '<figcaption style="margin-bottom:10px;line-height:1.6em;">'
+                '<span style="font-size:%dpx;color:%s;letter-spacing:1px;">%s</span>'
+                '</figcaption></figure>'
                 % (img_tag, theme['caption_size'], theme['caption'], esc(cap))
             )
-        return '<figure style="margin:14px 0 18px;">%s</figure>' % img_tag
+        return '<figure style="margin:10px 0;">%s</figure>' % img_tag
 
     return ''
 
@@ -241,34 +246,22 @@ def render_gallery(items, theme, img_dir, embed, strip_brackets):
 
 
 def frame_wrap(html, theme, first=True, last=True):
-    """给一段内容套上「外框」的一段。
+    """给一段内容套上最外层容器。
 
-    对齐中国环境科学学会的真实排版（mp.weixin.qq.com/s/zm07cyQ2W0IDoXL2x9lAiQ）：
-    整篇**只用一个边框容器**，内容在框内连续流淌——这是「连贯」的关键。
-    之前「每个元素各一张卡片」会把文章切成一节一节。
+    2024 模板的外层**没有边框、没有整篇底色**，只是在 `<section>` 上设了字体：
 
-    ⚠️ 推送要分多批 pasteHTML，而 `pasteHTML` 会自动闭合未闭合标签，
-    跨批次的单个 <section> 是包不住的。所以改成：**每批各带框的左右边，
-    首批加顶边、末批加底边与右下投影**，视觉上拼成完整的一个框。
+        <section style="font-family: 微软雅黑, "Microsoft YaHei";">
+
+    注意字体设在**包裹用的 section** 上（不是文字节点）——设在文字元素上会被微信丢样式。
+    推送分多批时每批各套一个同样的容器，视觉上仍是连续的一篇。
+
+    ⚠️ `margin:0` 不能省：微信给 `<section>` 默认加了 `margin-bottom:24px`，
+    不显式清零每批之间会出现 24px 的空隙（踩过）。
     """
-    b, s, o = theme['frame_border'], theme['frame_shadow'], theme['frame_offset']
-    border = 'border-left:1px solid %s;border-right:1px solid %s;' % (b, b)
-    if first:
-        border += 'border-top:1px solid %s;' % b
-    if last:
-        border += 'border-bottom:1px solid %s;' % b
-    # 批间接缝处只向右侧投影，末批才补右下角，拼起来才是一条连续的硬投影
-    shadow = ('box-shadow:%dpx %dpx 0px 0px %s;' % (o, o, s) if last
-              else 'box-shadow:%dpx 0px 0px 0px %s;' % (o, s))
-    # ⚠️ `margin:0` 不能省：微信编辑器给 <section> 默认加了 margin-bottom:24px，
-    # 不显式清零，每批之间就会出现 24px 的缝——框就「断」成一节一节了（实测踩过）。
     return (
-        '<section style="margin:0;background-color:%s;padding:8px 12px;%s%s'
-        'font-size:%dpx;line-height:%s;color:%s;letter-spacing:%s;'
-        'word-break:break-word;text-align:justify;">%s</section>'
-        % (theme['frame_bg'], border, shadow,
-           theme['font_size'], theme['line_height'], theme['text'],
-           theme['letter_spacing'], html)
+        '<section style="margin:0;font-family:%s;font-size:%dpx;'
+        'word-break:break-word;">%s</section>'
+        % (theme['font_family'], theme['font_size'], html)
     )
 
 
@@ -309,6 +302,9 @@ def render_blocks(content, theme, img_dir, embed=False, strip_brackets=False,
             gal = render_gallery(run, theme, img_dir, embed, strip_brackets) \
                 if (gallery and gallery_on and len(run) > 1) else None
             if gal:
+                # 相册前放一枚模板自带的分段装饰件，替代分节标题的视觉呼吸作用。
+                # 用装饰件而不是加标题——标题会引入原文没有的文字。
+                out.append(DIVIDER)
                 out.append(gal)
             else:
                 for x in run:
@@ -318,9 +314,29 @@ def render_blocks(content, theme, img_dir, embed=False, strip_brackets=False,
             i = j
             continue
 
-        # 没有分节标题的稿子：靠文锚点开启合组
-        if (not gallery_on) and gallery and gallery_anchor and b['type'] == 'para'                 and gallery_anchor in (b.get('text') or ''):
-            gallery_on = True
+        # 连续段落 → 合进**同一张**浅蓝卡片（2024 模板是一卡多段，不是一段一张卡），
+        # 同时在这里判定文锚点（无分节标题的稿子靠它开启相册合组）
+        if b['type'] == 'para':
+            j = i
+            while j < len(blocks) and blocks[j]['type'] == 'para':
+                j += 1
+            run = blocks[i:j]
+            if (not gallery_on) and gallery and gallery_anchor:
+                for x in run:
+                    if gallery_anchor in (x.get('text') or ''):
+                        gallery_on = True
+                        break
+            inner = ''.join(render_block(x, theme, img_dir, embed, strip_brackets) for x in run)
+            if inner:
+                out.append(
+                    '<section style="background-color:%s;padding:%dpx;'
+                    'border-radius:%dpx;margin:4px 0;">'
+                    '<section style="line-height:1.75em;letter-spacing:1.5px;'
+                    'background-color:transparent;">%s</section></section>'
+                    % (theme['card_bg'], theme['card_padding'],
+                       theme['card_radius'], inner))
+            i = j
+            continue
 
         html = render_block(b, theme, img_dir, embed, strip_brackets)
         if html:
@@ -344,7 +360,8 @@ def main():
     ap.add_argument('build_dir')
     ap.add_argument('--out', default=None)
     ap.add_argument('--embed', action='store_true')
-    ap.add_argument('--strip-brackets', action='store_true')
+    ap.add_argument('--keep-brackets', action='store_true',
+                    help='保留题注外层的【】；默认去掉（对齐 2024 模板）')
     # 默认 1080 = 微信正文图宽度硬顶，超过必被它压（见 compress_images 注释）
     ap.add_argument('--max-width', type=int, default=1080)
     ap.add_argument('--no-gallery', action='store_true',
@@ -370,7 +387,8 @@ def main():
             b['file'] = mapping[b['file']]
 
     # 3) 渲染
-    html = render(content, THEME, web_img_dir, args.embed, args.strip_brackets,
+    html = render(content, THEME, web_img_dir, args.embed,
+                  strip_brackets=not args.keep_brackets,
                   gallery=not args.no_gallery, gallery_anchor=args.gallery_anchor)
 
     out = args.out or os.path.join(build, 'article_embed.html' if args.embed else 'article.html')

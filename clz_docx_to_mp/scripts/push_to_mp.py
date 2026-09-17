@@ -118,11 +118,19 @@ JS_VERIFY = r'''
     var st = s.getAttribute('style') || '';
     if (st.indexOf('scroll-snap-type') !== -1) {
       var r = s.getBoundingClientRect();
+      var real = 0;
+      s.querySelectorAll('img').forEach(function (im) {
+        if ((im.className || '').indexOf('ProseMirror-separator') === -1) real++;
+      });
       gals.push({vis: Math.round(r.width), scroll: s.scrollWidth,
-                 n: s.querySelectorAll('img').length,
+                 n: real,
                  ok: s.scrollWidth > r.width * 1.5});
     }
   });
+  var hasEnd = body.innerText.indexOf('END') !== -1
+    || !!body.querySelector('section[style*="border-bottom:1px solid rgb(79, 129, 189)"]')
+    || !!body.querySelector('section[style*="border-bottom:1px solid #4F81BD"]')
+    || body.innerHTML.indexOf('border-bottom:1px solid #4F81BD') !== -1;
   return JSON.stringify({
     frames: fr.length, gaps: gaps,
     lefts: Object.keys(lefts), widths: Object.keys(widths),
@@ -130,7 +138,7 @@ JS_VERIFY = r'''
     captions: body.querySelectorAll('figcaption').length,
     headings: body.querySelectorAll('section[style*="border-radius:20px"]').length,
     galleries: gals,
-    hasEnd: body.innerText.indexOf('END') !== -1
+    hasEnd: hasEnd
   });
 })()
 '''
@@ -389,7 +397,7 @@ def main():
     if v.get('imgs') and v.get('cdn') != v.get('imgs'):
         problems.append('图片 CDN 数 %s ≠ 总数 %s' % (v.get('cdn'), v.get('imgs')))
     if not v.get('hasEnd'):
-        problems.append('没找到文末 END 线')
+        problems.append('没找到文末收尾线')
     gals = v.get('galleries') or []
     for i, g in enumerate(gals):
         if not g.get('ok'):
@@ -398,6 +406,8 @@ def main():
     print('   外框 %s 段 / 接缝 %s / 图 %s（CDN %s）/ 图注 %s / 分节标题 %s'
           % (v.get('frames'), v.get('gaps') or '无', v.get('imgs'), v.get('cdn'),
              v.get('captions'), v.get('headings')))
+    # 无外框的主题（abaas2024）本来就没有边框段，0 是正常的，不作问题
+
     if gals:
         print('   横滑相册 %d 组：%s'
               % (len(gals), ', '.join('%d 张(%s)' % (g['n'], '可滑' if g['ok'] else '不可滑') for g in gals)))
