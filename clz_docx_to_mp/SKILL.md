@@ -16,6 +16,10 @@ description: |
 > 目标：把一份 docx 忠实转成**样式好看**的公众号图文，推进草稿箱。
 > 原则：**内容一字不改，只做排版**。改编、润色、补写属于写作，不属于本 skill。
 
+> **做不到的事都记在 [`references/platform-limits.md`](references/platform-limits.md)**
+> ——图片 1080px 硬顶、滚动条加粗/常驻不可行、`<style>` 无差别剥除、服务号 CDN 域名差异、
+> 封面两个坑等，每条都注明实测证据，**别再重复试**。
+
 ## 前置环境
 
 - **browser-act CLI**：`C:\Users\Administrator\.local\bin\browser-act.exe`（**不在 PATH**，脚本里用绝对路径）
