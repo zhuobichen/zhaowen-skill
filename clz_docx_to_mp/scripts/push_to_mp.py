@@ -187,14 +187,15 @@ def eval_js(args, js, timeout=600):
     return ba(args, ['eval', '--stdin'], stdin_data=payload, timeout=timeout)
 
 
-def chunk_blocks(content, theme, img_dir, budget_bytes, strip_brackets=False):
+def chunk_blocks(content, theme, img_dir, budget_bytes, strip_brackets=False,
+                 build_dir=None):
     """按 HTML 体积切块，保证每块 < budget_bytes
 
     走 render_blocks（与预览同一套渲染逻辑），保证标题编号在推送稿里也一致。
     """
     htmls = render_blocks(content, theme, img_dir, embed=True,
                           strip_brackets=strip_brackets, gallery=True,
-                          gallery_anchor='主旨报告')
+                          gallery_anchor='主旨报告', build_dir=build_dir)
     htmls.append(END_LINE)
     # 先按体积切块，再给每块套上「外框的一段」（首批顶边、末批底边+右下投影）
     raw, cur, cur_len = [], [], 0
@@ -252,7 +253,7 @@ def main():
         return 1
 
     budget = int(args.chunk_mb * 1024 * 1024)
-    chunks = chunk_blocks(content, THEME, img_dir, budget)
+    chunks = chunk_blocks(content, THEME, img_dir, budget, build_dir=build)
     print('正文将分 %d 批推送（每批上限 %.1f MB）' % (len(chunks), args.chunk_mb))
 
     if args.dry_run:

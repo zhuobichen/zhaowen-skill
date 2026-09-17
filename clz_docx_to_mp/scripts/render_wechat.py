@@ -99,6 +99,40 @@ def esc(s):
     return (s.replace('&', '&amp;').replace('<', '&lt;').replace('>', '&gt;'))
 
 
+# ---------------------------------------------------------------- 动效装饰件
+# GIF 动图是微信正文里**唯一可行**的动效（CSS @keyframes 会被剥掉，见 SKILL.md）。
+# 素材来自 2024 年同系列会议文章里实际使用的两个 GIF。
+ASSETS_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'assets')
+DECO_BIRD = 'deco-bird.gif'          # 466x343 / 67 帧 —— 内容块右上角的小鸟
+DECO_ARROW = 'deco-arrow-down.gif'   # 200x269 / 13 帧 —— 分节之间的下滑箭头
+
+
+def _deco(name, width, align_right, theme, build_dir, embed, pull_up=0):
+    """把一个 GIF 装饰件渲染成 <img>。
+
+    ⚠️ GIF **绝不能走 compress_images**（会被转成 JPEG，动画就没了），
+    这里直接把原文件读出来 base64 内嵌；预览时则拷到 build 目录走相对路径。
+    """
+    src_path = os.path.join(ASSETS_DIR, name)
+    if not os.path.exists(src_path):
+        return ''
+    if embed:
+        src = to_data_uri(src_path)
+    else:
+        dst_dir = os.path.join(build_dir, 'assets')
+        os.makedirs(dst_dir, exist_ok=True)
+        dst = os.path.join(dst_dir, name)
+        if not os.path.exists(dst) or os.path.getmtime(src_path) > os.path.getmtime(dst):
+            import shutil
+            shutil.copyfile(src_path, dst)
+        src = 'assets/' + name
+    side = 'margin-left:auto;' if align_right else 'margin-right:auto;margin-left:auto;'
+    pull = 'margin-bottom:%dpx;' % pull_up if pull_up else ''
+    return ('<section style="width:%dpx;%s%s">'
+            '<img src="%s" style="width:%dpx;display:block;height:auto;">'
+            '</section>' % (width, side, pull, src, width))
+
+
 # ---------------------------------------------------------------- 图片压缩
 def compress_images(images_dir, out_dir, max_width=1080, quality=95, subsampling=0):
     """压缩图片到适合公众号的尺寸，返回 {原文件名: 新文件名}
@@ -121,7 +155,16 @@ def compress_images(images_dir, out_dir, max_width=1080, quality=95, subsampling
         src = os.path.join(images_dir, name)
         if not os.path.isfile(src):
             continue
-        stem, _ = os.path.splitext(name)
+        stem, ext0 = os.path.splitext(name)
+        if ext0.lower() == '.gif':
+            # ⚠️ GIF 不能重编码成 JPEG —— 会只剩第一帧，动画全丢。原样拷过去。
+            import shutil
+            dst = os.path.join(out_dir, name)
+            shutil.copyfile(src, dst)
+            mapping[name] = name
+            total_before += os.path.getsize(src)
+            total_after += os.path.getsize(dst)
+            continue
         dst_name = stem + '.jpg'
         dst = os.path.join(out_dir, dst_name)
         try:
@@ -143,13 +186,14 @@ def compress_images(images_dir, out_dir, max_width=1080, quality=95, subsampling
 
 def to_data_uri(path):
     ext = os.path.splitext(path)[1].lower()
-    mime = 'image/png' if ext == '.png' else 'image/jpeg'
+    mime = {'.png': 'image/png', '.gif': 'image/gif'}.get(ext, 'image/jpeg')
     with open(path, 'rb') as f:
         return 'data:%s;base64,%s' % (mime, base64.b64encode(f.read()).decode())
 
 
 # ---------------------------------------------------------------- 渲染
-def render_block(b, theme, img_dir, embed, strip_brackets, heading_no=None):
+def render_block(b, theme, img_dir, embed, strip_brackets, heading_no=None,
+                 build_dir=None):
     t = b['type']
 
     if t == 'title':
@@ -253,7 +297,7 @@ def gallery_variant(path, target=GALLERY_RATIO):
     return out
 
 
-def render_gallery(items, theme, img_dir, embed, strip_brackets):
+def render_gallery(items, theme, img_dir, embed, strip_brackets, build_dir=None):
     """把一组图渲染成「横向可滑相册」。
 
     结构实测自 2024 年同系列会议文章（mp.weixin.qq.com/s/NK6oHHieNbtPrSTAl3wBmg）：
@@ -277,7 +321,7 @@ def render_gallery(items, theme, img_dir, embed, strip_brackets):
             v = gallery_variant(p)
             if v != p:
                 b = dict(b, file=os.path.basename(v))
-        fig = render_block(b, theme, img_dir, embed, strip_brackets)
+        fig = render_block(b, theme, img_dir, embed, strip_brackets, build_dir=build_dir)
         if fig:
             # ⚠️ 这里是字面量 '%'，不要写成 '%25'——Python 不会做百分号解码，
             #    写成 %25 会产出非法 CSS 值（width:3.84615%25），浏览器整条忽略，
@@ -323,7 +367,7 @@ def frame_wrap(html, theme, first=True, last=True):
 
 
 def render_blocks(content, theme, img_dir, embed=False, strip_brackets=False,
-                  gallery=False, gallery_anchor=None):
+                  gallery=False, gallery_anchor=None, build_dir=None):
     """按顺序渲染所有 block，返回 HTML 片段列表（标题编号在这里统一分配）
 
     gallery=True 时的分组规则：
@@ -361,7 +405,11 @@ def render_blocks(content, theme, img_dir, embed=False, strip_brackets=False,
             if gal:
                 # 相册前放一枚模板自带的分段装饰件，替代分节标题的视觉呼吸作用。
                 # 用装饰件而不是加标题——标题会引入原文没有的文字。
-                out.append(DIVIDER)
+                arrow = _deco(DECO_ARROW, 44, False, theme, build_dir, embed)
+                if arrow:
+                    out.append(arrow)
+                else:
+                    out.append(DIVIDER)
                 out.append(gal)
                 out.append(GALLERY_HINT)   # 相册下方紧跟「◁ 左右滑动查看更多 ▷」
             else:
@@ -386,7 +434,9 @@ def render_blocks(content, theme, img_dir, embed=False, strip_brackets=False,
                         break
             inner = ''.join(render_block(x, theme, img_dir, embed, strip_brackets) for x in run)
             if inner:
+                bird = _deco(DECO_BIRD, 50, True, theme, build_dir, embed, pull_up=-15)
                 out.append(
+                    bird +
                     '<section style="background-color:%s;padding:%dpx;'
                     'border-radius:%dpx;margin:4px 0;">'
                     '<section style="line-height:1.75em;letter-spacing:1.5px;'
@@ -404,10 +454,11 @@ def render_blocks(content, theme, img_dir, embed=False, strip_brackets=False,
 
 
 def render(content, theme, img_dir, embed=False, strip_brackets=False,
-           gallery=False, gallery_anchor=None):
+           gallery=False, gallery_anchor=None, build_dir=None):
     parts = [EMPTY_NODE]
     parts.extend(render_blocks(content, theme, img_dir, embed, strip_brackets,
-                                gallery=gallery, gallery_anchor=gallery_anchor))
+                                gallery=gallery, gallery_anchor=gallery_anchor,
+                                build_dir=build_dir))
     parts.append(END_LINE)
     parts.append(EMPTY_NODE)
     return frame_wrap(''.join(parts), theme)
@@ -446,7 +497,7 @@ def main():
 
     # 3) 渲染
     html = render(content, THEME, web_img_dir, args.embed,
-                  strip_brackets=not args.keep_brackets,
+                  strip_brackets=not args.keep_brackets, build_dir=build,
                   gallery=not args.no_gallery, gallery_anchor=args.gallery_anchor)
 
     out = args.out or os.path.join(build, 'article_embed.html' if args.embed else 'article.html')

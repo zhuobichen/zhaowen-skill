@@ -299,22 +299,33 @@ if (ta) { ta.value = title; ta.dispatchEvent(new Event('input', {bubbles:true}))
 > 校验：`push_to_mp.py` 第 ⑦ 步的 `heights` 字段，**必须为 1**（全等高）；
 > >1 就是混排，会报问题。
 
-### 动效：正文做不了，别浪费时间试
+### 动效：CSS 动画做不了，但 **GIF 可以** ⭐
 
-**用户问过「别人的背景块有动效，我们能加吗」——答案是做不了**，两条硬约束：
+**先纠正一个我下早了的结论**：最初查 2024 模板时看到「正文 `animation`/`transition` 各 0 处」，
+就断定动效做不了。**漏了 GIF**——GIF 就是普通 `<img>`，微信正常上传播放，
+是正文里**唯一可行**的动效手段。
 
-1. **`@keyframes` 只能写在 `<style>` 里，而微信会剥掉 `<style>`** → 内联写
-   `animation:xxx 2s` 也没用，动画名根本没定义。
-2. **`transition` 虽然能内联，但需要状态变化（hover/active）触发**，而内联样式
-   定义不了伪类；移动端也没有 hover。
+**CSS 动画确实不行**（两条硬约束）：
 
-**实证**：实解 2024 年那篇参考文章（`mp.weixin.qq.com/s/NK6oHHieNbtPrSTAl3wBmg`），
-**文章正文里 `animation` / `transition` 各 0 处**；页面上那 5 个 `@keyframes`
-全在 `<head>` 里，是微信自己的 UI（`weuiAudioPlaying`、`scaleUpDown`）。
-用户看到的「动效」多半是微信页面自带的。
+1. `@keyframes` 只能写在 `<style>` 里，而微信会剥掉 `<style>` → 内联写 `animation:xxx` 也没用
+2. `transition` 需要 hover/active 触发，内联样式定义不了伪类，移动端也没有 hover
 
-正文里唯一算「动感」的是 **`scroll-snap-type:x mandatory`**——滑动结束自动吸附对齐，
-本 skill 已默认开启。
+**GIF 可行**——2024 模板实际用了两个（已提取存到 `assets/`）：
+
+| 文件 | 尺寸 | 帧数 | 用途与摆法 |
+|---|---|---|---|
+| `deco-bird.gif` | 466×343 | 67 | **内容块右上角**：`width:50px; margin-left:auto; margin-bottom:-15px`（负边距压住卡片上沿） |
+| `deco-arrow-down.gif` | 200×269 | 13 | **分节之间的下滑引导**：`width:44px; margin:0 auto`（居中） |
+
+**管线接线要点**：
+
+- GIF **绝不能走 `compress_images`**——会被重编码成 JPEG，只剩第一帧，动画全丢。
+  已在 `compress_images` 里对 `.gif` 原样跳过。
+- `to_data_uri` 的 mime 表要含 `.gif` → `image/gif`，否则 MIME 错了播放不了。
+- 素材放 skill 的 `assets/`；预览时拷到 build 目录走相对路径，推送时直接 base64 内嵌。
+
+> ⚠️ **素材来源**：这两个 GIF 是从 2024 年同系列会议文章里提取的。
+> 属第三方素材，非本 skill 原创——**换机构/换号使用前应先确认授权**。
 
 ### 滚动条美化：只能用可内联的标准属性
 
