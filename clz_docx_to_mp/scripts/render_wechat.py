@@ -101,10 +101,11 @@ def esc(s):
 
 # ---------------------------------------------------------------- 动效装饰件
 # GIF 动图是微信正文里**唯一可行**的动效（CSS @keyframes 会被剥掉，见 SKILL.md）。
-# 素材来自 2024 年同系列会议文章里实际使用的两个 GIF。
+# 素材由 gen_deco_gifs.py **本 skill 原创生成**——不引用第三方素材，无授权风险，
+# 而且配色/形状与主题一致（星形与章节标题的 SVG 星形同款）。
 ASSETS_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'assets')
-DECO_BIRD = 'deco-bird.gif'          # 466x343 / 67 帧 —— 内容块右上角的小鸟
-DECO_ARROW = 'deco-arrow-down.gif'   # 200x269 / 13 帧 —— 分节之间的下滑箭头
+DECO_STAR = 'deco-star-pulse.gif'        # 60x60 / 12 帧 —— 内容块右上角，呼吸缩放
+DECO_CHEVRON = 'deco-chevron-bounce.gif'  # 64x64 / 11 帧 —— 分节之间的下滑引导
 
 
 def _deco(name, width, align_right, theme, build_dir, embed, pull_up=0):
@@ -405,7 +406,7 @@ def render_blocks(content, theme, img_dir, embed=False, strip_brackets=False,
             if gal:
                 # 相册前放一枚模板自带的分段装饰件，替代分节标题的视觉呼吸作用。
                 # 用装饰件而不是加标题——标题会引入原文没有的文字。
-                arrow = _deco(DECO_ARROW, 44, False, theme, build_dir, embed)
+                arrow = _deco(DECO_CHEVRON, 40, False, theme, build_dir, embed)
                 if arrow:
                     out.append(arrow)
                 else:
@@ -434,7 +435,7 @@ def render_blocks(content, theme, img_dir, embed=False, strip_brackets=False,
                         break
             inner = ''.join(render_block(x, theme, img_dir, embed, strip_brackets) for x in run)
             if inner:
-                bird = _deco(DECO_BIRD, 50, True, theme, build_dir, embed, pull_up=-15)
+                bird = _deco(DECO_STAR, 46, True, theme, build_dir, embed, pull_up=-15)
                 out.append(
                     bird +
                     '<section style="background-color:%s;padding:%dpx;'

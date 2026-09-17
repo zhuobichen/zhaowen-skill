@@ -310,12 +310,17 @@ if (ta) { ta.value = title; ta.dispatchEvent(new Event('input', {bubbles:true}))
 1. `@keyframes` 只能写在 `<style>` 里，而微信会剥掉 `<style>` → 内联写 `animation:xxx` 也没用
 2. `transition` 需要 hover/active 触发，内联样式定义不了伪类，移动端也没有 hover
 
-**GIF 可行**——2024 模板实际用了两个（已提取存到 `assets/`）：
+**GIF 可行**——本 skill 用 `gen_deco_gifs.py` **自己生成**（不引用第三方素材）：
 
-| 文件 | 尺寸 | 帧数 | 用途与摆法 |
-|---|---|---|---|
-| `deco-bird.gif` | 466×343 | 67 | **内容块右上角**：`width:50px; margin-left:auto; margin-bottom:-15px`（负边距压住卡片上沿） |
-| `deco-arrow-down.gif` | 200×269 | 13 | **分节之间的下滑引导**：`width:44px; margin:0 auto`（居中） |
+| 文件 | 尺寸 | 帧数 | 体积 | 用途与摆法 |
+|---|---|---|---|---|
+| `deco-star-pulse.gif` | 60×60 | 12 | 11KB | **内容块右上角**：`width:46px; margin-left:auto; margin-bottom:-15px`（负边距压住卡片上沿）。星形与章节标题的 SVG 星形同款，自成一套视觉语言 |
+| `deco-chevron-bounce.gif` | 64×64 | 11 | 6KB | **分节之间的下滑引导**：`width:40px; margin:0 auto`（居中），三枚箭头依次点亮 |
+
+> **为什么要自己画**：2024 那篇里确实有两个现成的 GIF（小鸟 + 箭头），
+> 但那是**第三方素材、授权不明**，直接搬有抄袭/侵权风险。
+> 自己用 PIL 画的好处：零授权问题、配色随主题、体积小一个数量级（17KB vs 312KB）、
+> 且能刻意呼应文章里的形状元素。改配色只需改 `gen_deco_gifs.py` 顶部的 `PRIMARY`/`TEAL`。
 
 **管线接线要点**：
 
