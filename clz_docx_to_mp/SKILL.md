@@ -43,6 +43,22 @@ python $SKILL/push_to_mp.py <build_dir> --token <TOKEN> --session <SESSION>
 - `--strip-brackets` 去掉题注外层【】，视觉更干净；**默认保留原文**
 - 推送前可 `--dry-run` 看分批情况
 
+## ⚠️ 订阅号 vs 服务号：图片 CDN 域名不同
+
+同一套流程推到两种号上，**图片落地的 CDN 域名不一样**，写校验/核对脚本时两个都要认：
+
+| 账号类型 | 图片 CDN | 实际 URL 形态 |
+|---|---|---|
+| 订阅号 | `mmbiz.qpic.cn` | `mmbiz_gif` / `mmbiz_jpg` |
+| **服务号** | **`mmecoa.qpic.cn`** | `mmecoa_gif` / `mmecoa_jpg`（也见过 `sz_mmecoa_jpg`） |
+
+**踩过**：把「src 含 `mmbiz.qpic.cn`」当成「上传成功」的判据，推到服务号上会**全部误报失败**
+（实测 50 张图全传成功，校验却报 `CDN 数 0 ≠ 总数 50`）。
+判据改成「含 `qpic.cn`」即可同时覆盖两种。
+
+> 另注：**服务号的群发额度远比订阅号紧**（订阅号每天可群发，服务号每月仅数次），
+> 排期时要留意；推草稿不受影响。
+
 ## 微信平台的硬性限制（决定图片规格）
 
 | 项目 | 限制 | 本 skill 的应对 |

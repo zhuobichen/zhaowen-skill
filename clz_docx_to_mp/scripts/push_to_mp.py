@@ -109,7 +109,8 @@ JS_VERIFY = r'''
     imgs++;
     var src = im.getAttribute('src') || '';
     if (src.indexOf('data:') === 0) dataN++;
-    if (src.indexOf('mmbiz.qpic.cn') !== -1) cdn++;
+    // 订阅号走 mmbiz.qpic.cn，服务号走 mmecoa.qpic.cn —— 两个都要认
+    if (src.indexOf('qpic.cn') !== -1) cdn++;
   });
   var lefts = {}, widths = {};
   fr.forEach(function (f) { lefts[f.left] = 1; widths[f.w] = 1; });
