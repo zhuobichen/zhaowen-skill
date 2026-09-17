@@ -289,14 +289,17 @@ def render_gallery(items, theme, img_dir, embed, strip_brackets):
                          .replace('__FIG__', fig))
     if len(cells) < 2:
         return None
-    # scrollbar-width / -ms-overflow-style 用来隐藏滚动条：移动端本来就自动隐藏，
-    # 桌面端会露出一条灰条很难看。滑动的可发现性由下方的「◁ 左右滑动查看更多 ▷」承担。
-    return ('<section style="width:100%;vertical-align:top;overflow:auto;'
-            'scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;'
-            'scrollbar-width:none;-ms-overflow-style:none;">'
-            '<section style="width:__ROW__%;display:flex;flex-flow:row;'
-            'max-width:__ROW__% !important;">__CELLS__</section></section>'
-            ).replace('__ROW__', str(n * 100)).replace('__CELLS__', ''.join(cells))
+    # 滚动条美化：微信会剥掉 <style>，`::-webkit-scrollbar` 那套用不上，
+    # 只能用**可内联设置的标准属性** `scrollbar-width` + `scrollbar-color`
+    # （实测微信会原样保留这两个属性）。细条 + 主色滑块 + 浅底轨道。
+    outer = ('<section style="width:100%;vertical-align:top;overflow:auto;'
+             'scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;'
+             'scrollbar-width:thin;scrollbar-color:' + theme['primary'] + ' '
+             + theme['card_bg'] + ';">')
+    inner = ('<section style="width:' + str(n * 100) + '%;display:flex;'
+             'flex-flow:row;max-width:' + str(n * 100) + '% !important;">'
+             + ''.join(cells) + '</section>')
+    return outer + inner + '</section>'
 
 
 def frame_wrap(html, theme, first=True, last=True):

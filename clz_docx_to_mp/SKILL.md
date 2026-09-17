@@ -299,6 +299,22 @@ if (ta) { ta.value = title; ta.dispatchEvent(new Event('input', {bubbles:true}))
 > 校验：`push_to_mp.py` 第 ⑦ 步的 `heights` 字段，**必须为 1**（全等高）；
 > >1 就是混排，会报问题。
 
+### 滚动条美化：只能用可内联的标准属性
+
+微信会剥掉 `<style>`，所以 `::-webkit-scrollbar` 那套自定义样式**用不上**。
+能内联设置、且微信会保留的只有：
+
+```html
+<section style="… overflow:auto; scrollbar-width:thin;
+                scrollbar-color:#4F81BD #F4F8FC;">
+```
+
+- `scrollbar-width:thin` → 细条
+- `scrollbar-color:<滑块色> <轨道色>` → 主色滑块 + 浅底轨道
+
+**不要把滚动条直接隐藏**（`scrollbar-width:none`）：用户明确要求保留可拖动的滑条。
+真机上微信的滚动条本来就会自动隐藏／半透明，桌面端才是那条难看的灰条。
+
 ### 相册下方要有滑动提示
 
 2024 模板在相册**后一个兄弟节点**放了提示，原文照抄：
