@@ -109,7 +109,7 @@ JS_VERIFY = r'''
     imgs++;
     var src = im.getAttribute('src') || '';
     if (src.indexOf('data:') === 0) dataN++;
-    // 订阅号走 mmbiz.qpic.cn，服务号走 mmecoa.qpic.cn —— 两个都要认
+    // qpic.cn covers both mmbiz (subscription) and mmecoa (service) CDNs
     if (src.indexOf('qpic.cn') !== -1) cdn++;
   });
   var lefts = {}, widths = {};
@@ -152,7 +152,14 @@ JS_VERIFY = r'''
     captions: body.querySelectorAll('figcaption').length,
     headings: body.querySelectorAll('section[style*="border-radius:20px"]').length,
     galleries: gals,
-    hasEnd: hasEnd
+    hasEnd: hasEnd,
+    coverUrl: (function () {
+      var e = document.querySelector('.js_cover_preview_new');
+      if (!e) return '';
+      var st = e.getAttribute('style') || '';
+      var m = st.match(/url\\([^)]*\\)/);
+      return m ? m[0] : '';
+    })()
   });
 })()
 '''
