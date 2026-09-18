@@ -272,7 +272,7 @@ GALLERY_RATIO = 1.5   # 相册统一比例（2024 模板的图都是 3:2）
 #    居中裁会把头顶切掉（实测李向东那张：人脸在 y=334-449，
 #    居中窗口从 y=338 开始，差 4px 就切了头）。
 #    0.35 对「讲台人像」这类构图更稳；换了别的体裁要逐张看。
-CROP_BIAS = 0.35
+CROP_BIAS = 0.45
 
 
 def gallery_variant(path, target=GALLERY_RATIO):
