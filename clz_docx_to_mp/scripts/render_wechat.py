@@ -272,7 +272,18 @@ GALLERY_RATIO = 1.5   # 相册统一比例（2024 模板的图都是 3:2）
 #    居中裁会把头顶切掉（实测李向东那张：人脸在 y=334-449，
 #    居中窗口从 y=338 开始，差 4px 就切了头）。
 #    0.35 对「讲台人像」这类构图更稳；换了别的体裁要逐张看。
-CROP_BIAS = 0.45
+CROP_BIAS = 0.35
+
+# 逐图覆盖：默认值再好也架不住个别照片的构图不一样。
+# 键 = 图片**不含扩展名的文件名**（用 stem 而不是全名——
+#      compress_images 会把 .jpeg 压成 .jpg，用全名做键永远匹配不上）。
+CROP_BIAS_BY_FILE = {
+    # 刘炳江：屏幕上的英文占了大半幅，按默认裁完人只剩个头。
+    # 窗口下移，把英文切掉、多露讲台和下半身。
+    # 实测：0.65 → 窗顶 y=469，头顶留 41px，英文全切，讲台见 "ABaCAS 2026"；
+    #       0.70 → 头顶只剩 5px，贴边，太险。
+    '015_image15': 0.65,
+}
 
 
 def gallery_variant(path, target=GALLERY_RATIO):
@@ -297,9 +308,11 @@ def gallery_variant(path, target=GALLERY_RATIO):
         nw = int(h * target)
         left = (w - nw) // 2
         im = im.crop((left, 0, left + nw, h))
-    else:                                # 太高 → 裁上下，按 CROP_BIAS 偏上（保头部）
+    else:                                # 太高 → 裁上下，按偏置偏上（保头部）
         nh = int(w / target)
-        top = int((h - nh) * CROP_BIAS)
+        stem = os.path.splitext(os.path.basename(path))[0]
+        bias = CROP_BIAS_BY_FILE.get(stem, CROP_BIAS)
+        top = int((h - nh) * bias)
         im = im.crop((0, top, w, top + nh))
     out = path[:-4] + '_gal.jpg'
     im.convert('RGB').save(out, 'JPEG', quality=95, subsampling=0,
@@ -463,6 +476,54 @@ def render_blocks(content, theme, img_dir, embed=False, strip_brackets=False,
     return out
 
 
+DROP_FILE = 'drop_images.txt'
+
+
+def load_drop_images(build_dir):
+    """读 build 目录下的删图清单（一行一个文件名，不含扩展名，# 开头为注释）。"""
+    p = os.path.join(build_dir, DROP_FILE)
+    if not os.path.exists(p):
+        return []
+    names = []
+    with open(p, encoding='utf-8') as f:
+        for line in f:
+            line = line.strip()
+            if line and not line.startswith('#'):
+                names.append(line)
+    return names
+
+
+def save_drop_images(build_dir, names):
+    p = os.path.join(build_dir, DROP_FILE)
+    with open(p, 'w', encoding='utf-8') as f:
+        f.write('# 本稿不用的图：一行一个文件名（不含扩展名）\n')
+        f.write('# render_wechat.py 与 push_to_mp.py 都读这个文件，\n')
+        f.write('# 保证本地预览和推到草稿箱的内容一致。\n')
+        for n in names:
+            f.write(n + '\n')
+
+
+def apply_drop_images(content, names):
+    """从 blocks 里摘掉指定图，返回 (新 content, 实际删掉的文件名列表)。
+
+    ⚠️ 必须两个入口（render_wechat / push_to_mp）都用这一个函数。
+       之前只在 render_wechat 的 CLI 里加参数，而 push_to_mp 是自己
+       从 content.json 重新 render_blocks 的、根本不读 article.html——
+       结果「本地预览删了、推上去还在」，批次字节数跟上一版一模一样才露馅。
+    题注挂在 block 上，会跟着一起消失，不会留下一句孤零零的图注。
+    """
+    if not names:
+        return content, []
+    todo = set(names)
+    kept, dropped = [], []
+    for b in content['blocks']:
+        if b['type'] == 'image' and os.path.splitext(b['file'])[0] in todo:
+            dropped.append(b['file'])
+            continue
+        kept.append(b)
+    return dict(content, blocks=kept), dropped
+
+
 def render(content, theme, img_dir, embed=False, strip_brackets=False,
            gallery=False, gallery_anchor=None, build_dir=None):
     parts = [EMPTY_NODE]
@@ -487,11 +548,26 @@ def main():
                     help='关闭横滑相册，所有图逐张平铺')
     ap.add_argument('--gallery-anchor', default='主旨报告',
                     help='无分节标题的稿子用：遇到含此文字的段落之后才开始合组相册')
+    ap.add_argument('--drop-image', action='append', default=[], metavar='NAME',
+                    help='删掉某张图，按**不含扩展名**的文件名（可重复使用）。'
+                         '会把清单写进 <build>/drop_images.txt，push_to_mp.py 也读它；'
+                         'docx 仍是唯一事实来源，这里只做展示层的删除，不动源文件')
     args = ap.parse_args()
 
     build = args.build_dir
     with open(os.path.join(build, 'content.json'), encoding='utf-8') as f:
         content = json.load(f)
+
+    # 0) 按需删图。给了 --drop-image 就以它为准并落盘，没给就读落盘的那份，
+    #    这样重复跑 render / push 不会一个删一个不删。
+    if args.drop_image:
+        names = sorted(set(args.drop_image))
+        save_drop_images(build, names)
+    else:
+        names = load_drop_images(build)
+    if names:
+        content, dropped = apply_drop_images(content, names)
+        print('删图清单：%s' % (', '.join(dropped) if dropped else '(无匹配，名字核对一下)'))
 
     # 1) 压缩图片
     src_img_dir = os.path.join(build, content.get('images_dir', 'images'))

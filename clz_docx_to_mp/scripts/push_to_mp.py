@@ -32,9 +32,13 @@ if sys.platform == 'win32':
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from render_wechat import (THEME, render_block, render_blocks, to_data_uri,  # noqa: E402
-                           EMPTY_NODE, END_LINE, frame_wrap)
+                           EMPTY_NODE, END_LINE, frame_wrap,
+                           load_drop_images, apply_drop_images)
 
 DEFAULT_BA = r'C:\Users\Administrator\.local\bin\browser-act.exe'
+
+# 标题覆盖的落盘位置（相对 build 目录）
+TITLE_FILE = 'title.txt'
 
 NEW_DRAFT_URL = ('https://mp.weixin.qq.com/cgi-bin/appmsg'
                  '?t=media/appmsg_edit_v2&action=edit&isNew=1&type=77'
@@ -230,6 +234,9 @@ def main():
     ap.add_argument('--chunk-mb', type=float, default=1.2)
     ap.add_argument('--dry-run', action='store_true')
     ap.add_argument('--no-title', action='store_true', help='不设置标题（调试用）')
+    ap.add_argument('--title', default=None,
+                    help='改标题（默认用 docx 里的）。会写进 <build>/title.txt，'
+                         '之后重推自动沿用，免得下次不留神又变回 docx 原标题')
     ap.add_argument('--appmsgid', default=None,
                     help='复用已有草稿（清空正文后重推），避免每次改动都新建一篇')
     args = ap.parse_args()
@@ -242,6 +249,31 @@ def main():
     if not os.path.isdir(img_dir):
         print('❌ 找不到 images_web/，请先跑 render_wechat.py')
         return 1
+
+    # 标题：--title 优先并落盘；没给就读落盘的那份；都没有才用 docx 原标题。
+    # ⚠️ 与删图清单同理：标题只影响微信的标题字段（正文 HTML 里没有标题），
+    #    所以不需要 render 那边配合，但要落盘，免得重推时又弹回原标题。
+    title_file = os.path.join(build, TITLE_FILE)
+    if args.title:
+        t = args.title.strip()
+        with open(title_file, 'w', encoding='utf-8') as f:
+            f.write(t + '\n')
+        content['title'] = t
+    elif os.path.exists(title_file):
+        with open(title_file, encoding='utf-8') as f:
+            t = f.read().strip()
+        if t:
+            content['title'] = t
+    if content.get('title'):
+        print('标题：%s' % content['title'])
+
+    # 本稿不用的图（重复照片等）——清单由 render_wechat.py 维护，
+    # ⚠️ 必须在这里也删一次：本脚本是自己从 content.json 重新 render_blocks 的，
+    #    完全不读 article.html，只在 render 那边删会让「预览删了、推上去还在」。
+    names = load_drop_images(build)
+    if names:
+        content, dropped = apply_drop_images(content, names)
+        print('删图清单：%s' % (', '.join(dropped) if dropped else '(无匹配，名字核对一下)'))
 
     # content.json 里是原始文件名（xxx.jpeg/png），images_web 里是压缩后的同名 .jpg，
     # 这里按 compress_images 的命名规则（stem + .jpg）重指一次
