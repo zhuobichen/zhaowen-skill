@@ -267,6 +267,13 @@ def render_block(b, theme, img_dir, embed, strip_brackets, heading_no=None,
 
 GALLERY_RATIO = 1.5   # 相册统一比例（2024 模板的图都是 3:2）
 
+# 裁竖图时窗口的垂直位置：0 = 贴顶，0.5 = 居中，1 = 贴底。
+# ⚠️ 不要用 0.5（居中）——演讲类照片人脸多在画面偏上，
+#    居中裁会把头顶切掉（实测李向东那张：人脸在 y=334-449，
+#    居中窗口从 y=338 开始，差 4px 就切了头）。
+#    0.35 对「讲台人像」这类构图更稳；换了别的体裁要逐张看。
+CROP_BIAS = 0.35
+
 
 def gallery_variant(path, target=GALLERY_RATIO):
     """把比例与 target 不符的图**居中裁**成 target，返回可用文件路径。
@@ -290,9 +297,9 @@ def gallery_variant(path, target=GALLERY_RATIO):
         nw = int(h * target)
         left = (w - nw) // 2
         im = im.crop((left, 0, left + nw, h))
-    else:                                # 太高 → 裁上下（人物多在中间带，居中裁最稳）
+    else:                                # 太高 → 裁上下，按 CROP_BIAS 偏上（保头部）
         nh = int(w / target)
-        top = (h - nh) // 2
+        top = int((h - nh) * CROP_BIAS)
         im = im.crop((0, top, w, top + nh))
     out = path[:-4] + '_gal.jpg'
     im.convert('RGB').save(out, 'JPEG', quality=95, subsampling=0,
