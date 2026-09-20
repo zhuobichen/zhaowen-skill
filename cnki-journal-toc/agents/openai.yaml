@@ -1,0 +1,4 @@
+interface:
+  display_name: "CNKI Journal Table of Contents"
+  short_description: "Browse journal issues and download TOC PDFs"
+  default_prompt: "Use $cnki-journal-toc to browse a CNKI issue and optionally download its original TOC PDF."

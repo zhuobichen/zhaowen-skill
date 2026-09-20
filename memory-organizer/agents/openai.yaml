@@ -1,0 +1,4 @@
+interface:
+  display_name: "Memory Organizer"
+  short_description: "Organize MEMORY notes into linked knowledge"
+  default_prompt: "Use $memory-organizer to organize the supplied MEMORY notes and repair useful links."

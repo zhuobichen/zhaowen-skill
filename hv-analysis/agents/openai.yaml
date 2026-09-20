@@ -1,0 +1,4 @@
+interface:
+  display_name: "Horizontal-Vertical Analysis"
+  short_description: "Perform structured horizontal-vertical deep research"
+  default_prompt: "Use $hv-analysis to perform a structured horizontal-vertical analysis of the requested subject."

@@ -1,0 +1,248 @@
+{
+  "schema_version": 1,
+  "repository": "zhaowen-skill",
+  "purpose": "Machine-readable inventory for Skill discovery, validation, and upstream tracking.",
+  "generated_from": "directory scan plus agents/openai.yaml",
+  "skills": [
+    {
+      "name": "abacas-cloud-ops",
+      "path": "abacas-cloud-ops/",
+      "display_name": "ABaCAS Cloud Operations",
+      "short_description": "Operate ABaCAS cloud jobs and inspect results",
+      "ui_metadata": "agents/openai.yaml",
+      "upstream": null
+    },
+    {
+      "name": "academic-paper-download",
+      "path": "academic-paper-download/",
+      "display_name": "Academic Paper Download",
+      "short_description": "Fetch identity-verified OA or browser-authorized paper PDFs",
+      "ui_metadata": "agents/openai.yaml",
+      "upstream": "tiangong-ai/agent-skills@5e692461708a4e02c1012086a59d2bd75da99673"
+    },
+    {
+      "name": "agent-dialog_management",
+      "path": "agent-dialog_management/",
+      "display_name": "Agent Dialog Management",
+      "short_description": "Find, inspect, export, and resume agent sessions",
+      "ui_metadata": "agents/openai.yaml",
+      "upstream": null
+    },
+    {
+      "name": "clz_docx_to_mp",
+      "path": "clz_docx_to_mp/",
+      "display_name": "DOCX to WeChat Draft",
+      "short_description": "Convert DOCX files into WeChat draft articles",
+      "ui_metadata": "agents/openai.yaml",
+      "upstream": null
+    },
+    {
+      "name": "clz_wechat_mp_ops",
+      "path": "clz_wechat_mp_ops/",
+      "display_name": "WeChat Official Account Ops",
+      "short_description": "Edit and validate WeChat Official Account drafts",
+      "ui_metadata": "agents/openai.yaml",
+      "upstream": null
+    },
+    {
+      "name": "cnki-advanced-search",
+      "path": "cnki-advanced-search/",
+      "display_name": "CNKI Advanced Search",
+      "short_description": "Run filtered CNKI searches by fields and dates",
+      "ui_metadata": "agents/openai.yaml",
+      "upstream": null
+    },
+    {
+      "name": "cnki-download",
+      "path": "cnki-download/",
+      "display_name": "CNKI Paper Download",
+      "short_description": "Download a CNKI paper PDF or CAJ with login",
+      "ui_metadata": "agents/openai.yaml",
+      "upstream": null
+    },
+    {
+      "name": "cnki-export",
+      "path": "cnki-export/",
+      "display_name": "CNKI Citation Export",
+      "short_description": "Export CNKI citations to Zotero, RIS, or GB",
+      "ui_metadata": "agents/openai.yaml",
+      "upstream": null
+    },
+    {
+      "name": "cnki-journal-index",
+      "path": "cnki-journal-index/",
+      "display_name": "CNKI Journal Indexing",
+      "short_description": "Check CNKI journal indexing and evaluation data",
+      "ui_metadata": "agents/openai.yaml",
+      "upstream": null
+    },
+    {
+      "name": "cnki-journal-search",
+      "path": "cnki-journal-search/",
+      "display_name": "CNKI Journal Search",
+      "short_description": "Find journals by name, ISSN, or CN number",
+      "ui_metadata": "agents/openai.yaml",
+      "upstream": null
+    },
+    {
+      "name": "cnki-journal-toc",
+      "path": "cnki-journal-toc/",
+      "display_name": "CNKI Journal Table of Contents",
+      "short_description": "Browse journal issues and download TOC PDFs",
+      "ui_metadata": "agents/openai.yaml",
+      "upstream": null
+    },
+    {
+      "name": "cnki-navigate-pages",
+      "path": "cnki-navigate-pages/",
+      "display_name": "CNKI Results Navigation",
+      "short_description": "Paginate or sort current CNKI search results",
+      "ui_metadata": "agents/openai.yaml",
+      "upstream": null
+    },
+    {
+      "name": "cnki-paper-detail",
+      "path": "cnki-paper-detail/",
+      "display_name": "CNKI Paper Details",
+      "short_description": "Extract metadata from a CNKI paper page",
+      "ui_metadata": "agents/openai.yaml",
+      "upstream": null
+    },
+    {
+      "name": "cnki-parse-results",
+      "path": "cnki-parse-results/",
+      "display_name": "CNKI Results Parser",
+      "short_description": "Parse CNKI results into structured paper records",
+      "ui_metadata": "agents/openai.yaml",
+      "upstream": null
+    },
+    {
+      "name": "cnki-search",
+      "path": "cnki-search/",
+      "display_name": "CNKI Paper Search",
+      "short_description": "Search CNKI for papers by keyword",
+      "ui_metadata": "agents/openai.yaml",
+      "upstream": null
+    },
+    {
+      "name": "convert-image-to-jpg",
+      "path": "convert-image-to-jpg/",
+      "display_name": "Convert Image to JPG",
+      "short_description": "Convert local images to JPG at a target DPI",
+      "ui_metadata": "agents/openai.yaml",
+      "upstream": "tiangong-ai/agent-skills@5e692461708a4e02c1012086a59d2bd75da99673"
+    },
+    {
+      "name": "document-granular-decompose",
+      "path": "document-granular-decompose/",
+      "display_name": "Document Granular Decompose",
+      "short_description": "Parse docs to fulltext via MinerU",
+      "ui_metadata": "agents/openai.yaml",
+      "upstream": "tiangong-ai/agent-skills@5e692461708a4e02c1012086a59d2bd75da99673"
+    },
+    {
+      "name": "hv-analysis",
+      "path": "hv-analysis/",
+      "display_name": "Horizontal-Vertical Analysis",
+      "short_description": "Perform structured horizontal-vertical deep research",
+      "ui_metadata": "agents/openai.yaml",
+      "upstream": null
+    },
+    {
+      "name": "khazix-writer",
+      "path": "khazix-writer/",
+      "display_name": "Khazix Long-Form Writer",
+      "short_description": "Write long-form Chinese public-account articles",
+      "ui_metadata": "agents/openai.yaml",
+      "upstream": null
+    },
+    {
+      "name": "latex-paper-writing",
+      "path": "latex-paper-writing/",
+      "display_name": "LaTeX Paper Writing",
+      "short_description": "Write and compile academic papers in LaTeX",
+      "ui_metadata": "agents/openai.yaml",
+      "upstream": null
+    },
+    {
+      "name": "memory-organizer",
+      "path": "memory-organizer/",
+      "display_name": "Memory Organizer",
+      "short_description": "Organize MEMORY notes into linked knowledge",
+      "ui_metadata": "agents/openai.yaml",
+      "upstream": null
+    },
+    {
+      "name": "n8n-web-ops",
+      "path": "n8n-web-ops/",
+      "display_name": "n8n Web Operations",
+      "short_description": "Inspect n8n workflows and execution records safely",
+      "ui_metadata": "agents/openai.yaml",
+      "upstream": null
+    },
+    {
+      "name": "obsidian-wiki-workflow",
+      "path": "obsidian-wiki-workflow/",
+      "display_name": "Obsidian Wiki Workflow",
+      "short_description": "Build and maintain an Obsidian LLM Wiki",
+      "ui_metadata": "agents/openai.yaml",
+      "upstream": null
+    },
+    {
+      "name": "ppt-assembler",
+      "path": "ppt-assembler/",
+      "display_name": "PPT Assembler",
+      "short_description": "Assemble PPTX decks from guides and source material",
+      "ui_metadata": "agents/openai.yaml",
+      "upstream": null
+    },
+    {
+      "name": "process-daily-pm25",
+      "path": "process-daily-pm25/",
+      "display_name": "Daily PM2.5 Processor",
+      "short_description": "Convert hourly PM2.5 data to daily files",
+      "ui_metadata": "agents/openai.yaml",
+      "upstream": null
+    },
+    {
+      "name": "prompt-auditor",
+      "path": "prompt-auditor/",
+      "display_name": "Prompt Auditor",
+      "short_description": "Audit PPT prompts against source code and facts",
+      "ui_metadata": "agents/openai.yaml",
+      "upstream": null
+    },
+    {
+      "name": "remove-similar-image",
+      "path": "remove-similar-image/",
+      "display_name": "Remove Similar Image",
+      "short_description": "Find similar or blurry local photos",
+      "ui_metadata": "agents/openai.yaml",
+      "upstream": "tiangong-ai/agent-skills@5e692461708a4e02c1012086a59d2bd75da99673"
+    },
+    {
+      "name": "wechat-claude-code",
+      "path": "wechat-claude-code/",
+      "display_name": "WeChat Claude Code Bridge",
+      "short_description": "Chat with Claude Code through WeChat",
+      "ui_metadata": "agents/openai.yaml",
+      "upstream": null
+    },
+    {
+      "name": "ylx_onehub_usage_monitor",
+      "path": "ylx_onehub_usage_monitor/",
+      "display_name": "One-Hub Usage Monitor",
+      "short_description": "Monitor one-hub API usage, costs, and history",
+      "ui_metadata": "agents/openai.yaml",
+      "upstream": null
+    },
+    {
+      "name": "ylx_research_evidence_synthesis",
+      "path": "ylx_research_evidence_synthesis/",
+      "display_name": "Research Evidence Synthesis",
+      "short_description": "Synthesize research evidence with claim tracking",
+      "ui_metadata": "agents/openai.yaml",
+      "upstream": null
+    }
+  ]
+}

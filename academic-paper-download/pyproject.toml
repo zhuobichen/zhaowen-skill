@@ -1,0 +1,8 @@
+[project]
+name = "academic-paper-download-runtime"
+version = "1.0.0"
+description = "Runtime dependency contract for the academic-paper-download skill"
+requires-python = ">=3.10"
+dependencies = [
+  "pypdf>=6.14,<7",
+]

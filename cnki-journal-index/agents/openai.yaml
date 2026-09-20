@@ -1,0 +1,4 @@
+interface:
+  display_name: "CNKI Journal Indexing"
+  short_description: "Check CNKI journal indexing and evaluation data"
+  default_prompt: "Use $cnki-journal-index to check a journal's CNKI indexing and evaluation information."

@@ -1,0 +1,4 @@
+interface:
+  display_name: "n8n Web Operations"
+  short_description: "Inspect n8n workflows and execution records safely"
+  default_prompt: "Use $n8n-web-ops to inspect n8n workflows or execution records without changing workflow configuration."

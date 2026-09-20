@@ -1,0 +1,4 @@
+interface:
+  display_name: "Convert Image to JPG"
+  short_description: "Convert local images to JPG at a target DPI"
+  default_prompt: "Use $convert-image-to-jpg to convert one or more local images into JPG files at 96 DPI or a custom DPI."

@@ -1,0 +1,4 @@
+interface:
+  display_name: "CNKI Results Parser"
+  short_description: "Parse CNKI results into structured paper records"
+  default_prompt: "Use $cnki-parse-results to turn the current CNKI result list into structured records."

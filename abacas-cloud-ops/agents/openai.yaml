@@ -1,0 +1,4 @@
+interface:
+  display_name: "ABaCAS Cloud Operations"
+  short_description: "Operate ABaCAS cloud jobs and inspect results"
+  default_prompt: "Use $abacas-cloud-ops to operate an ABaCAS job and verify its files and results."

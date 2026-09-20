@@ -1,0 +1,4 @@
+interface:
+  display_name: "One-Hub Usage Monitor"
+  short_description: "Monitor one-hub API usage, costs, and history"
+  default_prompt: "Use $ylx_onehub_usage_monitor to inspect one-hub usage, costs, and historical snapshots."

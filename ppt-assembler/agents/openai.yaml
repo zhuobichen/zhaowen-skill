@@ -1,0 +1,4 @@
+interface:
+  display_name: "PPT Assembler"
+  short_description: "Assemble PPTX decks from guides and source material"
+  default_prompt: "Use $ppt-assembler to assemble a PPTX deck from the provided guide and source material."

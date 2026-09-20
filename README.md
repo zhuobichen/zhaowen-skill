@@ -39,8 +39,22 @@
 | PPT 提示词审计 | [`prompt-auditor/`](prompt-auditor/) | 逐条对照源码验证提示词事实声明 |
 | 微信消息桥接 | [`wechat-claude-code/`](wechat-claude-code/) | 微信中与 Claude Code 聊天 |
 
+## 借鉴自 Tiangong AI Skills
+
+以下 Skill 从 [`tiangong-ai/agent-skills`](https://github.com/tiangong-ai/agent-skills)
+迁入，保留其工作流与安全边界，并通过 `UPSTREAM_SOURCES.md` 记录来源提交。
+
+| Skill | 目录 | 用途 |
+|-------|------|------|
+| Academic Paper Download | [`academic-paper-download/`](academic-paper-download/) | 通过 DOI/精确标题获取经过身份、结构、哈希和许可证来源校验的开放获取论文 PDF |
+| Document Granular Decompose | [`document-granular-decompose/`](document-granular-decompose/) | 调用 TianGong Unstructure 对本地文档做细粒度全文解析 |
+| Convert Image To JPG | [`convert-image-to-jpg/`](convert-image-to-jpg/) | 将常见栅格图片批量转换为指定 DPI 的 JPG |
+| Remove Similar Image | [`remove-similar-image/`](remove-similar-image/) | 检测近似重复和模糊图片，并在确认后清理 |
+
 ## 使用方式
 
 每个 skill 目录内含 `SKILL.md`，为完整执行说明；`scripts/`（如有）为可复用脚本，`examples/`（如有）为产出样例。
+
+机器可读清单见 [`skill-catalog.json`](skill-catalog.json)，其中包含 UI 元数据路径和 Tiangong 上游来源标记。新增或迁移 Skill 后应同步更新清单，并运行 `skill-creator/scripts/quick_validate.py`。
 
 > 注：`abacas-cloud-ops` 与 `n8n-web-ops` 中的账号密码、内网 IP、webhook ID、认证服务器地址均已替换为 `<占位符>`，迁移到自己的环境时需对应填写。

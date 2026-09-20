@@ -1,0 +1,4 @@
+interface:
+  display_name: "Prompt Auditor"
+  short_description: "Audit PPT prompts against source code and facts"
+  default_prompt: "Use $prompt-auditor to audit each factual claim in the prompt against the source code."

@@ -1,0 +1,4 @@
+interface:
+  display_name: "LaTeX Paper Writing"
+  short_description: "Write and compile academic papers in LaTeX"
+  default_prompt: "Use $latex-paper-writing to draft or revise the academic paper and compile its LaTeX PDF."

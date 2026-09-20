@@ -1,0 +1,4 @@
+interface:
+  display_name: "Obsidian Wiki Workflow"
+  short_description: "Build and maintain an Obsidian LLM Wiki"
+  default_prompt: "Use $obsidian-wiki-workflow to ingest the supplied notes and maintain the Obsidian Wiki layers."

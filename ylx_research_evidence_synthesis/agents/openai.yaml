@@ -1,0 +1,4 @@
+interface:
+  display_name: "Research Evidence Synthesis"
+  short_description: "Synthesize research evidence with claim tracking"
+  default_prompt: "Use $ylx_research_evidence_synthesis to build a claim-first evidence matrix and synthesis."

@@ -1,0 +1,4 @@
+interface:
+  display_name: "CNKI Paper Download"
+  short_description: "Download a CNKI paper PDF or CAJ with login"
+  default_prompt: "Use $cnki-download to download the requested CNKI paper after confirming the logged-in session."

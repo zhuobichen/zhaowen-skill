@@ -1,0 +1,4 @@
+interface:
+  display_name: "Khazix Long-Form Writer"
+  short_description: "Write long-form Chinese public-account articles"
+  default_prompt: "Use $khazix-writer to turn the supplied material into a polished Chinese long-form article."

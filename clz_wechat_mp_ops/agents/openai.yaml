@@ -1,0 +1,4 @@
+interface:
+  display_name: "WeChat Official Account Ops"
+  short_description: "Edit and validate WeChat Official Account drafts"
+  default_prompt: "Use $clz_wechat_mp_ops to inspect or safely edit a WeChat Official Account draft."

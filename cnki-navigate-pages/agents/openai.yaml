@@ -1,0 +1,4 @@
+interface:
+  display_name: "CNKI Results Navigation"
+  short_description: "Paginate or sort current CNKI search results"
+  default_prompt: "Use $cnki-navigate-pages to move through or reorder the current CNKI search results."

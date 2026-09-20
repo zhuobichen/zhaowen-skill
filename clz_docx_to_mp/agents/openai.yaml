@@ -1,0 +1,4 @@
+interface:
+  display_name: "DOCX to WeChat Draft"
+  short_description: "Convert DOCX files into WeChat draft articles"
+  default_prompt: "Use $clz_docx_to_mp to convert a DOCX file into a validated WeChat draft."

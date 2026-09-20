@@ -1,0 +1,4 @@
+interface:
+  display_name: "CNKI Citation Export"
+  short_description: "Export CNKI citations to Zotero, RIS, or GB"
+  default_prompt: "Use $cnki-export to export the current CNKI paper citation to Zotero or a citation file."

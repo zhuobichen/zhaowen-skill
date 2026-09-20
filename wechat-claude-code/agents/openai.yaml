@@ -1,0 +1,4 @@
+interface:
+  display_name: "WeChat Claude Code Bridge"
+  short_description: "Chat with Claude Code through WeChat"
+  default_prompt: "Use $wechat-claude-code to configure or troubleshoot the WeChat bridge for Claude Code."

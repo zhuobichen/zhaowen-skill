@@ -1,0 +1,4 @@
+interface:
+  display_name: "CNKI Journal Search"
+  short_description: "Find journals by name, ISSN, or CN number"
+  default_prompt: "Use $cnki-journal-search to find a CNKI journal by name, ISSN, CN number, or sponsor."

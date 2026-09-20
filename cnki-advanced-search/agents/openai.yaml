@@ -1,0 +1,4 @@
+interface:
+  display_name: "CNKI Advanced Search"
+  short_description: "Run filtered CNKI searches by fields and dates"
+  default_prompt: "Use $cnki-advanced-search to run a CNKI search with field, source, and date filters."
