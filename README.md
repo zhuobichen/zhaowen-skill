@@ -7,7 +7,7 @@
 | Skill | 目录 | 用途 |
 |-------|------|------|
 | docx 转公众号（clz） | [`clz_docx_to_mp/`](clz_docx_to_mp/) | 把 docx 转成公众号图文并推送草稿箱：解析 → 渲染微信兼容 HTML → 推送。内容忠实保留只做样式；含横滑相册、GIF 动效、平台硬限制实测记录 |
-| 中石油网申填表 | [`cnpc-job-apply/`](cnpc-job-apply/) | 中国石油高校毕业生招聘平台网申填表：browser-act 表单填写(input/select/upload)、字段 id 清单、维护时间窗口(0:00-6:00)、字数限制、籍贯 autocomplete、CDP 混用陷阱 |
+| > | [`cnpc-job-apply/`](cnpc-job-apply/) | > |
 | 科研文献证据工程（ylx） | [`ylx_research_evidence_synthesis/`](ylx_research_evidence_synthesis/) | ylx·科研文献证据工程与 Related Work 写作：Claim-first（证据矩阵 + 逻辑树 + 综述），含输出样例 |
 | one-hub 用量监测（ylx） | [`ylx_onehub_usage_monitor/`](ylx_onehub_usage_monitor/) | 监测 one-hub API 用量与费用：总额度/已用/剩余、每日每月记账、各模型单价对比 |
 | 公众号后台操作（clz） | [`clz_wechat_mp_ops/`](clz_wechat_mp_ops/) | 微信公众号后台：草稿读写、新建草稿、正文 dispatch 改字、批量替换配图、四层发布前校验 |

@@ -203,6 +203,66 @@ browser-act --session cnpc upload --selector ".ajax_my_upload_file_ctl" \
 
 全部填完后点页面底部「**完整性校验**」。
 
+### ⚠️ 各板块的「隐藏必填项」（2026-09-20 实测）
+
+**每一个都需要上传文件** —— 这是最容易低估的地方：
+
+| 板块 | 除了文字，还必填 |
+|------|-----------------|
+| 教育背景 | `#gradePoint` 学分绩点（**纯数字，非数字报"请输入数字"**）+ `#transcriptAttachmentFile` 成绩单 |
+| 外语水平 | 外语水平证明文件 + `准考证号` + `报告单编号`（成绩单上才有） |
+| 获奖信息 | 每条的获奖证明文件（**选完奖项名称后上传按钮才可用**） |
+| 附件 | 都是"选填"（个人简历/就业推荐表/其他资料） |
+
+→ **结论**：能真正"纯自动化"填完的只有 **基本信息 / 通讯信息 / 家庭成员**。其余板块需要用户提供成绩单、证书扫描件、准考证号等，提前跟用户要。
+
+### 🔁 「+ 添加XX」是替换，不是追加
+
+点「+ 添加家庭成员」（或任何「+ 添加XX」）会**清空当前未保存的表单**并换成空白表单，**不会**保留上一条。
+
+- ❌ 想一次填完父母两条 → 第二条一点，第一条全丢
+- ✅ 正确顺序：**填一条 → 保存 → 再点「+ 添加」填下一条**
+
+> 教育背景同理，需 2 条（第一学历 + 最高学历）时必须逐条保存。
+
+### 📅 日期字段（readonly）
+
+`#educationStartDate`、`#educationEndDate`、`#birthday` 等都是 `readonly` + `form_date`，**不能 fill**。
+
+用 datetimepicker API（**不是** setValue）：
+
+```js
+window.jQuery(el).data("datetimepicker").setDate(new Date(2024, 8, 1))  // 月份 0-based
+```
+
+### 🏫 教育背景的院校是「先选省份再选校」
+
+- `#schoolCode` 是 select，**选完 `#province` 后才加载**对应学校列表
+- 华南理工大学 = `440100002`；列表末尾有 `999999999=其他院校`（手工输入）
+- 选系统内院校后 `#schoolChinaName` 会**隐藏**，不用填（隐藏字段不参与校验）
+- 学位值示例：`333`=资源与环境硕士，`343`=工程硕士
+- 学历：`21`=硕士研究生，`31`=大学本科；学历形式：`1`=普通全日制
+- 绩点制：`1`=四分制
+
+### 👨👩👦 家庭成员字段 id 重复
+
+同一页面多条家庭成员记录**共用同一组 id**（`#relation`、`#name`、`#birthday`…），`getElementById` 只能拿到第一条。
+
+要定位"当前展开的那条"，用：
+
+```js
+[...document.querySelectorAll("form")].find(f => f.offsetParent && f.querySelector("#birthday"))
+```
+
+- 关系值：`51`=父，`52`=母
+- `#department`（工作单位）是 `list="depList"` 的 datalist 输入框，直接填文本即可
+- 页面上的树/ref 顺序与 checkbox 实际 id **可能错位一格** —— 勾选后务必用 JS 回读 `checked` 验证
+
+### 📎 上传文件的权限坑
+
+`bsk upload` 可能报 `Not allowed` —— 浏览器扩展缺 **「允许访问文件网址」** 权限。
+此时**不要反复重试**，直接交给用户手动选文件（或让用户在扩展设置里开权限）。
+
 ---
 
 ## 🔍 常用只读查询
@@ -223,6 +283,76 @@ browser-act session close cnpc
 
 **投递状态查询**：页面顶部「职位申请记录」，可看应聘企业/岗位/状态。
 规则：每人最多同时应聘 **2 家**单位，每家限 **1 个**岗位。
+
+---
+
+## ✏️ 修改已保存的记录（只能删了重建）
+
+列表页每条记录**只有「X」删除按钮，没有编辑入口**。要改一个字段，必须：
+
+1. 用 X 删掉旧记录（弹「该数据已删除」→ 点「关闭」）
+2. 点「+ 添加XX」重新填一条
+
+**删除前务必先把整条记录抄下来**（getBoundingClientRect 无法恢复数据）。删除是服务端立即生效的，不可撤销。
+
+---
+
+## 🖱️ BrowserSkill（bsk）实战陷阱 —— 2026-09-20 实测
+
+用 `bsk` 替代 browser-act 时的几个坑，都会表现成**"点错元素"**：
+
+### 1. `@eN` ref 会错位一格
+
+observe 出来的 ref 顺序**不等于** DOM 顺序。实测勾选「最高学历」的 ref 实际点到了「最高学位」。
+
+**对策**：涉及勾选/删除等有副作用的操作，先 `evaluate` 回读状态验证；或改用 CSS selector。
+
+### 2. 用 CSS selector 代替 ref（更稳）
+
+`bsk click` 接受 CSS selector。对没有稳定 id 的元素：
+
+```js
+// 先定位 + 打 id 标记，并滚到视口中央
+(()=>{const b=[...document.querySelectorAll("a,button,div,span")]
+  .filter(e=>e.offsetParent && e.textContent.replace(/[\s+]+/g,"")==="添加家庭成员" && e.children.length<=2);
+  if(!b.length) return "nf";
+  const t=b[b.length-1]; t.id="zzAddMom"; t.scrollIntoView({block:"center"}); return "ok";})()
+```
+
+```bash
+bsk click "#zzAddMom" --session <id>
+```
+
+### 3. 元素在视口外时坐标点击会乱跳
+
+未滚动就直接 `bsk click "@eN"`，元素在页面很深的位置时，点击可能落到**别的元素**上（实测点「删除母亲」跳到了「帮助中心」页）。
+
+**对策**：先 `scrollIntoView({block:"center"})`，再点。
+
+### 4. `element.click()` 对某些按钮无效，对另一些有效
+
+- 「+ 添加XX」按钮：JS `click()` **不生效**，必须真实点击
+- 「X」删除按钮、「关闭」弹窗按钮：JS `click()` **有效**（实测成功）
+
+### 5. navigate 会另开 tab，导致后续操作打空
+
+`bsk navigate` 后如果 Agent Window 里有 2 个 tab，`observe`/`click` 默认作用于 **active** tab，而你导航的是新 tab → 报 `element not visible` / `tabs outside an Agent Window must first be borrowed`。
+
+**对策**：
+
+```bash
+bsk tab list --session <id>          # 看有几个 agent tab
+bsk tab close <多余tab-id> --session <id>
+bsk tab select <保留的tab-id> --session <id>
+```
+
+### 6. session 会因中断/超时而消失
+
+命令被用户中断（Ctrl-C）后 session 常直接失效（`session not registered`），需重新 `bsk session start`。**新 session 是新窗口，登录态可能丢失**，要重新登录。
+
+### 7. 点击前若报 `Renderer did not become ready for input`
+
+先跑一次 `bsk observe`，再执行点击。
 
 ---
 
