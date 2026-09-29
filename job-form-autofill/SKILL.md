@@ -200,7 +200,39 @@ browser-act --session apply get value --selector "#basicName"     # 填完就验
   · 期望薪资 = 8-10K（Jev 0.61，置信度不高；与上次填的 10-12K 不一致）
 ```
 
+## 北森（phoenix）表单：直接用 `scripts/formkit.py`
+
+北森这套表单（`zhiye.com` 系的网申）有一堆"不这么做就静默失败"的地方。`formkit.py` 把
+在真表单上试出来的原语收成一个 CLI，**别再从零手写 JS**。
+
+```bash
+python scripts/formkit.py dump                 # 全表字段：标题/控件/当前值（每项挂 #wf-f<N>）
+python scripts/formkit.py options              # 当前打开的弹层里有哪些选项
+python scripts/formkit.py pick 钦州市           # 在弹层里选中一行
+python scripts/formkit.py date 2024-09         # 在打开的日期面板里选年月
+python scripts/formkit.py blocks               # 列可重复块（项目经历/工作经历）
+python scripts/formkit.py block-fill --key AQMAT --name … --role … --start 2025-05 --end 2025-10 --desc …
+python scripts/formkit.py block-text --key AQMAT --name … --role … --desc …   # 只改文字，不碰日期
+python scripts/formkit.py block-now weflow-cli # 勾该块的「至今」
+python scripts/formkit.py click-text 暂存       # 按文字点（唯一命中才点）
+python scripts/formkit.py collect              # 滚一遍收集虚拟化列表的全部选项
+```
+
+它替你挡住的四件事（每一条都是实测翻车换来的，细节见速查表）：
+
+1. **弹层里的行不能用 `--selector` 点** —— 点了不报错也不选中。`pick` 会自动试落点，
+   并且**用页面上的"已选 N/M"计数判断是否真的生效**，而不是看返回值。
+2. **可重复块会按结束时间自己重排** —— 所以一律**按名称定位块**（`--key`），
+   命中 0 个或 ≥2 个就停手；`block-*` 全按这个规矩。
+3. **日期面板每次跳年都重渲染** —— 序号全失效，`date` 每一跳都重新读 `state`。
+4. **「至今」复选框不在结束时间的 form-item 里** —— 按子树找会落空，`block-now` 按"它属于哪个块"定位。
+
+⚠️ **改完必须用 `reload` 验证落盘**（`formkit` 不管这一步）：只看读回来的 `value`
+会被受控组件骗 —— 我在这上面翻过一次车（内容写进了错的那一块，读回来却全对）。
+重载后还在，才算真的填进去了。
+
 ## 参考
 
-- `references/browser-act-cheatsheet.md` —— 填表常用命令、会话管理、状态读取的速查
+- `references/browser-act-cheatsheet.md` —— 填表常用命令、会话管理、状态读取的速查，
+  以及上面那四条坑的**实测记录**（含失败现象与错误结论长什么样）
 - 某个平台的专用手册（字段 id 清单、维护窗口、字数限制）：见同仓库的 `cnpc-job-apply`
