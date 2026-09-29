@@ -129,6 +129,50 @@ browser-act --session apply get value --selector "#basicName"
 3. 是不是**受控组件**且你用错了工具（绝不能 JS/CDP setValue）
 4. 页面是否被重新导航过（序号会失效，要重新 `state`）
 
+## ⚠️ 弹层里的点击：`--selector` 会**静默失败**
+
+北森的「期望从事行业 / 期望工作城市 / 籍贯」这类弹层，行元素（`.area-item-*`、`.list-item-container`）
+用 `click --selector ...` 点下去**不报错、也没选中** —— 计数（页面上的「已选 N/M」）纹丝不动。
+2026-09-29 实测，同一目标：
+
+| 目标 | `--selector` 点击 | 按 `state` 序号点击 |
+|---|---|---|
+| 弹层里的选项行 | ✗ 静默失败 | ✓ |
+| 普通下拉的 `li` 选项 | ✓（挂临时 id 后点） | ✓ |
+| 输入框（含弹层里的搜索框） | ✓ | ✓ |
+
+**能用的落点**：地区/行业面板点 `.icon-container`（那个单选圈/复选框的图标容器）——
+点 `.area-item-name`（标签条）或 `.area-item-container`（整行）都没反应。
+
+```bash
+# 通用的"试落点"做法：逐个候选点一下、查一次计数
+browser-act --session apply eval '<给 .icon-container 挂 id>'
+browser-act --session apply click --selector '#wf-pick'
+browser-act --session apply eval '<读「已选 N/M」>'
+```
+
+**弹层里的元素不一定出现在 `state` 里。** 同一套 `.area-item-*` 结构：籍贯面板的行**在** state 里
+（可点序号），期望工作城市面板的行就**不在**。所以两条路都要备着——先试序号，不行再试落点。
+
+**别用 `offsetParent !== null` 判可见**：滚动后它的 y 会变成负数。判断"在不在视口"要用
+`0 <= r.y < window.innerHeight`；而且每换一个字段就**重新量一次坐标**（我照旧坐标点空过两次）。
+
+## ⚠️ 判断"点了有没有反应"，别用轮询 —— 用 MutationObserver
+
+点「暂存」后连查 6 次都是"无弹层"，看着像按钮没生效；其实**真的保存成功了**
+（提示是「暂存成功，可在『投递记录』中查看」）。toast 消失得比轮询还快。
+
+```bash
+# 先装观察器（只读，不算点击），再点，再读
+browser-act --session apply eval '(() => { window.__t=[]; new MutationObserver(ms=>{for(const m of ms)for(const n of m.addedNodes){if(n.nodeType===1){const s=(n.innerText||"").replace(/\s+/g," ").trim(); if(s&&s.length<120) window.__t.push(s);}}}).observe(document.body,{childList:true,subtree:true}); return "ok"; })()'
+browser-act --session apply click <暂存序号>
+browser-act --session apply eval 'window.__t.join(" || ")'
+```
+
+**顺带两条**：`暂存` 会做校验（必填没填时会拦下来），但**「工作经历」整段空着也能存**
+（章节里的红 `*` 是给"加了条目"用的）；页面上只剩下"请选择"这种字样时，那多半只是空日期框的
+placeholder，不是报错。
+
 ## 不要做的事
 
 - ❌ `element.value = 'x'` / `dispatchEvent(new Event('change'))` 直接改 DOM（受控组件不认）
