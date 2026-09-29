@@ -100,7 +100,7 @@ browser-act --session apply upload --selector ".ajax_my_upload_file_ctl" --path 
 **搜索式下拉**（籍贯、学校、公司这类"打字才出选项"的）：**不能**用 `--mode fill`（不触发搜索）——
 
 ```bash
-browser-act --session apply input --selector "#nativePlaceName" --text "钦州"   # 不加 --mode fill
+browser-act --session apply input --selector "#nativePlaceName" --text "某市"   # 不加 --mode fill
 browser-act --session apply state                                               # 拿下拉项序号
 browser-act --session apply click 39                                            # 按序号点
 browser-act --session apply get value --selector "#nativePlaceName"             # 验证
