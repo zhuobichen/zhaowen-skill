@@ -18,6 +18,7 @@
 |-------|------|------|
 | ABaCAS 平台操纵 | [`abacas-cloud-ops/`](abacas-cloud-ops/) | ABaCAS Cloud 平台任务/文件/费效评估/结果导入与本地可视化（9 个脚本） |
 | n8n 工作流操纵 | [`n8n-web-ops/`](n8n-web-ops/) | n8n 网页操纵：登录、执行记录只读查看、callback_token 自动提取 |
+| 网申表单速填 | [`job-form-autofill/`](job-form-autofill/) | 按简历填任意网页的求职/网申表单：闭合选项（下拉/单选）交给 Jev 一次批量判定，需要写字的由助手依据简历生成；**绝不提交**，没依据的一律留空并列出"需要你提供"清单 |
 | CNKI 基础搜索 | [`cnki-search/`](cnki-search/) | CNKI 关键词检索论文 |
 | CNKI 高级搜索 | [`cnki-advanced-search/`](cnki-advanced-search/) | 字段过滤（作者/标题/期刊/日期/来源类别） |
 | CNKI 论文下载 | [`cnki-download/`](cnki-download/) | 下载论文 PDF/CAJ（需登录态） |

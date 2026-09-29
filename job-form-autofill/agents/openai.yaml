@@ -1,0 +1,4 @@
+interface:
+  display_name: "Job Form Autofill"
+  short_description: "Fill job application forms from your resume; dropdowns decided by Jev"
+  default_prompt: "Use $job-form-autofill to open the application page and fill the form from my resume. Ask Jev for the closed-option fields, leave anything without a basis blank, and stop before submitting."
