@@ -96,13 +96,27 @@ def rot13(s):
 
 # ---------------- collectors ----------------
 
-def collect_prefetch():
+def collect_prefetch(detail=None):
+    """QQ/微信/WeGame 家族的最后运行时刻。
+
+    **优先用 .pf 里记录的运行历史，mtime 只作退路。**
+    只看 mtime 会漏：某程序若在目标时段跑过、之后又跑过，mtime 会被顶到后面，
+    那次在目标时段里的运行就整个看不见了 —— 而报告看起来完全正常。
+    （这正是本工具踩过并写进陷阱清单的坑。）
+    """
     res = []
     for p in glob.glob(os.path.join(PF, '*.pf')):
         b = os.path.basename(p)
         if not any(k in b.lower() for k in TRACE_KEYS):
             continue
-        res.append((datetime.datetime.fromtimestamp(os.path.getmtime(p)), b))
+        exe = b.split('.EXE-')[0].upper() if '.EXE-' in b.upper() else b.split('.')[0].upper()
+        d = (detail or {}).get(exe) or {}
+        runs = [t for t in d.get('last8', []) if t]
+        if runs:
+            res.append((max(runs), b, d.get('runs', 0), 'Prefetch 运行历史'))
+        else:
+            res.append((datetime.datetime.fromtimestamp(os.path.getmtime(p)), b,
+                        0, '.pf 文件时间（无运行历史，退路）'))
     res.sort(reverse=True)
     return res
 
@@ -923,7 +937,8 @@ sigs     = [r for r in as_list(load('signatures.json')) if isinstance(r, dict)]
 recents  = [r for r in as_list(load('recent.json')) if isinstance(r, dict)]
 procs    = [r for r in as_list(load('procs.json')) if isinstance(r, dict)]
 
-pf             = collect_prefetch()
+pf_detail      = collect_prefetch_detail()   # 必须先于 pf —— 第五节按运行历史取时间
+pf             = collect_prefetch(pf_detail)
 ua_total, ua_n, ua_maxcnt, ua = collect_userassist()
 ua_ten         = [(d, n) for (d, n) in ua if any(k in n.lower() for k in TRACE_KEYS)]
 qq_accts       = qq_accounts()
@@ -972,7 +987,6 @@ day = d2        # the timeline section renders the last day of the window
 
 # broad privacy sweep for the two focus days
 pf_all            = collect_prefetch_all()
-pf_detail         = collect_prefetch_detail()
 bhist, bdl, bstat = collect_browser_history(d1, d2)
 timeline          = collect_timeline(d1, d2)
 recycled, recycled_all = collect_recycle(d1, d2)
@@ -996,7 +1010,7 @@ for r in logons:
     t = parse_s(r.get('time'))
     if t and r.get('lt') == '2' and 'DWM' not in str(r.get('user')) and 'UMFD' not in str(r.get('user')):
         add_tl(t, 'logon', '交互式登录 ' + str(r.get('user')), '登录')
-for dt, name in pf:
+for dt, name, _cnt, _src in pf:
     exe = name.split('-')[0]
     if exe.upper().endswith('.EXE'):
         exe = exe[:-4]
@@ -1101,8 +1115,9 @@ else:
       '<div class="d">在 %d 条自启动记录中，QQ 与微信<b>均不在其中</b>（本次实测）</div></div>' % len(autoruns))
 
 if ua_maxcnt <= 20:
-    A('<div class="card warn"><div class="k">运行次数</div><div class="v">取不到</div>'
-      '<div class="d">UserAssist 计数字段最大仅 %d，该版本不落盘次数；只能给"最后一次运行"</div></div>' % ua_maxcnt)
+    A('<div class="card warn"><div class="k">UserAssist 次数</div><div class="v">取不到</div>'
+      '<div class="d">UserAssist 计数字段最大仅 %d，该版本不落盘次数，这一路只能给"最后一次运行"。'
+      '但 <b>Prefetch 的运行次数是可用的</b>，报告里的次数来自 Prefetch</div></div>' % ua_maxcnt)
 else:
     A('<div class="card info"><div class="k">运行次数</div><div class="v">可用</div>'
       '<div class="d">UserAssist 计数最大 %d，报告中会给出次数</div></div>' % ua_maxcnt)
@@ -1150,7 +1165,7 @@ for e in activity:
     add_ev(parse_s(e.get('t')), e.get('p'), os.path.basename(str(e.get('p'))), 'file')
 for r in recents:
     add_ev(parse_s(r.get('time')), str(r.get('name')), str(r.get('name'))[:70], 'file')
-for dt, name in pf:
+for dt, name, _cnt, _src in pf:
     add_ev(dt, name, name)
 for dt, name in ua_ten:
     add_ev(dt, name, os.path.basename(name))
@@ -1695,11 +1710,17 @@ else:
 
 mstr = '、'.join('<code>%s</code>（%d 个文件）' % (esc(r.get('magic')), int(r.get('count') or 0))
                  for r in magic[:3]) if magic else '未知'
+_nohist = sum(1 for d in pf_detail.values() if not d.get('last8'))
 A('<tr><td><b>Prefetch 运行历史</b></td>'
-  '<td>本机 Prefetch 头为 %s。其中 <code>53434341</code> 是旧格式（"SCCA" 的小端表示），'
-  '<code>044d414d</code> 是 Windows 11 24H2+ 的新格式（"MAM"）。新格式读不出"最近 8 次运行时间"，'
-  '因此只能退回用 <code>.pf</code> 文件的修改时间近似"最后一次运行"。</td>'
-  '<td><span class="tag t-amber">中</span></td></tr>' % mstr)
+  '<td>本机 Prefetch 头为 %s。<code>53&nbsp;43&nbsp;43&nbsp;41</code> 是未压缩的 "SCCA"；'
+  '<code>4d&nbsp;41&nbsp;4d&nbsp;04</code> 是 "MAM" —— <b>MAM 是压缩，不是新格式</b>，'
+  '按 MS-XCA 的 LZ77+Huffman 解开后仍是标准 v30/v31 布局，'
+  '<b>运行次数与最近 8 次运行时间都能读到</b>，本节判断"窗口内跑过"用的就是它们。'
+  '真正剩下的缺口有两条：<b>Prefetch 会被清理</b>（系统维护与第三方"系统清理"都会删 .pf），'
+  '而且<b>实测有执行根本没写进 Prefetch</b>。所以「Prefetch 里没有」不能当「没运行过」——'
+  '另用 BAM 补差集（见隐私报告的「执行记录差集」一项）。'
+  '本机有 <b>%d</b> 个程序没有运行历史，只能用 mtime 近似。</td>'
+  '<td><span class="tag t-amber">中</span></td></tr>' % (mstr, _nohist))
 
 A('<tr><td><b>UserAssist 运行次数</b></td>'
   '<td>本机共读到 %d 条 UserAssist 记录，其中 %d 条带有效"最后运行时间"（其余 %d 条时间戳为 0）。'
@@ -1811,17 +1832,24 @@ A('</section>')
 
 # ================= 4. launch times =================
 A('<section><h2>五、QQ / 微信 / WeGame 最后运行时间</h2>')
-A('<div class="note">取 <code>C:\\Windows\\Prefetch\\*.pf</code> 的文件修改时间 + UserAssist 的最后运行时间，'
-  '两路互相印证。<b>只有"最后一次"，没有次数</b>（原因见第三节）。</div>')
+A('<div class="note">两路互相印证：<b>5.1 Prefetch</b>（用 .pf 里记录的运行历史，'
+  '不是文件修改时间 —— 见下）与 <b>5.2 UserAssist</b>。'
+  '这里给的是<b>最后一次运行时刻与累计次数</b>。</div>')
 
-A('<h3>5.1 Prefetch（.pf 文件时间 = 最后一次运行）</h3>')
-A('<table><thead><tr><th style="width:190px">最后运行</th><th>文件</th><th style="width:140px">距今</th></tr></thead><tbody>')
-for dt, name in pf:
+A('<h3>5.1 Prefetch（运行历史 = 最后一次运行 + 累计次数）</h3>')
+A('<p class="cap">时间取自 .pf 内部记录的运行历史，<b>不是 .pf 文件的修改时间</b>。'
+  '某程序若在目标时段跑过、之后又跑过，mtime 会被顶到后面 —— 只看 mtime 会把那次运行整个漏掉，'
+  '而报告看起来完全正常。没有运行历史的条目（新装、或历史被清理）才退回用文件时间，已在下表标出。</p>')
+A('<table><thead><tr><th style="width:190px">最后运行</th><th>文件</th>'
+  '<th style="width:90px">累计次数</th><th style="width:150px">来源</th></tr></thead><tbody>')
+for dt, name, cnt, srcname in pf:
     delta = now - dt
     secs = delta.total_seconds()
     dd = ('%.1f 天前' % (secs / 86400)) if secs > 86400 else ('%.1f 小时前' % (secs / 3600))
     hot = ' style="background:#f2faf5"' if dt.date() == day else ''
-    A('<tr%s><td class="mono">%s</td><td>%s</td><td class="mono">%s</td></tr>' % (hot, fmt(dt), esc(name), dd))
+    A('<tr%s><td class="mono">%s</td><td>%s</td><td class="mono">%s</td>'
+      '<td class="mono" style="font-size:12px">%s</td></tr>'
+      % (hot, fmt(dt), esc(name), (str(cnt) if cnt else '—'), esc(srcname)))
 A('</tbody></table>')
 
 A('<h3>5.2 UserAssist（记录"从资源管理器 / 开始菜单"发起的启动）</h3>')
@@ -2248,9 +2276,9 @@ print('  bytes       : %d' % os.path.getsize(OUT))
 # Cross-source time check: UserAssist and Prefetch for the same exe must agree.
 # A timezone mistake in either reader shows up here as a constant hour offset.
 pf_by_exe = {}
-for dt, name in pf:
+for dt, name, _cnt, _src in pf:
     pf_by_exe.setdefault(name.split('-')[0].upper(), []).append(dt)
-print('  crosscheck  : userassist-last-run vs prefetch-mtime')
+print('  crosscheck  : userassist-last-run vs prefetch-last-run')
 for dt, nm in ua_ten:
     base = os.path.basename(nm).upper()
     if base in pf_by_exe:

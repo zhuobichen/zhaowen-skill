@@ -636,7 +636,7 @@ def chk_jumplists():
                          % (total, known, hits),
                 items=items, source=ad,
                 note='应用名来自 EricZimmerman/JumpList 的 AppIDs.txt，'
-                     '**未命中不等于可疑** —— 该表只覆盖经典应用，新版应用常不在表内。'
+                     '未命中不等于可疑 —— 该表只覆盖经典应用，新版应用常不在表内。'
                      '表里没有的只报 AppID 与时间，不猜。')
 
 
