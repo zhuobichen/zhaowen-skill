@@ -274,13 +274,48 @@ def chrome_ts_to_dt(v):
 
 
 def dt_to_chrome_ts(d):
-    """Inverse of chrome_ts_to_dt.
+    """Inverse of chrome_ts_to_dt — must round-trip.
 
-    (d - 1601-01-01).total_seconds() already includes the 1601->1970 offset --
-    adding CHROME_OFF on top of it shifts the bound by 369 years and every
-    query returns zero rows, which reads as 'no activity that day'.
+    Two traps here, and they pull in opposite directions:
+
+    * `(d - 1601-01-01).total_seconds()` already includes the 1601->1970 offset.
+      Adding CHROME_OFF on top of it shifts the bound by 369 years and every
+      query returns zero rows, which reads as "no activity that day".
+    * But `d` is a **naive local** datetime while the Chromium timestamp is
+      **UTC**-based. Using the subtraction alone quietly shifts the window by
+      the timezone offset (+8h here): the query then misses everything between
+      local midnight and 08:00 and silently includes the day after the window.
+
+    Going through `d.timestamp()` (which applies the local offset) and then
+    adding CHROME_OFF keeps this the exact inverse of chrome_ts_to_dt.
     """
-    return int((d - datetime.datetime(1601, 1, 1)).total_seconds() * 1000000)
+    return int((d.timestamp() + CHROME_OFF) * 1000000)
+
+
+def _check_timebase():
+    """Fail loudly if the two conversion helpers stop being inverses.
+
+    This pair has already gone wrong twice, both silently:
+      * adding the 1601->1970 offset twice -> bounds 369 years off -> 0 rows,
+        which reads as "nobody browsed that day";
+      * mixing a local naive datetime with the UTC-based Chromium stamp ->
+        window shifted one timezone -> the first 8 hours of each day dropped
+        and the day after the window included.
+    Neither shows up as an error -- only as missing data. So assert it.
+    """
+    probes = [datetime.datetime(2026, 1, 1),
+              datetime.datetime(2026, 6, 15, 13, 37, 5),
+              datetime.datetime.now().replace(microsecond=0),
+              datetime.datetime.combine(datetime.date.today(), datetime.time())]
+    for p in probes:
+        back = chrome_ts_to_dt(dt_to_chrome_ts(p))
+        if back != p:
+            raise SystemExit('TIMEBASE SELFTEST FAILED: %r -> %r (local offset %s)'
+                             % (p, back, datetime.datetime.now().astimezone().utcoffset()))
+    print('timebase roundtrip: OK (%d probes)' % len(probes))
+
+
+_check_timebase()
 
 
 def _sqlite_copy(src):

@@ -65,12 +65,22 @@ python scripts/analyze.py --work <采集目录> --out <报告路径>
 ## 陷阱（每一条都实际踩过，且都是静默出错）
 
 ### 1. 时间基准换算 —— 最容易把"有"变成"没有"
-- **Chromium 时间戳**（Edge/Chrome History 的 `visit_time`）= 1601-01-01 起的**微秒**。算边界时
-  `(dt - datetime(1601,1,1)).total_seconds()` **已经含**了 1601→1970 的偏移，
-  **不要再加 11644473600**；加两次会偏 369 年，查询返回 0 条 —— 看起来就像"那天没上网"。
-- **FILETIME**（UserAssist/`$I`/Prefetch 内嵌）是 UTC。`datetime(1601,1,1)+timedelta(...)` 得到裸 UTC，
-  与 `os.path.getmtime`（本地时间）混用会差整个时区（UTC+8 上差 8 小时）。
+一次排查里连踩三种，全都是**静默的**（不报错，只是少数据）：
+
+- **Chromium 时间戳**（Edge/Chrome History 的 `visit_time`）= 1601-01-01 起的**微秒**，且基准是 **UTC**。
+  两个独立的坑：
+  - `(dt - datetime(1601,1,1)).total_seconds()` **已经含**了 1601→1970 的偏移，
+    再加 `11644473600` 会偏 **369 年** → 查询 0 条 → 看起来像"那天没上网"。
+  - `dt` 是**本地裸时间**而时间戳是 **UTC**，只做减法会整体偏一个时区（UTC+8 上偏 8 小时）→
+    **每天 00:00–08:00 被漏掉，且窗口末尾多算次日**。
+  - 正确的一对：`fromtimestamp(v/1e6 - 11644473600)` ↔ `int((d.timestamp() + 11644473600) * 1e6)`。
+- **FILETIME**（UserAssist / 回收站 `$I` / Prefetch 内嵌）同样是 UTC。
+  `datetime(1601,1,1)+timedelta(...)` 得到裸 UTC，与 `os.path.getmtime`（本地）混用差一个时区。
   统一走 `datetime.fromtimestamp(v/1e7 - 11644473600)`。
+
+**防回归**：`analyze.py` 启动时会跑 `_check_timebase()` —— 让两个函数在几个时间点上**往返自测**，
+不互逆就直接 `SystemExit` 并打印偏移量。**任何一对"编码/解码"函数都该这样自测**，
+因为这类错误的唯一症状是"数据变少"，而"变少"看起来永远像"本来就没有"。
 
 ### 2. Prefetch 新格式
 Windows 11 24H2+ 的 `.pf` 头是 `4d 41 4d 04`（"MAM"），不是老的 `53434341`（"SCCA"）。
