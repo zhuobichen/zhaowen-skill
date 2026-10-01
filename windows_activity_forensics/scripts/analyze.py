@@ -31,6 +31,25 @@ WORK = _ARGS.work or os.path.join(tempfile.gettempdir(), 'activity_forensics')
 PF   = os.path.join(os.environ.get('SystemRoot', r'C:\Windows'), 'Prefetch')
 OUT  = _ARGS.out or os.path.join(HOME, 'Desktop', 'activity_report.html')
 
+def fixed_drives():
+    """所有固定盘（排除可移动/光驱/网络盘）。
+
+    「只看 C 盘」是这类工具最常见的静默漏检来源：回收站、下载目录都可能
+    在别的盘上。宁可多扫，也不要因为没列全而报一个假的 0。
+    """
+    out = []
+    try:
+        import ctypes
+        buf = ctypes.create_unicode_buffer(512)
+        n = ctypes.windll.kernel32.GetLogicalDriveStringsW(512, buf)
+        for d in buf[:n].split('\x00'):
+            if d and ctypes.windll.kernel32.GetDriveTypeW(d) == 3:
+                out.append(d)
+    except Exception:
+        out = ['C:\\']
+    return out
+
+
 KEYS = ('qq', 'weixin', 'wechat', 'tencent', 'napcat', 'multiw')
 # WeGame / LoL family. WeGame 通常就装在 LoL 的安装目录下（同一个父目录）。
 # 具体路径由 collect.ps1 按固定盘扫出并写进 app_roots.json，这里只认名字。
@@ -562,7 +581,11 @@ def collect_recycle(d1, d2):
     recovered name comes out as a single junk character.
     """
     inwin, allrows = [], []
-    for root in glob.glob(r'C:\$Recycle.Bin\*'):
+    # 每个固定盘都有自己的回收站；只看 C 盘会漏掉别的盘上的删除记录。
+    _recyc = []
+    for _drv in fixed_drives():
+        _recyc += glob.glob(os.path.join(_drv, '$Recycle.Bin', '*'))
+    for root in _recyc:
         for f in glob.glob(os.path.join(root, '$I*')):
             try:
                 with open(f, 'rb') as fh:

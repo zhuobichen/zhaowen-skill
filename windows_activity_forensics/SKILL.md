@@ -252,6 +252,35 @@ BAM 位置：`HKLM\SYSTEM\CurrentControlSet\Services\bam\State\UserSettings\<SID
 `edge://` / `chrome://` 内部页不写历史库、未列入清单的嵌入式浏览器、纯只读访问、
 时间戳可被管理员改写。
 
+## 反取证：先确认「痕迹没被人动过」，再谈"查不到"
+
+别的项都在找"他做了什么"；这一项给**所有其它项的结论定强度**。
+如果日志被清、审计被关、Prefetch 被停、系统时间被改，那么别处的"没有记录"
+就不是"没发生过"，而是"被清掉了"。`privacy_check.py` 的「痕迹是否被抹」查这些：
+
+| 查什么 | 位置 |
+|---|---|
+| 安全日志被清空 | Security 事件 **1102** |
+| 系统日志被清空 | System 事件 **104** |
+| 系统时间被修改 | System / Kernel-General 事件 **1** |
+| Prefetch 被关 | `HKLM\SYSTEM\...\Memory Management\PrefetchParameters\EnablePrefetcher`（0=关） |
+| BAM 被清 | BAM 条目数为 0（正常机器不会空） |
+
+命中时**不要**把它写成"他做了什么"——它只说明别处的 CLEAR 要打折看。
+查安全日志需要管理员权限，读不到必须记 UNKNOWN，不能记 CLEAR。
+
+## 几条容易漏的"内容型"证据源
+
+- **摄像头 / 麦克风**：`...\CapabilityAccessManager\ConsentStore\<webcam|microphone>\<应用>`
+  的 `LastUsedTimeStart/Stop`。这是"他有没有开你的摄像头/录你的音"**唯一**的来源。
+  **判定要按区间重叠**（开始 ≤ 窗口结束 且 结束 ≥ 窗口开始），不是"起点落在窗口内"——
+  设备常常在窗口开始前就开着、一直持续到窗口内，只看起点会整个漏掉。
+- **浏览器下载记录**：Chromium 的 `downloads` 表（`start_time` / `target_path` / `tab_url`）。
+  这和"下载文件夹里多了什么"是两件事 —— 文件夹只看到结果，下载表还记着**来源 URL**。
+- **命令行历史**：`%APPDATA%\Microsoft\Windows\PowerShell\PSReadLine\ConsoleHost_history.txt`。
+  **它没有逐条时间戳**，只能靠文件 mtime 判断"那段时间敲过没有" ——
+  能得出"敲过"，**不能**得出"敲了什么、什么时候敲的"。别把它写成时间线。
+
 ## 「是谁在用」—— 登录账号，最直接的证据
 
 同一个 Windows 账户下，系统层面区分不了操作人。但**游戏/客户端自己记着"我是谁"**：
@@ -305,6 +334,14 @@ RustDesk / ScreenConnect / LogMeIn / VNC）的安装与日志，2.10c 给 mstsc 
 **另一个**：`collect.ps1` 含中文，**必须存成 UTF-8 with BOM**。无 BOM 时 Windows PowerShell 5.1
 按 GBK 解码，中文串的字节会吃掉后面的引号/大括号 → 直接语法错；
 且这个错**只在改过中文注释后**才出现（字节对齐一变就崩），报错行号还常指向无辜的那一行。
+
+**还有一个**：**每个固定盘都有自己的回收站**。只 glob `C:\$Recycle.Bin\*`
+会在别的盘上静默漏掉删除记录（实测本机 D 盘就有一个）。
+同理，扫描范围要从 `fixed_drives()` 枚举，不要写死 `C:`。
+
+**报告必须真的打印数据源**。每个检查都填了 `source=`，但渲染循环曾经把它整个丢掉 ——
+技能里写着"每一项都要打印它实际看了哪个数据源"，而产物里看不到。
+**纪律写在文档里、没落在产物上，等于没有。** 改完要**在生成的 HTML 里搜一遍**确认它真的出现了。
 
 ## 来源与许可（接进来的第三方）
 

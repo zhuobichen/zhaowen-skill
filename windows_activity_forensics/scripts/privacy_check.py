@@ -23,6 +23,29 @@ analyze.py 回答「他做了什么」（程序运行、登录、远程控制）
 另外每项都会打印**它实际看了哪个数据源**，以便人工复核。
 """
 import os, io, sys, re, glob, json, shutil, sqlite3, argparse, datetime, subprocess, tempfile
+try:
+    import winreg
+except ImportError:          # 非 Windows：所有依赖它的检查会报 UNKNOWN，不会崩
+    winreg = None
+
+
+def fixed_drives():
+    """所有**固定**盘（排除可移动/光驱/网络盘）。
+
+    「只看 C 盘」是这类工具最常见的静默漏检来源：回收站、临时目录、
+    下载目录都可能在你另外的盘上。宁可多扫，也不要因为没列全而报一个假的 0。
+    """
+    out = []
+    try:
+        import ctypes
+        buf = ctypes.create_unicode_buffer(512)
+        n = ctypes.windll.kernel32.GetLogicalDriveStringsW(512, buf)
+        for d in buf[:n].split('\x00'):
+            if d and ctypes.windll.kernel32.GetDriveTypeW(d) == 3:
+                out.append(d)
+    except Exception:
+        out = ['C:\\']
+    return out
 
 W0 = W1 = None
 HOME = os.environ.get('USERPROFILE', '')
@@ -47,6 +70,14 @@ except Exception:
 
 def inw(t):
     return t is not None and W0 <= t <= W1
+
+
+def _as_dt(s):
+    """PowerShell 的 ToString('s') → datetime（2026-10-01T00:32:34）。"""
+    try:
+        return datetime.datetime.fromisoformat(str(s).strip())
+    except (ValueError, TypeError):
+        return None
 
 
 def mtime(p):
@@ -91,9 +122,10 @@ def _check_timebase():
             raise SystemExit('TIMEBASE SELFTEST FAILED: %r -> %r' % (p, back))
 
 
-def add(key, title, verdict, evidence, items=None, note=''):
+def add(key, title, verdict, evidence, items=None, note='', source=''):
     results.append({'key': key, 'title': title, 'verdict': verdict,
-                    'evidence': evidence, 'items': items or [], 'note': note})
+                    'evidence': evidence, 'items': items or [], 'note': note,
+                    'source': source})
 
 
 def ps(cmd, timeout=180):
@@ -707,9 +739,16 @@ def chk_jumplists():
 
 
 def chk_recycle():
-    """窗口内的删除记录。"""
+    """窗口内的删除记录。
+
+    **每个固定盘都有自己的回收站。** 只看 `C:\\$Recycle.Bin` 会在别的盘上
+    漏掉删除记录 —— 实测本机 D 盘就有一个。所以要遍历所有固定盘。
+    """
     hits, items, total = 0, [], 0
-    for root in glob.glob(r'C:\$Recycle.Bin\*'):
+    recyc = []
+    for drv in fixed_drives():
+        recyc += glob.glob(os.path.join(drv, '$Recycle.Bin', '*'))
+    for root in recyc:
         for f in glob.glob(os.path.join(root, '$I*')):
             try:
                 d = open(f, 'rb').read(4000)
@@ -736,8 +775,9 @@ def chk_recycle():
                 hits += 1
                 items.append('%s  %s' % (t.strftime('%m-%d %H:%M:%S'), name[:110]))
     return dict(verdict=HIT if hits else CLEAR,
-                evidence='回收站共 %d 项，窗口内删除 %d 项' % (total, hits),
-                items=items,
+                evidence='回收站共 %d 项（%d 个盘），窗口内删除 %d 项'
+                         % (total, len(recyc), hits),
+                items=items, source='; '.join(recyc[:8]) or '(无)',
                 note='清空回收站会一并抹掉证据 —— 这里 0 条不能反证"没删过"。')
 
 
@@ -1041,6 +1081,236 @@ def chk_logged_accounts():
                 items=items, note=note)
 
 
+def chk_camera_mic():
+    """摄像头 / 麦克风有没有被用过。
+
+    这是「他有没有开你的摄像头、录你的声音」**唯一**的证据源 ——
+    Windows 把每个应用的最近一次启停时刻记在
+    `...\\CapabilityAccessManager\\ConsentStore\\<webcam|microphone>\\<应用>` 的
+    LastUsedTimeStart / LastUsedTimeStop 里。
+
+    **判定要按"区间重叠"**，不是"起点落在窗口内"：摄像头常常是窗口开始前就开着、
+    一直开到窗口内。只看起点会把这种情况整个漏掉。
+    """
+    if winreg is None:
+        return dict(verdict=UNKNOWN, evidence='非 Windows 或无 winreg 模块', items=[])
+    items = []
+    hits = 0
+    checked = 0
+    sub = (r'Software\Microsoft\Windows\CurrentVersion\CapabilityAccessManager'
+           r'\ConsentStore\\')
+    for kind, label in (('webcam', '摄像头'), ('microphone', '麦克风')):
+        rows = []
+        for hive, hn in ((winreg.HKEY_CURRENT_USER, 'HKCU'),
+                         (winreg.HKEY_LOCAL_MACHINE, 'HKLM')):
+            path = sub + kind
+            try:
+                k = winreg.OpenKey(hive, path)
+            except OSError:
+                continue
+            checked += 1
+            i = 0
+            while True:
+                try:
+                    name = winreg.EnumKey(k, i)
+                    i += 1
+                except OSError:
+                    break
+                try:
+                    sk = winreg.OpenKey(k, name)
+                    s = winreg.QueryValueEx(sk, 'LastUsedTimeStart')[0]
+                    e = winreg.QueryValueEx(sk, 'LastUsedTimeStop')[0]
+                except OSError:
+                    continue
+                rows.append((filetime_to_dt(s), filetime_to_dt(e), hn, name))
+        rows.sort(key=lambda r: r[0] or datetime.datetime.min, reverse=True)
+        for s, e, hn, name in rows[:8]:
+            # 区间重叠：开始 <= 窗口结束 且 （结束为空 或 结束 >= 窗口开始）
+            overlaps = bool(s) and s <= W1 and (e is None or e >= W0)
+            if overlaps:
+                hits += 1
+                items.append('%s  %s 在窗口内使用过（%s → %s）'
+                             % (label, name[:44],
+                                s.strftime('%m-%d %H:%M:%S'),
+                                e.strftime('%m-%d %H:%M:%S') if e else '未记录结束'))
+            else:
+                items.append('%s  %s  最近一次 %s → %s（窗口外）'
+                             % (label, name[:44],
+                                s.strftime('%m-%d %H:%M') if s else '?',
+                                e.strftime('%m-%d %H:%M') if e else '?'))
+    if not checked:
+        return dict(verdict=UNKNOWN,
+                    evidence='读不到 ConsentStore（该账户/系统版本无此键）', items=[],
+                    note='读不到不等于没被用过 —— 这是"没查成"。')
+    return dict(verdict=HIT if hits else CLEAR,
+                evidence='窗口内使用过 %d 次（摄像头/麦克风合计）' % hits
+                         if hits else '窗口内摄像头与麦克风都没有使用记录',
+                items=items,
+                source=sub + 'webcam|microphone 的 LastUsedTimeStart/Stop',
+                note='判定按时间区间重叠，不是"起点落在窗口内"——'
+                     '设备可能在窗口开始前就开着、一直持续到窗口内。')
+
+
+def chk_downloads():
+    """窗口内有没有下载过文件 —— 扫所有 Chromium 系的 downloads 表。
+
+    这和"下载文件夹里多了什么"是两件事：文件夹只能看到**结果**，
+    浏览器的 downloads 表还记着**来源 URL**（谁给的、从哪个站下的）。
+    """
+    dbs = _chromium_history_dbs()
+    if not dbs:
+        return dict(verdict=UNKNOWN, evidence='未发现任何 Chromium 系历史库', items=[])
+    hits, rows, failed = 0, [], 0
+    for h, label in sorted(dbs.items(), key=lambda kv: kv[1]):
+        tmp = os.path.join(T or tempfile.gettempdir(), '_pc_dl.db')
+        try:
+            shutil.copy2(h, tmp)
+            for ext in ('-wal', '-shm'):
+                if os.path.isfile(h + ext):
+                    shutil.copy2(h + ext, tmp + ext)
+            con = sqlite3.connect(tmp)
+            got = list(con.execute(
+                'SELECT start_time, target_path, tab_url FROM downloads '
+                'WHERE start_time>=? AND start_time<=?',
+                (dt_to_chrome(W0), dt_to_chrome(W1))))
+            con.close()
+            for ts, tp, url in got:
+                hits += 1
+                rows.append('%-44s  %s\n        来自 %s'
+                            % (label, str(tp)[:110], str(url)[:110]))
+        except Exception:
+            failed += 1
+        finally:
+            for ext in ('', '-wal', '-shm'):
+                try:
+                    os.remove(tmp + ext)
+                except OSError:
+                    pass
+    if failed and not hits:
+        return dict(verdict=UNKNOWN,
+                    evidence='扫描 %d 个库中有 %d 个读不到 downloads 表，且窗口内无下载'
+                             % (len(dbs), failed), items=[],
+                    note='读不动的那些无法排除 —— 这是"没查成"，不是"没下载"。')
+    return dict(verdict=HIT if hits else CLEAR,
+                evidence='扫描 %d 个库，窗口内下载 %d 个文件' % (len(dbs), hits),
+                items=rows,
+                source='; '.join(sorted(dbs.values())) + ' 的 downloads 表',
+                note='浏览器下载只是一条路：直接用 U 盘 / 资源管理器复制不写这里，'
+                     '要配合「外部存储」那一项一起看。')
+
+
+def chk_console_history():
+    """窗口内有没有人敲过命令行。
+
+    `ConsoleHost_history.txt` 只有"整个文件最后一次被写"的时间，**没有逐条时间戳**。
+    所以能得出的只有一条：**文件 mtime 落在窗口内 = 那段时间有人在这个会话里敲过命令**。
+    反过来说不成立 —— 窗口内没敲过，文件 mtime 也可能因为别的原因更新。
+    """
+    paths = [os.path.join(R, 'Microsoft', 'Windows', 'PowerShell', 'PSReadLine',
+                          'ConsoleHost_history.txt')]
+    items, hits, found = [], 0, 0
+    for p in paths:
+        if not os.path.isfile(p):
+            continue
+        found += 1
+        t = mtime(p)
+        if t and inw(t):
+            hits += 1
+            items.append('%s  <== 窗口内被写  %s' % (t.strftime('%m-%d %H:%M:%S'), p))
+        else:
+            items.append('%s  最后写入 %s（窗口外）' % (p, t.strftime('%m-%d %H:%M') if t else '?'))
+    if not found:
+        return dict(verdict=UNKNOWN,
+                    evidence='没有 PowerShell 历史文件（该会话从未用过 PS，或已被删）',
+                    items=[], source=' | '.join(paths),
+                    note='文件不存在本身也可能意味着"被删过"—— 但没法区分，所以记 UNKNOWN。')
+    return dict(verdict=HIT if hits else CLEAR,
+                evidence='窗口内命令行历史文件%s被写' % ('有' if hits else '未'),
+                items=items, source=' | '.join(paths),
+                note='这个文件没有逐条时间戳，只能靠文件 mtime 判断"那段时间敲过没有"，'
+                     '不能还原敲了什么、也不能按条定时刻。')
+
+
+def chk_tampering():
+    """痕迹有没有被人动过 —— 决定"查不到"到底是"没发生"还是"被清掉了"。
+
+    这一项不是找"他做了什么"，而是给**其它所有项的结论定强度**：
+    如果日志被清、审计被关、Prefetch 被停、系统时间被改，
+    那么别处的"没有记录"就不能读成"没发生过"。
+    """
+    items = []
+    bad, unknown = 0, 0
+
+    def ev(log, eid, label):
+        nonlocal bad, unknown
+        cmd = ("$ErrorActionPreference='SilentlyContinue';"
+               "Get-WinEvent -FilterHashtable @{LogName='%s';Id=%d} -MaxEvents 3 "
+               "| ForEach-Object { $_.TimeCreated.ToString('s') }" % (log, eid))
+        out, err = ps(cmd)
+        times = [x.strip() for x in out.splitlines() if x.strip()]
+        if not times and err:
+            unknown += 1
+            items.append('%s：查询失败（%s）' % (label, err.strip().splitlines()[0][:70]))
+            return
+        inw_t = [t for t in times if _as_dt(t) and inw(_as_dt(t))]
+        if inw_t:
+            bad += 1
+            items.append('%s  <== 窗口内发生：%s' % (label, '、'.join(inw_t)))
+        elif times:
+            items.append('%s：最近一次 %s（窗口外）' % (label, times[0]))
+        else:
+            items.append('%s：无此事件' % label)
+
+    ev('Security', 1102, '安全日志被清空')
+    ev('System', 104, '系统日志被清空')
+    ev('System', 1, '系统时间被修改(Kernel-General)')
+
+    # Prefetch / SysMain 是否被关 —— 关了就再也不写 .pf，会让别处"没记录"
+    if winreg is not None:
+        try:
+            k = winreg.OpenKey(
+                winreg.HKEY_LOCAL_MACHINE,
+                r'SYSTEM\CurrentControlSet\Control\Session Manager'
+                r'\Memory Management\PrefetchParameters')
+            v = winreg.QueryValueEx(k, 'EnablePrefetcher')[0]
+            if int(v) == 0:
+                bad += 1
+                items.append('Prefetch 已被关闭（EnablePrefetcher=0）'
+                             '  <== 之后的程序运行不会再留下 .pf')
+            else:
+                items.append('Prefetch 处于开启状态（EnablePrefetcher=%s）' % v)
+        except OSError:
+            unknown += 1
+            items.append('读不到 EnablePrefetcher')
+
+    # BAM 是否为空 —— 正常机器不会空
+    ent = bam_entries()
+    if ent is None:
+        unknown += 1
+        items.append('读不到 BAM')
+    elif len(ent) == 0:
+        bad += 1
+        items.append('BAM 是空的  <== 正常机器不会空，可能被清过')
+    else:
+        items.append('BAM 有 %d 条记录（正常）' % len(ent))
+
+    src = 'Security/System 事件日志 1102/104/1 | ' \
+          r'HKLM\SYSTEM\...\PrefetchParameters | BAM'
+    if bad:
+        return dict(verdict=HIT,
+                    evidence='发现 %d 条"痕迹被抹"的迹象' % bad, items=items, source=src,
+                    note='这一项命中**不会**告诉你"他做了什么"，但它会让别处的'
+                         '"没有记录"失去说服力 —— 报告里别处那些 CLEAR 要打折看。')
+    if unknown:
+        return dict(verdict=UNKNOWN,
+                    evidence='有 %d 项没能查成，其余正常' % unknown, items=items, source=src,
+                    note='没查成的那几项无法排除 —— 不要当成"没问题"。'
+                         '（查安全日志需要管理员权限。）')
+    return dict(verdict=CLEAR,
+                evidence='没有发现痕迹被抹的迹象（日志未被清、Prefetch 开启、BAM 正常）',
+                items=items, source=src)
+
+
 CHECKS = [
     ('外部存储', '有没有插 U 盘 / 移动硬盘', chk_external_storage),
     ('文档', '有没有打开过文档', chk_documents),
@@ -1049,14 +1319,23 @@ CHECKS = [
     ('文件夹', '资源管理器里翻过哪些文件夹', chk_folder_browsing),
     ('上网', '浏览器访问记录', chk_browsing),
     ('截图', '截图 / 录屏', chk_screenshots),
-    ('浏览器敏感库', '密码库 / 自动填充 / 书签被碰过吗', chk_browser_secrets),
+    ('浏览器敏感库', '密码库 / 自动填充 / 书签被碰过吗', chk_browser_secrets,
+     '浏览器 User Data 下的 Login Data / Web Data / Bookmarks / Preferences / Shortcuts / Top Sites'),
     ('运行框', 'Win+R 用过什么', chk_run_dialog),
     ('跳转列表', '哪个应用被用过', chk_jumplists),
     ('回收站', '窗口内删了什么', chk_recycle),
-    ('聊天客户端', '微信/QQ 当时开着吗', chk_chat_clients),
-    ('通知中心', '屏幕上有没有弹出过消息预览', chk_notifications),
+    ('聊天客户端', '微信/QQ 当时开着吗', chk_chat_clients,
+     r'%SystemRoot%\Prefetch\WEIXIN|WECHATAPPEX|QQ.EXE-*.pf + '
+     r'%APPDATA%\Tencent\xwechat\log\mm_*.xlog'),
+    ('通知中心', '屏幕上有没有弹出过消息预览', chk_notifications,
+     r'%LOCALAPPDATA%\Microsoft\Windows\Notifications\wpndatabase.db 的 Notification 表'),
     ('执行记录差集', '窗口内跑过、但 Prefetch 漏掉的程序', chk_bam_missing),
-    ('登录账号', '窗口内登录过哪些账号', chk_logged_accounts),
+    ('登录账号', '窗口内登录过哪些账号', chk_logged_accounts,
+     r'<英雄联盟安装目录>\Game\Logs\LeagueClient Logs\*LeagueClient.log 的 CurrentSummoner'),
+    ('摄像头/麦克风', '有没有开过摄像头、录过音', chk_camera_mic),
+    ('下载', '窗口内下载过什么文件', chk_downloads),
+    ('命令行', '窗口内有没有人敲过命令', chk_console_history),
+    ('痕迹是否被抹', '日志/审计/记录有没有被人动过', chk_tampering),
 ]
 
 BLIND_SPOTS = [
@@ -1100,13 +1379,18 @@ def main():
         raise SystemExit('结束时间早于起始时间')
     _check_timebase()
 
-    for key, title, fn in CHECKS:
+    for entry in CHECKS:
+        key, title, fn = entry[0], entry[1], entry[2]
+        # 第 4 项是"兜底数据源"：检查函数自己没声明 source 时用它。
+        # 这样"每一项都要打印数据源"这条纪律不会再因为某个函数忘了写而破掉。
+        hint = entry[3] if len(entry) > 3 else ''
         try:
             r = fn()
             add(key, title, r.get('verdict', UNKNOWN), r.get('evidence', ''),
-                r.get('items'), r.get('note', ''))
+                r.get('items'), r.get('note', ''), r.get('source') or hint)
         except Exception as e:
-            add(key, title, UNKNOWN, '检查过程抛异常: %s: %s' % (type(e).__name__, e), [])
+            add(key, title, UNKNOWN, '检查过程抛异常: %s: %s' % (type(e).__name__, e),
+                [], '', hint)
 
     pc = power_context()
     n_hit = sum(1 for r in results if r['verdict'] == HIT)
@@ -1133,6 +1417,8 @@ def main():
         print('  [%-7s] %-14s %s' % (r['verdict'], r['key'], r['evidence']))
         for it in r['items'][:6]:
             print('              - %s' % it[:120])
+        if r.get('source'):
+            print('              源: %s' % str(r['source'])[:110])
     print()
     print('BLIND SPOTS: %d (see report)' % len(BLIND_SPOTS))
 
@@ -1213,6 +1499,11 @@ def write_html(path, n_hit, n_clear, n_unk, pc=None):
         P.append('<div class="t">%s <span style="color:%s;font-size:12px">［%s］</span></div>'
                  % (e(r['title']), col[v], lbl[v]))
         P.append('<div class="s">%s</div>' % e(r['evidence']))
+        if r.get('source'):
+            # 技能里写着"每一项都要打印它实际看了哪个数据源，以便人工复核" ——
+            # 这里必须真的打出来，否则那条纪律只存在于文档里。
+            P.append('<div style="font-size:11.5px;color:#8b98a8;font-family:Consolas,monospace;'
+                     'margin-top:5px;word-break:break-all">数据源 · %s</div>' % e(r['source']))
         if r['items']:
             P.append('<ul>')
             for it in r['items'][:40]:
