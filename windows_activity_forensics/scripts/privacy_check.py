@@ -645,7 +645,10 @@ def chk_screenshots():
     for d in (os.path.join(HOME, 'Videos', 'Captures'), os.path.join(HOME, 'Pictures', 'Screenshots')):
         if os.path.isdir(d):
             src.append(d)
-            for f in glob.glob(os.path.join(d, '*')):
+            # 递归：截图可能被存进子目录，只扫一层会漏
+            for f in glob.glob(os.path.join(d, '**', '*'), recursive=True):
+                if not os.path.isfile(f):
+                    continue
                 t = mtime(f)
                 if t and inw(t):
                     hits += 1
@@ -1303,7 +1306,7 @@ def chk_tampering():
     if bad:
         return dict(verdict=HIT,
                     evidence='发现 %d 条"痕迹被抹"的迹象' % bad, items=items, source=src,
-                    note='这一项命中**不会**告诉你"他做了什么"，但它会让别处的'
+                    note='这一项命中不会告诉你"他做了什么"，但它会让别处的'
                          '"没有记录"失去说服力 —— 报告里别处那些 CLEAR 要打折看。')
     if unknown:
         return dict(verdict=UNKNOWN,
@@ -1617,6 +1620,216 @@ def chk_file_search():
                 items=items, source=src)
 
 
+def chk_printing():
+    """有没有人打印过东西 —— 打印是"把内容带走"且**几乎不留文件**的一条路。
+
+    **这里有个必须避开的坑**：`Microsoft-Windows-PrintService/Operational`
+    在多数机器上**默认是关闭的**。日志关着时查询返回 0 条 —— 把它当成
+    "没打印过"就是**用一个查不到的结果当成了否定证据**。所以必须先问日志
+    是否启用：没启用就直接记 UNKNOWN。
+    """
+    items, hits = [], 0
+    failed = []
+
+    # 1) 日志是否启用 —— 决定"0 条"能不能算数
+    out, _ = ps("(Get-WinEvent -ListLog 'Microsoft-Windows-PrintService/Operational' "
+                "-ErrorAction SilentlyContinue).IsEnabled")
+    enabled = out.strip().lower() in ('true', '1')
+    items.append('打印服务事件日志已启用：%s' % ('是' if enabled else '否'))
+
+    if enabled:
+        cmd = ("$ErrorActionPreference='SilentlyContinue';"
+               "Get-WinEvent -FilterHashtable @{LogName='Microsoft-Windows-PrintService/Operational';"
+               "StartTime='%s';EndTime='%s'} -MaxEvents 50 | ForEach-Object {"
+               " $_.TimeCreated.ToString('s') + \"`t\" + $_.Id + \"`t\" + "
+               "($_.Message -replace '\\s+',' ') }"
+               % (W0.strftime('%Y-%m-%dT%H:%M:%S'), W1.strftime('%Y-%m-%dT%H:%M:%S')))
+        out, err = ps(cmd)
+        for line in out.splitlines():
+            line = line.strip()
+            if line:
+                hits += 1
+                items.append('%s  <== 窗口内打印事件  %s' % (line[:10], line[11:190]))
+        if not out.strip():
+            items.append('窗口内打印事件：0 条')
+    else:
+        failed.append('打印事件日志未启用')
+
+    # 2) 打印队列里有没有留下的作业
+    spool = os.path.join(os.environ.get('SystemRoot', r'C:\Windows'),
+                         'System32', 'spool', 'PRINTERS')
+    if os.path.isdir(spool):
+        left = [f for f in os.listdir(spool) if os.path.isfile(os.path.join(spool, f))]
+        items.append('打印队列残留作业：%d 个' % len(left))
+
+    # 3) 装了哪些"虚拟打印机" —— 决定了能不能"打印成 PDF 带走"
+    try:
+        k = winreg.OpenKey(winreg.HKEY_CURRENT_USER,
+                           r'Software\Microsoft\Windows NT\CurrentVersion\Windows')
+        dev = str(winreg.QueryValueEx(k, 'Device')[0]).split(',')[0]
+        items.append('默认打印机：%s' % dev)
+    except (OSError, IndexError):
+        items.append('读不到默认打印机')
+
+    src = ('Microsoft-Windows-PrintService/Operational 事件日志 | '
+           r'%SystemRoot%\System32\spool\PRINTERS | 默认打印机注册表')
+    if hits:
+        return dict(verdict=HIT, evidence='窗口内有 %d 条打印事件' % hits,
+                    items=items, source=src)
+    if failed:
+        return dict(verdict=UNKNOWN,
+                    evidence='打印事件日志%s —— 无法排除"打印过"' % failed[0],
+                    items=items, source=src,
+                    note='这一项没查成。打印日志默认关闭，要查得先手动打开。'
+                         '别把这里读成"没打印过"。')
+    return dict(verdict=CLEAR, evidence='窗口内没有打印事件，打印队列也没有残留',
+                items=items, source=src,
+                note='打印成 PDF 会落一个文件（在你自己选的目录），'
+                     '那条路要配合「文档」「下载」一起看。')
+
+
+def chk_cloud_sync():
+    """有没有把文件同步 / 上传到云端 —— "把东西带走"的主要途径之一。
+
+    **必须把"客户端自己的状态文件"和"同步的内容"分开算。**
+    实测 OneDrive 每次登录都会写一串 `logs/…`、`settings/…`、`setup/logs/…`
+    —— 把它们算成命中，就等于每台装了 OneDrive 的机器都"发现把文件传上云了"，
+    真正的信号会被淹掉。所以：
+
+      内容目录（`%USERPROFILE%\\OneDrive` 等）有动静  → HIT，这才是"文件被同步"
+      只有客户端状态/日志被写                        → 只作背景列出，不算命中
+    """
+    # (显示名, 内容目录, 客户端状态目录)
+    roots = (
+        ('OneDrive',
+         [os.path.join(HOME, 'OneDrive')] +
+         glob.glob(os.path.join(HOME, 'OneDrive - *')),
+         [os.path.join(L, 'Microsoft', 'OneDrive'), os.path.join(R, 'Microsoft', 'OneDrive')]),
+        ('百度网盘', [os.path.join(HOME, 'BaiduNetdiskDownload')],
+         [os.path.join(R, 'baidu'), os.path.join(L, 'baidu'),
+          os.path.join(R, 'BaiduNetdisk'), os.path.join(L, 'BaiduNetdisk')]),
+        ('阿里云盘', [], [os.path.join(R, 'aDrive'), os.path.join(L, 'aDrive'),
+                          os.path.join(R, 'Alipan'), os.path.join(L, 'Alipan')]),
+        ('夸克网盘', [], [os.path.join(R, 'Quark'), os.path.join(L, 'Quark'),
+                          os.path.join(R, 'QuarkCloudDrive'), os.path.join(L, 'QuarkCloudDrive')]),
+        ('天翼云盘', [], [os.path.join(R, 'CTYun'), os.path.join(L, 'CTYun')]),
+        ('迅雷', [], [os.path.join(R, 'Thunder Network'), os.path.join(L, 'Thunder Network')]),
+    )
+    items, hits, present, ctx = [], 0, [], []
+
+    def in_window_files(bases):
+        rows = []
+        for b in bases:
+            if not os.path.isdir(b):
+                continue
+            for p in glob.glob(os.path.join(b, '**', '*'), recursive=True):
+                if os.path.isfile(p):
+                    t = mtime(p)
+                    if t and inw(t):
+                        rows.append((t, p))
+        return sorted(rows)
+
+    for label, content, state in roots:
+        if not (any(os.path.isdir(b) for b in content) or
+                any(os.path.isdir(b) for b in state)):
+            continue
+        present.append(label)
+        for t, p in in_window_files(content)[:8]:
+            hits += 1
+            items.append('%s  %s  <== 窗口内内容目录被写  %s'
+                         % (label, t.strftime('%m-%d %H:%M:%S'), p[-90:]))
+        ctx += [(label, t, p) for t, p in in_window_files(state)[:4]]
+
+    if not present:
+        return dict(verdict=UNKNOWN,
+                    evidence='本机没有检测到已知的云同步/网盘客户端',
+                    items=[], source='OneDrive / 百度网盘 / 阿里云盘 / 夸克 / 天翼 / 迅雷',
+                    note='也可能是装了但目录名不在清单里 —— 这是"没查到"，不是"没有"。')
+
+    if ctx:
+        items.append('（以下只是客户端自己的状态/日志，每次开机都会写，不算"传文件"）')
+        for label, t, p in ctx[:8]:
+            items.append('%s  %s  客户端状态  %s'
+                         % (label, t.strftime('%m-%d %H:%M:%S'), p[-80:]))
+
+    src = ' / '.join(present) + ' 的内容目录与客户端状态目录'
+    if hits:
+        return dict(verdict=HIT,
+                    evidence='窗口内云同步的内容目录有 %d 个文件被改动' % hits,
+                    items=items, source=src,
+                    note='命中说明"有文件在同步目录里被动过"，不一定是有人手动上传 —— '
+                         '后台同步也会动。要看上面具体是哪些文件。')
+    return dict(verdict=CLEAR,
+                evidence='窗口内云同步的内容目录没有文件被改动（本机装了：%s）'
+                         % '、'.join(present),
+                items=items, source=src,
+                note='云端上传本身不在本机留记录；这里看的是同步目录的本地改动。'
+                     '客户端自己的日志每次开机都会写，已单独列出、不计入结论。')
+
+
+def _boot_events_in_window():
+    """窗口内的开机事件（System 日志 6005=事件日志服务启动）。"""
+    cmd = ("$ErrorActionPreference='SilentlyContinue';"
+           "Get-WinEvent -FilterHashtable @{LogName='System';Id=6005;"
+           "StartTime='%s';EndTime='%s'} | ForEach-Object { $_.TimeCreated.ToString('s') }"
+           % (W0.strftime('%Y-%m-%dT%H:%M:%S'), W1.strftime('%Y-%m-%dT%H:%M:%S')))
+    out, _ = ps(cmd)
+    return [t for t in (_as_dt(s) for s in out.splitlines()) if t]
+
+
+def chk_thumbcache():
+    """有人用**缩略图**浏览过文件吗 —— "看到了图片内容"却不打开任何文件的旁证。
+
+    Explorer 显示缩略图时会写 `%LOCALAPPDATA%\\Microsoft\\Windows\\Explorer\\thumbcache_*.db`。
+
+    **必须把"开机时刷新"排除掉**：登录后 Explorer 会重建一轮缩略图，每次开机都写。
+    把它算成命中，就等于每台机器都"发现有人翻过图片"。只有**远离开机时刻**的写入
+    才说明"那段时间真的去浏览了以前没看过的图片/文件"。
+
+    **方向**：没被写**不能**说明"没看过" —— 已缓存过的文件再看不会重写。
+    所以命中很有意义，没命中只是弱证据。
+    """
+    base = os.path.join(L, 'Microsoft', 'Windows', 'Explorer')
+    boots = _boot_events_in_window()
+    items, files = [], 0
+    quiet, near_boot = [], []
+    for p in sorted(glob.glob(os.path.join(base, 'thumbcache_*.db'))):
+        files += 1
+        t = mtime(p)
+        try:
+            sz = os.path.getsize(p)
+        except OSError:
+            sz = 0
+        if not (t and inw(t)):
+            items.append('%s  最后写入 %s  (%.0f KB)  （窗口外）'
+                         % (os.path.basename(p), t.strftime('%m-%d %H:%M') if t else '?',
+                            sz / 1024))
+            continue
+        close = any(abs((t - b).total_seconds()) <= 180 for b in boots)
+        line = '%s  %s  (%.0f KB)' % (os.path.basename(p),
+                                      t.strftime('%m-%d %H:%M:%S'), sz / 1024)
+        if close:
+            near_boot.append(t)
+            items.append(line + '  （开机后 3 分钟内，属登录时自动刷新）')
+        else:
+            quiet.append(t)
+            items.append(line + '  <== 远离开机时刻，值得注意')
+    if not files:
+        return dict(verdict=UNKNOWN, evidence='没有 thumbcache 文件',
+                    items=[], source=base)
+    if not boots:
+        items.append('（读不到窗口内的开机事件，无法把"登录时刷新"排除掉 —— 已按最保守方式计入）')
+    return dict(verdict=HIT if (quiet or not boots) else CLEAR,
+                evidence=('窗口内缩略图缓存被写 %d 次，其中 %d 次远离开机时刻'
+                          % (len(quiet) + len(near_boot), len(quiet)))
+                         if (quiet or near_boot) else
+                         '窗口内缩略图缓存没有被写（= 没有生成新缩略图）',
+                items=items, source=os.path.join(base, 'thumbcache_*.db'),
+                note='只有远离开机时刻的写入才算"那段时间去浏览了新的图片/文件"；'
+                     '开机后 3 分钟内的刷新是登录时自动发生的，不算。'
+                     '没被写只是弱证据：已缓存过的文件再看不会重写。')
+
+
 CHECKS = [
     ('远程连入', '有没有人远程连进来过', chk_remote_access),
     ('外部存储', '有没有插 U 盘 / 移动硬盘', chk_external_storage),
@@ -1626,6 +1839,9 @@ CHECKS = [
     ('文件夹', '资源管理器里翻过哪些文件夹', chk_folder_browsing),
     ('上网', '浏览器访问记录', chk_browsing),
     ('截图', '截图 / 录屏', chk_screenshots),
+    ('缩略图', '有没有人用缩略图看过图片', chk_thumbcache),
+    ('打印', '有没有人打印过东西', chk_printing),
+    ('云同步', '有没有把文件同步到云端', chk_cloud_sync),
     ('浏览器敏感库', '密码库 / 自动填充 / 书签被碰过吗', chk_browser_secrets,
      '浏览器 User Data 下的 Login Data / Web Data / Bookmarks / Preferences / Shortcuts / Top Sites'),
     ('运行框', 'Win+R 用过什么', chk_run_dialog),
