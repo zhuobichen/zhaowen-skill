@@ -31,7 +31,7 @@ python scripts/privacy_check.py --from "2026-01-02 09:00" --to "2026-01-02 12:00
 | | `analyze.py` | `privacy_check.py` |
 |---|---|---|
 | 问题 | **他做了什么** | **他碰到了我什么** |
-| 证据源 | Prefetch / UserAssist / 安全日志 / 计划任务 / 自启动 / 浏览器历史 / 回收站 / 远程控制日志 | USB / MRU / shellbags / 文件对话框 / Office / 截图 / 浏览器敏感库 / Win+R / 跳转列表 |
+| 证据源 | Prefetch / UserAssist / 安全日志 / 计划任务 / 自启动 / 浏览器历史 / 回收站 / 远程控制日志 | USB / MRU / shellbags / 文件对话框 / Office / 截图 / 浏览器敏感库 / Win+R / 跳转列表 / **通知中心** |
 | 时间粒度 | 天（`--days` / `--from/--to` 到日） | **到分钟**（`--from "YYYY-MM-DD HH:MM"`） |
 
 两者证据源几乎不重叠，**要一起跑**。
@@ -170,6 +170,23 @@ session send <帧数> frame, recv <字节> mouse <鼠标事件> key <按键> tex
 - **鼠标键盘都持续增长**：对方在真的操作这台机器。
 
 同时检查有无录制与文件传输产物（`*.mp4` / `*.tos`、`%USERPROFILE%\Downloads\ToDesk`）。
+
+## 通知中心：唯一能给出「屏幕上出现过什么字」的源
+
+`%LOCALAPPDATA%\Microsoft\Windows\Notifications\wpndatabase.db`（SQLite）里的 `Notification`
+表带 `Payload`（toast 的 XML，含**发件人与主题**）、`ArrivalTime`、`ExpiryTime`、`BootId`。
+它是整套隐私检查里**唯一装着"内容本身"而非"他点了什么"**的证据源 —— 其他人翻不到，
+但一个弹出来的预览是直接显示在屏幕上的。`privacy_check.py` 的「通知中心」一项就是查它。
+
+**判据只能是 `ArrivalTime`（到达时刻）。绝不要用 `ExpiryTime`** ——
+实测 `ExpiryTime = ArrivalTime + 30 天`，那是**保留期**，不是"弹窗消失的时刻"。
+拿它当"通知显示时间"会把 30 天内所有通知都算成"窗口内弹过"，方向完全反了。
+（这个错真的发生过：一度据此告诉用户"有 19 条通知覆盖了你的时段，请自己按 Win+N 确认"，
+实际窗口内一条都没到达。）
+
+**CLEAR 需要一个额外前提**：光看"窗口内 0 条"不够 —— 用户点掉单条、或"清除全部"
+都会删记录。所以要同时确认**库里还有窗口之前和之后的记录**（证明这个库在连续记录、
+没被清空过），才能把 CLEAR 和"查不到"区分开。代码里已按这个判据实现。
 
 ## 隐私检查必须用三态，且不容许把「没查成」混进「没有」
 

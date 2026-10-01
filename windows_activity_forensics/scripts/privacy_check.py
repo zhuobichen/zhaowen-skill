@@ -68,6 +68,22 @@ def dt_to_chrome(d):
     return int((d.timestamp() + CHROME_OFF) * 1000000)
 
 
+def filetime_to_dt(v):
+    """Windows FILETIME (UTC, 100ns since 1601) -> naive LOCAL datetime.
+
+    同一个坑在 analyze.py 里踩过一次：FILETIME 是 UTC，而 os.path.getmtime
+    返回本地时间。用 datetime(1601,1,1)+timedelta 得到的是裸 UTC，
+    和本地时间混在一起会整体差一个时区（UTC+8 上每天 00:00-08:00 全错）。
+    统一走 fromtimestamp。
+    """
+    if not v:
+        return None
+    try:
+        return datetime.datetime.fromtimestamp(v / 10000000.0 - CHROME_OFF)
+    except (OSError, OverflowError, ValueError):
+        return None
+
+
 def _check_timebase():
     for p in (datetime.datetime(2026, 1, 1), datetime.datetime.now().replace(microsecond=0)):
         back = chrome_to_dt(dt_to_chrome(p))
@@ -582,6 +598,98 @@ def chk_chat_clients():
                 note='客户端没开 = 聊天记录不可能被界面看到；但直接读本地数据库文件不会留下这里能查的痕迹。')
 
 
+def _toast_text(payload):
+    """从 toast 的 XML 里抽出"出现在屏幕上的那行字"（发件人 / 标题 / 正文首句）。"""
+    if not payload:
+        return '(无正文)'
+    s = payload.decode('utf-8', 'replace')
+    parts = re.findall(r'<text[^>]*>(.*?)</text>', s, re.S)
+    txt = ' | '.join(re.sub(r'<[^>]+>', '', p).strip() for p in parts if p.strip())
+    txt = re.sub(r'\s+', ' ', txt)
+    txt = txt.replace('&lt;', '<').replace('&gt;', '>').replace('&amp;', '&')
+    return txt[:160] or '(无正文)'
+
+
+def chk_notifications():
+    """窗口内有没有通知弹出来过。
+
+    这是整套检查里**唯一可能装着"实际显示在屏幕上的文字"**的证据源 ——
+    通知里带的是发件人和主题，是内容本身，不是"他点过什么"。
+
+    判据是 **ArrivalTime**（通知到达时刻）。**不要用 ExpiryTime**：
+    实测 ExpiryTime = ArrivalTime + 30 天（保留期），拿它当"弹窗时间"会得出完全错的结论。
+
+    方向性（必须看懂）：本项只能证明"窗口内没有通知**到达**"，
+    不能单独证明"屏幕上一个字都没出现过"。所以 CLEAR 还要求一个前提 ——
+    库里同时有窗口**之前和之后**的记录，否则就是"已被清空"而不是"没发生"。
+    """
+    db = os.path.join(L, 'Microsoft', 'Windows', 'Notifications', 'wpndatabase.db')
+    if not os.path.isfile(db):
+        return dict(verdict=UNKNOWN,
+                    evidence='未找到 %s' % db, items=[],
+                    note='没有通知库 = 这一项没查成，不等于"当时没有通知"。')
+
+    tmp = os.path.join(T or tempfile.gettempdir(), '_pc_wpn.db')
+    con = None
+    try:
+        # 连带 -wal / -shm 一起复制，否则可能漏掉尚未落盘的最新记录
+        for ext in ('', '-wal', '-shm'):
+            if os.path.isfile(db + ext):
+                shutil.copy2(db + ext, tmp + ext)
+        con = sqlite3.connect(tmp)
+        rows = list(con.execute('SELECT Id, Type, Payload, ArrivalTime FROM Notification'))
+    except Exception as e:
+        return dict(verdict=UNKNOWN,
+                    evidence='通知库读取失败：%s' % type(e).__name__, items=[],
+                    note='读不动不等于没有 —— 这是"没查成"。')
+    finally:
+        if con is not None:
+            con.close()
+        for ext in ('', '-wal', '-shm'):
+            try:
+                os.remove(tmp + ext)
+            except OSError:
+                pass
+
+    arrivals = [(filetime_to_dt(a), p, i) for i, t, p, a in rows]
+    arrivals = [(t, p, i) for t, p, i in arrivals if t is not None]
+    if not arrivals:
+        return dict(verdict=UNKNOWN,
+                    evidence='通知库有 %d 条记录但读不出到达时刻' % len(rows), items=[])
+
+    arrivals.sort()
+    inside = [x for x in arrivals if inw(x[0])]
+
+    if inside:
+        items = ['%s  %s' % (t.strftime('%m-%d %H:%M:%S'), _toast_text(p))
+                 for t, p, _ in inside]
+        return dict(verdict=HIT,
+                    evidence='窗口内有 %d 条通知到达' % len(inside),
+                    items=items,
+                    note='这些是通知栏里出现过的**内容**（发件人 / 主题），'
+                         '不是"他点过什么"。屏幕上是否真的可见，取决于当时显示器状态，文件层面判断不了。')
+
+    before = [t for t, _, _ in arrivals if t < W0]
+    after = [t for t, _, _ in arrivals if t > W1]
+    if before and after:
+        return dict(verdict=CLEAR,
+                    evidence='通知库共 %d 条，窗口内到达 0 条 —— '
+                             '且库里同时有窗口前后的记录（窗口前最近 %s，窗口后最近 %s），'
+                             '说明这个库确实覆盖了该时段、不是被清空过'
+                             % (len(rows), before[-1].strftime('%m-%d %H:%M'),
+                                after[0].strftime('%m-%d %H:%M')),
+                    items=['窗口前两天内的历史通知（供对照，说明库是连续记录的）：'] +
+                          ['%s  %s' % (t.strftime('%m-%d %H:%M:%S'), _toast_text(p))
+                           for t, p, _ in arrivals[-6:]],
+                    note='通知库只保留最近约 30 天，更早的会被系统清掉。'
+                         '另外：手动点掉或"清除全部"会删掉记录 —— 本项的 CLEAR 已排除这种情况'
+                         '（依据是窗口前后的记录都还在）。')
+    return dict(verdict=UNKNOWN,
+                evidence='窗口内到达 0 条，但库里没有同时覆盖窗口前后的记录，'
+                         '无法区分"没到达"和"已被清空"',
+                items=[], note='这一项没查成，不要读成"没有通知"。')
+
+
 CHECKS = [
     ('外部存储', '有没有插 U 盘 / 移动硬盘', chk_external_storage),
     ('文档', '有没有打开过文档', chk_documents),
@@ -595,6 +703,7 @@ CHECKS = [
     ('跳转列表', '哪个应用被用过', chk_jumplists),
     ('回收站', '窗口内删了什么', chk_recycle),
     ('聊天客户端', '微信/QQ 当时开着吗', chk_chat_clients),
+    ('通知中心', '屏幕上有没有弹出过消息预览', chk_notifications),
 ]
 
 BLIND_SPOTS = [
@@ -603,6 +712,14 @@ BLIND_SPOTS = [
     '浏览器内部页：edge:// / chrome:// 页面（历史、密码、书签设置页）不写入历史库。',
     '应用内自带浏览器：任何未列入检查清单的嵌入式 Chromium 都可能有自己的历史库。',
     '只读访问：多数检查靠"文件/注册表被改动"判断，纯读取可能不留痕。',
+    '活动历史 / 时间线（ActivitiesCache.db）：**本机有这个库，但它不含回答本问题所需的信息** '
+    '—— 逐条查过，记录里没有应用名也没有文档标题（实测 1126 条全为空壳），'
+    '所以它提供不了"当时前台是什么"。**不要在报告里把它算成一项通过的检查**：'
+    '查这种空库得到的 0 条不带任何信息，却会让人以为"看过屏幕内容了"。',
+    '剪贴板历史（Win+V）：系统默认关闭。**未启用时，历史上复制过的内容根本没有被记录过** —— '
+    '这里查不到既不能推出"没复制过"，也不代表"复制过但被清掉了"。'
+    '判断是否启用：注册表 HKCU\\Software\\Microsoft\\Clipboard 的 EnableClipboardHistory，'
+    '以及 %LOCALAPPDATA%\\Microsoft\\Windows\\Clipboard 目录是否存在；两者都没有就是从未启用。',
     '时间戳可被改写：有管理员权限的人可以篡改文件与注册表时间戳。本报告不是取证级证据。',
     '窗口之外：本报告只覆盖指定时间窗，窗口外发生的事不在范围内。',
 ]
