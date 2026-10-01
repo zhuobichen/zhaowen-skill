@@ -7,7 +7,6 @@
 | Skill | 目录 | 用途 |
 |-------|------|------|
 | docx 转公众号（clz） | [`clz_docx_to_mp/`](clz_docx_to_mp/) | 把 docx 转成公众号图文并推送草稿箱：解析 → 渲染微信兼容 HTML → 推送。内容忠实保留只做样式；含横滑相册、GIF 动效、平台硬限制实测记录 |
-| > | [`cnpc-job-apply/`](cnpc-job-apply/) | > |
 | 科研文献证据工程（ylx） | [`ylx_research_evidence_synthesis/`](ylx_research_evidence_synthesis/) | ylx·科研文献证据工程与 Related Work 写作：Claim-first（证据矩阵 + 逻辑树 + 综述），含输出样例 |
 | one-hub 用量监测（ylx） | [`ylx_onehub_usage_monitor/`](ylx_onehub_usage_monitor/) | 监测 one-hub API 用量与费用：总额度/已用/剩余、每日每月记账、各模型单价对比 |
 | 公众号后台操作（clz） | [`clz_wechat_mp_ops/`](clz_wechat_mp_ops/) | 微信公众号后台：草稿读写、新建草稿、正文 dispatch 改字、批量替换配图、四层发布前校验 |
@@ -19,6 +18,7 @@
 | ABaCAS 平台操纵 | [`abacas-cloud-ops/`](abacas-cloud-ops/) | ABaCAS Cloud 平台任务/文件/费效评估/结果导入与本地可视化（9 个脚本） |
 | n8n 工作流操纵 | [`n8n-web-ops/`](n8n-web-ops/) | n8n 网页操纵：登录、执行记录只读查看、callback_token 自动提取 |
 | 网申表单速填 | [`job-form-autofill/`](job-form-autofill/) | 按简历填任意网页的求职/网申表单：闭合选项（下拉/单选）交给 Jev 一次批量判定，需要写字的由助手依据简历生成；**绝不提交**，没依据的一律留空并列出"需要你提供"清单 |
+| 中石油网申填表 | [`cnpc-job-apply/`](cnpc-job-apply/) | 中石油高校毕业生招聘平台（zhaopin.cnpc.com.cn）校招网申简历填写：browser-act 填表原语、字段 id 清单、维护时间窗口、承诺告知书保存流程、CDP 混用陷阱 |
 | CNKI 基础搜索 | [`cnki-search/`](cnki-search/) | CNKI 关键词检索论文 |
 | CNKI 高级搜索 | [`cnki-advanced-search/`](cnki-advanced-search/) | 字段过滤（作者/标题/期刊/日期/来源类别） |
 | CNKI 论文下载 | [`cnki-download/`](cnki-download/) | 下载论文 PDF/CAJ（需登录态） |
