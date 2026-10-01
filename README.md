@@ -39,7 +39,7 @@
 | PM2.5 日均浓度 | [`process-daily-pm25/`](process-daily-pm25/) | 小时监测数据转日均（≥20 有效小时质控） |
 | PPT 提示词审计 | [`prompt-auditor/`](prompt-auditor/) | 逐条对照源码验证提示词事实声明 |
 | 微信消息桥接 | [`wechat-claude-code/`](wechat-claude-code/) | 微信中与 Claude Code 聊天 |
-| 本机活动痕迹检查——查本机某段时间有没有 | [`windows_activity_forensics/`](windows_activity_forensics/) | 本机活动痕迹检查——查本机某段时间有没有被人用过、有没有人远程连进来。读 Prefetch/UserAssist/安全日 |
+| 本机活动痕迹检查——查本机某段时间有没有 | [`windows_activity_forensics/`](windows_activity_forensics/) | 本机活动痕迹检查——查本机某段时间有没有被人用过、被人远程连进来、以及有没有人翻过你的隐私内容。证据源含 Prefetc |
 
 ## 借鉴自 Tiangong AI Skills
 
