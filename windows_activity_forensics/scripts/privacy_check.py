@@ -407,7 +407,7 @@ def chk_documents():
             hits += 1
             items.append('%s  <== 窗口内' % t.strftime('%m-%d %H:%M:%S'))
         else:
-            items.append('%s  %s' % (t.strftime('%m-%d %H:%M'), e))
+            items.append('%s  %s  （窗口外）' % (t.strftime('%m-%d %H:%M'), e))
     # 叠加执行证据：OpenWith.exe = "你要用什么打开这个文件" 对话框，
     # 是"有人试图打开一个文件"的直接痕迹，而且它不一定写进 RecentDocs
     # （实测窗口内 RecentDocs 0 条，OpenWith 却真的跑了）。
@@ -422,8 +422,9 @@ def chk_documents():
                      % t.strftime('%m-%d %H:%M:%S'))
     src = base + ' | OpenWith.exe 执行时刻 (Prefetch + BAM)'
     if ow:
-        items.append('OpenWith.exe 已知执行时刻：%s'
-                     % (', '.join(x.strftime('%m-%d %H:%M') for x in ow[-6:]) or '无'))
+        _ow_txt = '、'.join('%s%s' % (x.strftime('%m-%d %H:%M'),
+                                      '' if inw(x) else '（窗口外）') for x in ow[-6:])
+        items.append('OpenWith.exe 其他已知执行时刻（对照）：%s' % (_ow_txt or '无'))
     tot = times.get(base, '')
     # 注意：RecentDocs 的更新次数与 OpenWith 的运行次数**必须分开计数** ——
     # 混在一起会把"文档 MRU 被更新 0 个"报成 2 个，看着像有两条证据。
@@ -452,7 +453,8 @@ def chk_file_dialogs():
             hits += 1
             items.append('%s  <== 窗口内  %s' % (t.strftime('%m-%d %H:%M:%S'), p.split('\\')[-1]))
         else:
-            items.append('%s  %s' % (t.strftime('%m-%d %H:%M'), p.split('\\')[-1]))
+            items.append('%s  %s  （窗口外）'
+                         % (t.strftime('%m-%d %H:%M'), p.split('\\')[-1]))
     return dict(verdict=HIT if hits else CLEAR,
                 evidence='OpenSavePidlMRU / LastVisitedPidlMRU 窗口内更新 %d 个' % hits,
                 items=items, source=' / '.join(paths))
@@ -476,7 +478,7 @@ def chk_office():
             hits += 1
             items.append('%s  <== 窗口内  %s' % (t.strftime('%m-%d %H:%M:%S'), name))
         else:
-            items.append('%s  %s' % (t.strftime('%Y-%m-%d'), name))
+            items.append('%s  %s  （窗口外）' % (t.strftime('%Y-%m-%d'), name))
     if real == 0:
         return dict(verdict=UNKNOWN, evidence='本机未发现 Office File MRU 记录（可能未装 Office）', items=[])
     return dict(verdict=HIT if hits else CLEAR,
@@ -677,7 +679,8 @@ def chk_browser_secrets():
                 hits += 1
                 items.append('%s  <== 窗口内被改  %s / %s' % (t.strftime('%m-%d %H:%M:%S'), who, n))
             elif t:
-                items.append('%s  %s / %s' % (t.strftime('%m-%d %H:%M'), who, n))
+                items.append('%s  %s / %s  （窗口外）'
+                             % (t.strftime('%m-%d %H:%M'), who, n))
     if seen == 0:
         return dict(verdict=UNKNOWN, evidence='未发现浏览器敏感库文件', items=[])
     return dict(verdict=HIT if hits else CLEAR,
@@ -892,8 +895,9 @@ def chk_notifications():
                              '说明这个库确实覆盖了该时段、不是被清空过'
                              % (len(rows), before[-1].strftime('%m-%d %H:%M'),
                                 after[0].strftime('%m-%d %H:%M')),
-                    items=['窗口前两天内的历史通知（供对照，说明库是连续记录的）：'] +
-                          ['%s  %s' % (t.strftime('%m-%d %H:%M:%S'), _toast_text(p))
+                    items=['窗口前两天内的历史通知（全部在窗口外，仅作对照 —— '
+                           '它们的存在说明这个库在连续记录、没被清空过）：'] +
+                          ['%s  %s  （窗口外）' % (t.strftime('%m-%d %H:%M:%S'), _toast_text(p))
                            for t, p, _ in arrivals[-6:]],
                     note='通知库只保留最近约 30 天，更早的会被系统清掉。'
                          '另外：手动点掉或"清除全部"会删掉记录 —— 本项的 CLEAR 已排除这种情况'
@@ -1060,7 +1064,7 @@ def chk_logged_accounts():
     inside = [s for s in sessions if inw(s['t'])]
     items = []
     for s in sessions:
-        mark = '  <== 窗口内' if inw(s['t']) else ''
+        mark = '  <== 窗口内' if inw(s['t']) else '  （窗口外，仅作对照）'
         items.append('%s  %s#%s（等级 %s）%s'
                      % (s['t'].strftime('%m-%d %H:%M'), s['name'], s['tag'], s['lvl'], mark))
     if not inside:
