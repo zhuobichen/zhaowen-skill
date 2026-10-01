@@ -481,54 +481,120 @@ def chk_folder_browsing():
                 items=items, source=' / '.join(roots))
 
 
-def chk_browsing():
-    """上网痕迹（所有能找到的 Chromium 系历史库）。"""
-    roots = [(os.path.join(L, 'Microsoft', 'Edge', 'User Data'), 'Edge'),
-             (os.path.join(R, 'Tencent', 'QQBrowser', 'User Data'), 'QQBrowser'),
-             (os.path.join(L, 'Tencent', 'QQBrowser', 'User Data'), 'QQBrowser'),
-             (os.path.join(L, 'Doubao', 'User Data'), '豆包(Doubao)'),
-             (os.path.join(L, 'ima.copilot', 'User Data'), 'ima.copilot'),
-             (os.path.join(R, 'zero', 'User Data'), 'zero'),
-             (os.path.join(L, '360Chrome', 'Chrome', 'User Data'), '360Chrome'),
-             (os.path.join(R, '360se6', 'User Data'), '360SE')]
-    found, items, hits = [], [], 0
-    for base, name in roots:
-        if not os.path.isdir(base):
+_NAMED_BROWSER_FRAG = (
+    ('Edge', 'microsoft\\edge\\user data'),
+    ('QQBrowser', 'qqbrowser'),
+    ('豆包(Doubao)', 'doubao'),
+    ('ima.copilot', 'ima.copilot'),
+    ('zero', '\\roaming\\zero\\user data'),
+    ('360Chrome', '360chrome'),
+    ('360SE', '360se6'),
+)
+
+
+def _browser_label(path):
+    low = path.lower()
+    for name, frag in _NAMED_BROWSER_FRAG:
+        if frag in low:
+            return name
+    return None
+
+
+def _chromium_history_dbs():
+    """机器上**全部** Chromium 系历史库，含各种内嵌 WebView2。
+
+    为什么必须全量扫：实测本机有 **130 多个** —— Office / OneDrive / Steam / NVIDIA /
+    各大游戏启动器 / 装机软件的 WebView2 各有一个自己的 History。
+    只查清单里那 4-8 个，报告却写"检查了 4 个历史库"，读起来像"浏览器查过了"，
+    实际上漏掉的是绝大多数 —— 这属于「查不到却说得像查过了」。
+    """
+    out = {}
+    for root in (L, R):
+        if not root or not os.path.isdir(root):
             continue
-        for prof in ['Default'] + ['Profile %d' % i for i in range(1, 6)]:
-            h = os.path.join(base, prof, 'History')
-            if not os.path.isfile(h):
-                continue
-            found.append(name)
+        for p in glob.glob(os.path.join(root, '**', 'History'), recursive=True):
+            if os.path.isfile(p) and p not in out:
+                out[p] = _browser_label(p) or ('(%s)' % p.replace(root, '…'))
+    return out
+
+
+def _visits_in_window(h):
+    """某个 Chromium 历史库里窗口内的访问数。读不动抛异常。"""
+    tmp = os.path.join(T or tempfile.gettempdir(), '_pc_bh.db')
+    try:
+        shutil.copy2(h, tmp)
+        for ext in ('-wal', '-shm'):      # 少了它们会漏掉尚未落盘的最新记录
+            if os.path.isfile(h + ext):
+                shutil.copy2(h + ext, tmp + ext)
+        con = sqlite3.connect(tmp)
+        n = list(con.execute(
+            'SELECT COUNT(*) FROM visits WHERE visit_time>=? AND visit_time<=?',
+            (dt_to_chrome(W0), dt_to_chrome(W1))))[0][0]
+        con.close()
+        return n
+    finally:
+        for ext in ('', '-wal', '-shm'):
             try:
-                tmp = os.path.join(T or tempfile.gettempdir(),
-                                   '_pc_%s.db' % re.sub(r'\W', '', name + prof))
-                shutil.copy2(h, tmp)
-                con = sqlite3.connect(tmp)
-                n = list(con.execute('SELECT COUNT(*) FROM visits WHERE visit_time>=? AND visit_time<=?',
-                                     (dt_to_chrome(W0), dt_to_chrome(W1))))[0][0]
-                con.close()
-                os.remove(tmp)
-                if n:
-                    hits += n
-                    items.append('%s/%s  窗口内访问 %d 条' % (name, prof, n))
-                else:
-                    items.append('%s/%s  0 条  (库最后写入 %s)' % (
-                        name, prof, (mtime(h) or datetime.datetime.min).strftime('%m-%d %H:%M')))
-            except Exception as e:
-                return dict(verdict=UNKNOWN,
-                            evidence='%s/%s 历史库读取失败: %s' % (name, prof, e), items=items)
-    if not found:
+                os.remove(tmp + ext)
+            except OSError:
+                pass
+
+
+def chk_browsing():
+    """上网痕迹 —— 全量扫所有 Chromium 系历史库。"""
+    dbs = _chromium_history_dbs()
+    if not dbs:
         return dict(verdict=UNKNOWN, evidence='未发现任何 Chromium 系历史库', items=[])
-    # 默认浏览器确认（避免"用别的浏览器所以我们漏了"）
+
+    hits_named = 0
+    hits_embed = 0
+    scan_fail = 0
+    hot, named = [], []
+    for h, label in sorted(dbs.items(), key=lambda kv: kv[1]):
+        n = None
+        try:
+            n = _visits_in_window(h)
+        except Exception:
+            scan_fail += 1
+        if label.startswith('('):
+            if n:                          # 只有有命中的内嵌浏览器才值得列出来
+                hot.append('%s  窗口内访问 %d 条' % (label, n))
+                hits_embed += n
+        else:
+            named.append('%s  窗口内 %s 条  (库最后写入 %s)'
+                         % (label, n if n is not None else '读取失败',
+                            (mtime(h) or datetime.datetime.min).strftime('%m-%d %H:%M')))
+            if n:
+                hits_named += n
+
     out, _ = ps("(Get-ItemProperty 'HKCU:\\Software\\Microsoft\\Windows\\Shell\\Associations\\"
                 "UrlAssociations\\https\\UserChoice').ProgId")
     note = '默认浏览器 ProgId = %s' % (out.strip() or '(未设置)')
     note += ('\n注意：edge:// / chrome:// 内部页（历史、密码、书签页）不写入历史库，'
              '所以这里 0 条不能排除"他打开浏览器翻过设置页"。')
-    return dict(verdict=HIT if hits else CLEAR,
-                evidence='检查了 %d 个历史库，窗口内访问合计 %d 条' % (len(found), hits),
-                items=items, note=note, source='; '.join(found))
+    note += ('\n内嵌浏览器（应用自带的 WebView2）也一并扫了 —— 它们平时不在"浏览器"这个印象里，'
+             '但确实各自记历史。有命中的会单独列出。')
+
+    note += ('\n判定口径：常见浏览器（Edge/QQ浏览器/豆包/ima/zero/360）有访问才算「上网」；'
+             '内嵌 WebView2 的命中单独列出、不并进结论 —— 那些绝大多数是预装软件自己的本地界面'
+             '（file:// 或 localhost），把它算成"他上网了"会失真。'
+             '但要留意：内嵌浏览器也能打开真实网页，所以有命中时请逐条看上面列出的 URL。')
+
+    if scan_fail and not (hits_named or hits_embed):
+        return dict(verdict=UNKNOWN,
+                    evidence='扫描 %d 个历史库中有 %d 个读不动，且未发现窗口内访问 —— '
+                             '读不动的那几个无法排除' % (len(dbs), scan_fail),
+                    items=named + hot, note=note)
+    ev = ('全量扫描 %d 个 Chromium 系历史库（含内嵌 WebView2）：'
+          '常见浏览器窗口内 %d 条' % (len(dbs), hits_named))
+    if hits_embed:
+        ev += '；内嵌浏览器 %d 条（多为应用自身界面，逐条列在下面）' % hits_embed
+    if scan_fail:
+        ev += '；%d 个库读不动' % scan_fail
+    return dict(verdict=HIT if hits_named else CLEAR,
+                evidence=ev,
+                items=named + hot, note=note,
+                source='; '.join(named))
 
 
 def chk_screenshots():

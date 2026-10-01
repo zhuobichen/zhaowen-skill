@@ -141,6 +141,23 @@ host   recv connect request, myid=<本机>  → 本机是被控端，有人连�
 `TCP_VIDEO_HOST begin connect transfer server`，并拉起一个 `session` 进程。
 **必须按 `host`/`client` 分开统计**，不要把所有 `connect request` 混成一个数。
 
+### 5b. 「查了 4 个浏览器」不等于查了浏览器
+
+一台普通的 Windows 上，Chromium 系的历史库**远不止 Edge/Chrome**：Office、OneDrive、
+Steam、NVIDIA 覆盖层、各大游戏启动器、以及各种装机软件的 WebView2 **各有一个自己的
+`History`**。实测本机有 **60–130 个**。
+
+如果只查清单里那几个、却在报告里写「检查了 4 个历史库，窗口内访问 0 条」，
+读起来就是"浏览器查过了"——**这是「查不到却说得像查过了」，比不查更糟。**
+
+正确做法：**全量递归扫 `%LOCALAPPDATA%` 与 `%APPDATA%` 下所有名为 `History` 的文件**，
+逐个当 Chromium 库试读。实测 66 个库、约 20 秒。
+
+**但结论要分开算**：常见浏览器（Edge/QQ/豆包/ima/zero/360）有访问才算「上网」；
+内嵌 WebView2 的命中单独列出、不并进结论——那些绝大多数是预装软件自己的本地界面
+（`file://` 或 `localhost`），算成"他上网了"会失真。反过来也不能直接丢掉：
+内嵌浏览器**也能**打开真实网页，所以有命中时必须把 URL 逐条列出来让人自己看。
+
 ### 6. 域名统计要排除非 http 目标
 `url.split('/')[2]` 对 `chrome-extension://<32位随机id>/...` 会取到扩展 ID，
 在"访问最多的站点"里显示成一串可疑随机域名 —— 实际只是新标签页扩展。只统计 `http(s)://`。
