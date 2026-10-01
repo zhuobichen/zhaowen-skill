@@ -6,7 +6,6 @@
 
 | Skill | 目录 | 用途 |
 |-------|------|------|
-| 检查本机在某段时间内被谁用过、有没有人远 | [`windows_activity_forensics/`](windows_activity_forensics/) | 检查本机在某段时间内被谁用过、有没有人远程连进来。读 Prefetch/UserAssist/安全日志/计划任务/自启动 |
 | docx 转公众号（clz） | [`clz_docx_to_mp/`](clz_docx_to_mp/) | 把 docx 转成公众号图文并推送草稿箱：解析 → 渲染微信兼容 HTML → 推送。内容忠实保留只做样式；含横滑相册、GIF 动效、平台硬限制实测记录 |
 | > | [`cnpc-job-apply/`](cnpc-job-apply/) | > |
 | 科研文献证据工程（ylx） | [`ylx_research_evidence_synthesis/`](ylx_research_evidence_synthesis/) | ylx·科研文献证据工程与 Related Work 写作：Claim-first（证据矩阵 + 逻辑树 + 综述），含输出样例 |
@@ -40,6 +39,7 @@
 | PM2.5 日均浓度 | [`process-daily-pm25/`](process-daily-pm25/) | 小时监测数据转日均（≥20 有效小时质控） |
 | PPT 提示词审计 | [`prompt-auditor/`](prompt-auditor/) | 逐条对照源码验证提示词事实声明 |
 | 微信消息桥接 | [`wechat-claude-code/`](wechat-claude-code/) | 微信中与 Claude Code 聊天 |
+| 本机活动痕迹检查 | [`windows_activity_forensics/`](windows_activity_forensics/) | 查本机某段时间有没有被人用过 / 被人**远程连进来**：Prefetch、UserAssist、安全日志、计划任务、自启动、浏览器历史、回收站、远程控制软件日志 → HTML 报告。默认窗口为最近两天；含时间基准换算、回收站 `$I` 偏移、ToDesk 连接方向等静默出错点 |
 
 ## 借鉴自 Tiangong AI Skills
 
