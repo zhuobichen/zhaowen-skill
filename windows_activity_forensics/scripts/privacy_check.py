@@ -1830,7 +1830,143 @@ def chk_thumbcache():
                      '没被写只是弱证据：已缓存过的文件再看不会重写。')
 
 
+def _all_prefetch_runs():
+    """全部 .pf 里记录的运行时刻 -> [(时间, 可执行名)]，读不到返回 []。"""
+    pf = os.path.join(os.environ.get('SystemRoot', r'C:\Windows'), 'Prefetch')
+    try:
+        sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+        import prefetch_parse as pp
+    except Exception:
+        return []
+    rows = []
+    for p in glob.glob(os.path.join(pf, '*.pf')):
+        try:
+            r = pp.parse(open(p, 'rb').read())
+        except Exception:
+            continue
+        for v in r['last_runs']:
+            t = pp.filetime_to_dt(v)
+            if t:
+                rows.append((t, r['executable']))
+    rows.sort()
+    return rows
+
+
+def chk_boot_screen():
+    """开机时屏幕上会出现什么 —— 新开机的"初始态"。
+
+    **为什么这一项能成立**：如果窗口内的机器是**新开机的**，它就没有"之前的状态"。
+    屏幕上有什么 = **桌面** + **自己启动的程序**，两样都能列出来。
+    （如果机器在窗口开始前就开着，那"之前的状态"确实无从得知 —— 所以先看开机时刻。）
+
+    这里的窗口内只有一次开机（00:32:34），于是下面这张表就是当时的初始屏幕状态。
+    """
+    boots = _boot_events_in_window()
+    items = []
+
+    # 桌面：开机时就已经摆在那儿的图标
+    for d in (os.path.join(HOME, 'Desktop'), r'C:\Users\Public\Desktop'):
+        if os.path.isdir(d):
+            n = len([x for x in os.listdir(d) if x != 'desktop.ini'])
+            items.append('桌面 %s：%d 个图标' % (d, n))
+
+    if not boots:
+        return dict(verdict=UNKNOWN,
+                    evidence='读不到窗口内的开机事件，无法确定"初始态"',
+                    items=items, source='System 日志 6005 | 桌面目录',
+                    note='机器在窗口开始时已经开着的话，"屏幕上有什么"就无从确定 —— '
+                         '这是这一项真正的边界。')
+
+    runs = _all_prefetch_runs()
+    if not runs:
+        return dict(verdict=UNKNOWN,
+                    evidence='窗口内有 %d 次开机，但读不到程序运行历史' % len(boots),
+                    items=items, source='System 日志 6005 | Prefetch',
+                    note='Prefetch 被清理过就读不到，这一项会缺。')
+
+    per_boot = []
+    for b in boots:
+        got = [(t, exe) for t, exe in runs
+               if 0 <= (t - b).total_seconds() <= 300]
+        per_boot.append((b, got))
+    total = sum(len(g) for _, g in per_boot)
+    for b, got in per_boot:
+        items.append('开机 %s，之后 5 分钟内运行了 %d 个程序：'
+                     % (b.strftime('%m-%d %H:%M:%S'), len(got)))
+        for t, exe in got[:40]:
+            items.append('    %s  %s' % (t.strftime('%H:%M:%S'), exe))
+    return dict(verdict=CLEAR if total else UNKNOWN,
+                evidence='窗口内 %d 次开机，开机后 5 分钟内共运行 %d 个程序 '
+                         '（这就是当时的"初始屏幕"）' % (len(boots), total),
+                items=items, source='System 日志 6005 | Prefetch 运行历史 | 桌面目录',
+                note='新开机 = 没有"之前的状态"，所以屏幕上有什么基本可列。'
+                     '前提是窗口内确实开机过；若机器在窗口开始前就开着，这一项不成立。')
+
+
+def chk_session_restore():
+    """上次没关掉的东西，有没有被**自动恢复到屏幕上**。
+
+    这是"看一眼不留痕"最容易被忽略的一条路：浏览器"继续上次浏览"、WPS/Office
+    文档恢复、编辑器的热退出还原 —— 都会在开机时把**上次的内容**重新摆到屏幕上，
+    而且这个人**什么都没做**。
+
+    查法是看这些"会话状态"文件在窗口内**有没有被写过**：
+    被写 = 恢复发生过；没被写 = 没有内容被恢复出来。
+    """
+    targets = (
+        ('浏览器标签页(Edge)',
+         [os.path.join(L, 'Microsoft', 'Edge', 'User Data', p, 'Sessions', '*')
+          for p in ('Default', 'Profile 1', 'Profile 2')]),
+        ('浏览器标签页(Chrome)',
+         [os.path.join(L, 'Google', 'Chrome', 'User Data', p, 'Sessions', '*')
+          for p in ('Default', 'Profile 1')]),
+        ('WPS 文档恢复',
+         [os.path.join(R, 'kingsoft', 'office6', 'backup', '**', '*')]),
+        ('VSCode 热退出',
+         [os.path.join(R, 'Code', 'Backups', '*'),
+          os.path.join(R, 'Code', 'User', 'workspaceStorage', '*')]),
+        ('Notepad++ 会话',
+         [os.path.join(R, 'Notepad++', 'session.xml')]),
+        ('OneNote 缓存',
+         [os.path.join(L, 'Microsoft', 'OneNote', '16.0', 'cache', '*')]),
+    )
+    items, hits, present = [], 0, []
+    for label, pats in targets:
+        allf = []
+        for pat in pats:
+            allf += glob.glob(pat, recursive=True)
+        allf = [f for f in allf if os.path.isfile(f)]
+        if not allf:
+            continue
+        present.append(label)
+        inw_f = [(mtime(f), f) for f in allf if mtime(f) and inw(mtime(f))]
+        if inw_f:
+            hits += 1
+            for t, f in sorted(inw_f)[:5]:
+                items.append('%s  %s  <== 窗口内被写  %s'
+                             % (label, t.strftime('%m-%d %H:%M:%S'), f[-80:]))
+        else:
+            newest = max(allf, key=lambda f: mtime(f) or datetime.datetime.min)
+            items.append('%s：窗口内无变化（最近一次 %s，这期间没有内容被恢复出来）'
+                         % (label, (mtime(newest) or datetime.datetime.min).strftime('%m-%d %H:%M')))
+    if not present:
+        return dict(verdict=UNKNOWN,
+                    evidence='本机没有这些会话恢复文件（可能都没装/没用过）',
+                    items=[], source='Edge/Chrome Sessions | WPS backup | VSCode Backups | …',
+                    note='目录都不存在 = 不适用；装了却没有才是"没查成"。')
+    return dict(verdict=HIT if hits else CLEAR,
+                evidence=('窗口内有 %d 类程序写入了会话恢复文件 —— '
+                          '可能有上次的内容被自动摆回屏幕' % hits) if hits
+                         else '窗口内没有任何"会话恢复"被触发（上次的内容没有被自动摆回屏幕）',
+                items=items,
+                source='Edge/Chrome Sessions | WPS office6\backup | VSCode Backups | Notepad++ | OneNote',
+                note='这一项回答的是"他什么都没做、屏幕上就有东西"那条路。'
+                     '没被写 = 那一类内容没有被自动恢复出来。')
+
+
 CHECKS = [
+    ('开机初始态', '开机时屏幕上会出现什么', chk_boot_screen),
+    ('会话恢复', '上次没关的东西有没有被自动摆回屏幕', chk_session_restore),
     ('远程连入', '有没有人远程连进来过', chk_remote_access),
     ('外部存储', '有没有插 U 盘 / 移动硬盘', chk_external_storage),
     ('文档', '有没有打开过文档', chk_documents),
