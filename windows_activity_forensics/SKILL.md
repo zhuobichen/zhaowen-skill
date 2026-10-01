@@ -22,7 +22,7 @@ python scripts/analyze.py
 python scripts/session_detail.py
 
 # 4) 若问题是「他有没有看到我的隐私内容」→ 另一个工具，另一套证据源
-python scripts/privacy_check.py --from "2026-10-01 00:25" --to "2026-10-01 02:20" \
+python scripts/privacy_check.py --from "2026-01-02 09:00" --to "2026-01-02 12:00" \
        --out "%USERPROFILE%\Desktop\privacy_check.html"
 ```
 
@@ -40,11 +40,14 @@ python scripts/privacy_check.py --from "2026-10-01 00:25" --to "2026-10-01 02:20
 
 ```bash
 python scripts/analyze.py --days 7                       # 最近 7 天
-python scripts/analyze.py --from 2026-09-30 --to 2026-10-01   # 指定区间（覆盖 --days）
+python scripts/analyze.py --from 2026-01-01 --to 2026-01-02   # 指定区间（覆盖 --days）
 python scripts/analyze.py --work <采集目录> --out <报告路径>
 ```
 
-两个脚本通过 `%TEMP%\activity_forensics` 传数据；`collect.ps1 -Out X` 与 `analyze.py --work X` 必须一致。
+**数据怎么传**：只有 `analyze.py` 吃采集产物，通过 `%TEMP%\activity_forensics`
+（`collect.ps1 -Out X` 与 `analyze.py --work X` 必须一致）。
+`privacy_check.py` **不读采集产物**，它直接读注册表 / Prefetch / 浏览器库 / 回收站，
+所以它没有 `--work`，只有 `--from/--to/--out`。
 
 ## 报告结构（12 节）
 
@@ -106,14 +109,16 @@ python scripts/analyze.py --work <采集目录> --out <报告路径>
 `scripts/prefetch_parse.py` 是 [Sootmark/prefetch](https://github.com/Sootmark/prefetch)（MIT/Apache-2.0，Rust，零依赖）
 的 Python 逐行移植，自带两个锚点自检（解压器错一个移位只会输出垃圾、不会报错）。
 
-**"只看 mtime"会造成的实际损失**（实测）：WPS 在他那次开机（00:34:32）启动过，
-但当天 14:42 又跑过一次，mtime 只剩 14:42 —— **单看 mtime 会把 00:34 那次整个漏掉**。
-能读运行历史后才发现。同理，同一可执行文件有多个 `.pf`（不同安装路径）时**必须合并**，
-只留一个是错的（豆包有多个路径，合并后次数从 222 变 397）。
+**"只看 mtime"会造成的实际损失**：一个程序若在目标时段跑过、之后又跑过，
+mtime 会被顶到后面 —— **只看 mtime 会把目标时段那次整个漏掉**，而报告看起来完全正常。
+判断"窗口内是否运行过"必须用运行历史，mtime 只能作为没有历史时的退路。
 
-**另一个必须记住的限制**：Prefetch **会被清理**。本机在一次会话期间从 552 个 `.pf`
-掉到 ~210 个（`SilentCleanup` 计划任务 + 360/鲁大师常驻清理都在跑，未能确证是哪一次）。
-所以「Prefetch 里没有」永远不能当成「没运行过」。
+同一可执行文件也可能有多个 `.pf`（不同安装路径各一个），**必须合并**：
+只留"次数最多"的那一个是错的，会把该程序在别的路径上的启动时刻全丢掉。
+
+**另一个必须记住的限制**：Prefetch **会被清理**（系统维护任务、第三方"系统清理"工具都会动它）。
+实测在一次会话期间，目录里的 `.pf` 数量可以掉掉一半以上。所以
+「Prefetch 里没有」永远不能当成「没运行过」。
 
 ### 3. UserAssist 运行次数多半取不到
 不少 Win11 版本里计数字段恒为 0。**别直接报 0**：先统计所有记录的该字段最大值，
@@ -201,6 +206,21 @@ session send <帧数> frame, recv <字节> mouse <鼠标事件> key <按键> tex
   例：鲁大师的 `LdsMultiWechatA` 会在每次登录后 1 分钟自动拉起微信多开。
 - 两个独立来源（Prefetch vs UserAssist）对同一程序的时间要**并排比对**；
   差值接近整小时的整数倍 = 时区错。脚本已内置该自检。
+
+## 维护者注意：脚本里不要写死盘符
+
+`collect.ps1` 与两个 Python 脚本**都不假定安装盘**。聊天/游戏客户端装在哪个盘、
+哪个自定义目录因机器而异，写死了既只对一台机器成立，那条路径本身又是那台机器的指纹。
+正确做法是**运行时发现**：卸载注册表（`InstallLocation` / `UninstallString` / `DisplayIcon`）
++ 固定盘根目录扫一层常见目录名；微信的数据根目录直接读它自己的 `%APPDATA%\Tencent\xwechat\config\*.ini`。
+
+**踩过的坑**：把 `ToDesk` 从写死路径改成查注册表后，报告变成「未发现 ToDesk 日志目录」——
+而注册表里 ToDesk 的 `InstallLocation` 恰好是**空**的。这种回归最危险：它读起来正好像
+「没人连进来过」。所以**只查 `InstallLocation` 是不够的**，必须退到 `UninstallString`（安装目录里的卸载器路径）。
+
+**另一个**：`collect.ps1` 含中文，**必须存成 UTF-8 with BOM**。无 BOM 时 Windows PowerShell 5.1
+按 GBK 解码，中文串的字节会吃掉后面的引号/大括号 → 直接语法错；
+且这个错**只在改过中文注释后**才出现（字节对齐一变就崩），报错行号还常指向无辜的那一行。
 
 ## 来源与许可（接进来的第三方）
 

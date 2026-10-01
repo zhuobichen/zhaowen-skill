@@ -22,7 +22,7 @@ analyze.py 回答「他做了什么」（程序运行、登录、远程控制）
 
 另外每项都会打印**它实际看了哪个数据源**，以便人工复核。
 """
-import os, io, sys, re, glob, json, shutil, sqlite3, argparse, datetime, subprocess
+import os, io, sys, re, glob, json, shutil, sqlite3, argparse, datetime, subprocess, tempfile
 
 W0 = W1 = None
 HOME = os.environ.get('USERPROFILE', '')
@@ -188,8 +188,8 @@ def resolve_appid(appid):
 
     表来自 EricZimmerman/JumpList 的 AppIDs.txt（733 条，`"HASH"|"名称"`）。
     **查不到就返回 None，不要猜** —— 猜错会给出错误的应用名，比"未知"更坏。
-    注意该表只覆盖经典应用：本机 74 个跳转列表里只认出 20 个，
-    未命中不等于可疑（VS Code、Game Bar 这类新版应用常不在表内）。
+    注意该表只覆盖经典应用：实测命中率约三成，未命中不等于可疑
+    （VS Code、Game Bar 这类新版应用常不在表内）。
     """
     global _APPIDS
     if _APPIDS is None:
@@ -377,7 +377,8 @@ def chk_browsing():
                 continue
             found.append(name)
             try:
-                tmp = os.path.join(T or r'D:\tmp', '_pc_%s.db' % re.sub(r'\W', '', name + prof))
+                tmp = os.path.join(T or tempfile.gettempdir(),
+                                   '_pc_%s.db' % re.sub(r'\W', '', name + prof))
                 shutil.copy2(h, tmp)
                 con = sqlite3.connect(tmp)
                 n = list(con.execute('SELECT COUNT(*) FROM visits WHERE visit_time>=? AND visit_time<=?',
@@ -555,7 +556,7 @@ def chk_chat_clients():
     items = []
     hit = False
     checks = []
-    pf = r'C:\Windows\Prefetch'
+    pf = os.path.join(os.environ.get('SystemRoot', r'C:\Windows'), 'Prefetch')
     for exe in ('WEIXIN.EXE', 'WECHATAPPEX.EXE', 'QQ.EXE'):
         for p in glob.glob(os.path.join(pf, exe.replace('.EXE', '') + '.EXE-*.pf')) or \
                  glob.glob(os.path.join(pf, exe + '-*.pf')):

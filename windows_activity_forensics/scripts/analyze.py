@@ -8,7 +8,7 @@ it looks like a generation failure when it is not).
 Everything the report asserts about the machine is collected at run time; there
 are no hand-copied verdicts baked into the text.
 """
-import os, sys, json, glob, struct, datetime, html, re, shutil, sqlite3, argparse
+import os, sys, json, glob, struct, datetime, html, re, shutil, sqlite3, argparse, tempfile
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import prefetch_parse          # 同目录，解 MAM 压缩的 Prefetch（见该文件顶部说明）
@@ -26,13 +26,14 @@ _ap.add_argument('--out', default=None,
                  help='output HTML path (default: Desktop\\activity_report.html)')
 _ARGS = _ap.parse_args()
 
-HOME = os.environ.get('USERPROFILE', r'C:\Users\Administrator')
-WORK = _ARGS.work or os.path.join(os.environ.get('TEMP', r'D:\tmp'), 'activity_forensics')
-PF   = r'C:\Windows\Prefetch'
+HOME = os.environ.get('USERPROFILE') or os.path.expanduser('~')
+WORK = _ARGS.work or os.path.join(tempfile.gettempdir(), 'activity_forensics')
+PF   = os.path.join(os.environ.get('SystemRoot', r'C:\Windows'), 'Prefetch')
 OUT  = _ARGS.out or os.path.join(HOME, 'Desktop', 'activity_report.html')
 
 KEYS = ('qq', 'weixin', 'wechat', 'tencent', 'napcat', 'multiw')
-# WeGame / LoL family. WeGame ships inside the LoL install (D:\英雄联盟\WeGame).
+# WeGame / LoL family. WeGame 通常就装在 LoL 的安装目录下（同一个父目录）。
+# 具体路径由 collect.ps1 按固定盘扫出并写进 app_roots.json，这里只认名字。
 GAME_KEYS = ('wegame', 'tcls', 'taslogin', 'crossproxy', 'riotclient',
              'league', 'pallas', 'tenio', 'lolai')
 TRACE_KEYS = KEYS + GAME_KEYS
@@ -207,10 +208,99 @@ def wechat_logs():
     return sorted((day, t, b) for day, (t, b) in best.items())
 
 
+def find_install_dirs(hint, extra=()):
+    """按卸载注册表里的显示名找安装目录 —— 不写死某台机器的盘符。
+
+    hint 是显示名里出现的关键字（如 'todesk'）。extra 是兜底候选（通常是
+    "%ProgramFiles%\\<名字>" 这类**与盘符无关**的标准位置）。
+    找不到就返回空列表 —— 调用方必须把「找不到」当成 UNKNOWN，不要当成「没装」。
+    """
+    out = []
+    try:
+        import winreg
+    except ImportError:
+        winreg = None
+    if winreg is not None:
+        entries = (
+            (winreg.HKEY_LOCAL_MACHINE,
+             r'Software\Microsoft\Windows\CurrentVersion\Uninstall'),
+            (winreg.HKEY_LOCAL_MACHINE,
+             r'Software\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall'),
+            (winreg.HKEY_CURRENT_USER,
+             r'Software\Microsoft\Windows\CurrentVersion\Uninstall'),
+        )
+        for hive, path in entries:
+            try:
+                key = winreg.OpenKey(hive, path)
+            except OSError:
+                continue
+            i = 0
+            while True:
+                try:
+                    sub = winreg.EnumKey(key, i)
+                except OSError:
+                    break          # 枚举结束（或读不动）→ 停止，不静默丢后面的
+                i += 1
+                try:
+                    sk = winreg.OpenKey(key, sub)
+                    disp = str(winreg.QueryValueEx(sk, 'DisplayName')[0])
+                except OSError:
+                    continue
+                if hint.lower() not in disp.lower():
+                    continue
+                loc = ''
+                # InstallLocation 常常是空的（实测 ToDesk 就是），只看它会**漏掉整个程序**。
+                # 退到 UninstallString / DisplayIcon：它们指向程序所在目录里的某个文件。
+                for val_name in ('InstallLocation', 'UninstallString', 'DisplayIcon'):
+                    try:
+                        raw = str(winreg.QueryValueEx(sk, val_name)[0]).strip()
+                    except OSError:
+                        continue
+                    if raw.startswith('"'):
+                        raw = raw[1:].split('"', 1)[0]
+                    else:
+                        raw = raw.split(',')[0].strip()   # DisplayIcon 常见 "x.exe,0"
+                    if not raw:
+                        continue
+                    cand = raw if os.path.isdir(raw) else os.path.dirname(raw)
+                    if cand and os.path.isdir(cand):
+                        loc = cand
+                        break
+                if loc:
+                    out.append(loc)
+    for c in extra:
+        if os.path.isdir(c):
+            out.append(c)
+    return list(dict.fromkeys(out))
+
+
 def wechat_data_dirs():
-    """WeChat 4.x account data roots and the direct children of the account dir."""
+    """WeChat 4.x account data roots and the direct children of the account dir.
+
+    数据目录的位置**从客户端自己的配置里读**，不写死盘符 —— 每台机器的安装盘
+    和自定义目录都不同，写死了只对一台机器成立，而且那条路径本身就是机器指纹。
+    4.x 把它记在 %APPDATA%\\Tencent\\xwechat\\config\\*.ini（一行一个路径）；
+    3.x 的默认位置是「文档\\WeChat Files」。
+    """
     found = []
-    for base in (r'D:\微信', r'D:\WeiXin', r'C:\微信'):
+    bases = []
+
+    cfg = os.path.join(os.environ.get('APPDATA', ''), 'Tencent', 'xwechat', 'config')
+    if os.path.isdir(cfg):
+        for f in glob.glob(os.path.join(cfg, '*.ini')):
+            try:
+                with open(f, encoding='utf-8', errors='ignore') as fh:
+                    for line in fh:
+                        p = line.strip().strip('"')
+                        if p and os.path.isdir(p) and p not in bases:
+                            bases.append(p)
+            except OSError:
+                pass
+    legacy = os.path.join(HOME, 'Documents', 'WeChat Files')
+    if os.path.isdir(legacy):
+        bases.append(legacy)
+
+    for base in bases:
         root = os.path.join(base, 'xwechat_files')
         if not os.path.isdir(root):
             continue
@@ -627,7 +717,10 @@ def collect_todesk():
     it backwards inverts the conclusion.
     """
     base = None
-    for c in (r'D:\ToDesk', r'C:\Program Files\ToDesk', r'C:\Program Files (x86)\ToDesk'):
+    for c in find_install_dirs('todesk', (
+            os.path.join(os.environ.get('ProgramFiles', r'C:\Program Files'), 'ToDesk'),
+            os.path.join(os.environ.get('ProgramFiles(x86)',
+                                        r'C:\Program Files (x86)'), 'ToDesk'))):
         if os.path.isdir(os.path.join(c, 'Logs')):
             base = c
             break
@@ -1202,15 +1295,30 @@ if gamlogin:
     A('</tbody></table></details>')
 # ---- 2.5 broad program-execution sweep ----
 A('<h3>2.5 这两天运行过的全部程序（Prefetch 全量，按用途分类）</h3>')
-_pf_focus = [x for x in pf_all if d1 <= x[0].date() <= d2]
+# 判断"窗口内运行过"用**运行历史**（最多 8 次），不能只看 .pf 的 mtime ——
+# 某程序若在窗口内跑过、之后又跑过，mtime 会被顶到后面，只看 mtime 会整个漏掉。
+# （某程序在窗口内跑过、之后又跑过时，mtime 会被顶到后面，只看 mtime 会整个漏掉。）
+_pf_focus = []
+_no_hist = 0
+for _x in pf_all:
+    _exe = _x[1]
+    _d = pf_detail.get(_exe.upper()) or {}
+    _runs = [t for t in _d.get('last8', []) if t and d1 <= t.date() <= d2]
+    if _runs:
+        _pf_focus.append((max(_runs), _exe))
+    elif d1 <= _x[0].date() <= d2:
+        _pf_focus.append((_x[0], _exe))      # 没有运行历史时退回 mtime
+        _no_hist += 1
 _by_cat = {}
 for _t, _exe in _pf_focus:
     _by_cat.setdefault(app_cat(_exe), []).append((_t, _exe))
 _priv_hits = [c for c in _by_cat if c in PRIVACY_CATS]
 A('<div class="note">这是本机能拿到的最全"程序被运行过"证据，覆盖全部 %d 个 Prefetch 条目。'
   '<b>已解开 Windows 8+ 的 MAM 压缩</b>，所以除了"最后一次运行"，'
-  '还能给出<b>累计运行次数</b>与<b>最近 8 次运行时间</b>。'
-  '次数少而时间集中的，是偶尔手动打开；次数多而均匀的，多为后台服务。</div>' % len(pf_all))
+  '还能给出<b>累计运行次数</b>与<b>最近 8 次运行时间</b>；'
+  '本节判断"窗口内跑过"用的就是运行历史，能看见被后续运行顶掉的那些。'
+  '次数少而时间集中的是偶尔手动打开，次数多而均匀的多为后台服务。'
+  '（%d 个程序没有运行历史，只能用 mtime 近似。）</div>' % (len(pf_all), _no_hist))
 
 
 def _runs_of(exe):

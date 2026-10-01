@@ -1,4 +1,8 @@
-# collect.ps1  (ASCII only) - dump forensic artifacts to JSON for the activity report
+﻿# collect.ps1 - dump forensic artifacts to JSON for the activity report
+# NOTE: 本文件含中文，**必须存成 UTF-8 with BOM**。
+# 无 BOM 的 UTF-8 会被 Windows PowerShell 5.1 按当前代码页（简体中文下是 GBK）解码，
+# 中文串的字节会吃掉后面的引号/大括号 → 直接语法错。这个症状只在改过中文注释后出现，
+# 且报错行号指向的往往是无辜的那一行。
 param([string]$Out = (Join-Path $env:TEMP "activity_forensics"))
 $ErrorActionPreference = "SilentlyContinue"
 $out = $Out
@@ -129,20 +133,42 @@ AddAR "Winlogon" "Shell"    ([string]$wl.GetValue("Shell"))
 foreach ($svc in (Get-CimInstance Win32_Service)) { AddAR "Service" $svc.Name ([string]$svc.PathName) }
 Save $ar.ToArray() "autoruns.json"
 
+# ---------- client / game install roots ----------
+# 客户端/游戏目录**不写死盘符** —— 每台机器的安装盘和自定义目录都不同，
+# 写死了既只对一台机器成立，那条路径本身又是那台机器的指纹。
+# 必须放在**签名段之前**（签名段要按它去找客户端主程序）。
+# 这里只用固定盘扫描；卸载注册表给的 InstallLocation 稍后追加（那时 $soft 才建好）。
+$nameRe   = '(?i)weixin|wechat|tencent|wegame|英雄联盟|league of legends|todesk|^qq'
+$appRoots = New-Object System.Collections.ArrayList
+try {
+  foreach ($drv in [System.IO.DriveInfo]::GetDrives()) {
+    try { $ready = $drv.IsReady } catch { $ready = $false }
+    if ($drv.DriveType -ne 'Fixed' -or -not $ready) { continue }
+    foreach ($d in (Get-ChildItem $drv.RootDirectory.FullName -Directory -ErrorAction SilentlyContinue)) {
+      if ($d.Name -match $nameRe) { [void]$appRoots.Add($d.FullName) }
+    }
+  }
+} catch {}
+
 # ---------- authenticode signatures of the relevant binaries ----------
 $cands = New-Object System.Collections.ArrayList
-foreach ($d in @(
-  "C:\Program Files (x86)\LdsMultiWechatA",
-  "C:\Program Files (x86)\LdsDuplicateFileClean\SuperApp\multi_wechat",
-  "C:\Program Files (x86)\LdsSysClean\SuperApp\multi_wechat",
-  "C:\Program Files (x86)\LhpLionProtect\SuperApp\multi_wechat"
-)) {
-  foreach ($f in (Get-ChildItem "$d\*.exe")) { [void]$cands.Add($f) }
+# 「多开/清理」类工具要知道是**哪几个名字**（鲁大师系），但不该写死它们装在
+# 哪个盘哪个子目录 —— 用标准 ProgramFiles 根 + 名字去找。
+$pf86 = [Environment]::GetFolderPath('ProgramFilesX86')
+foreach ($d in @("$pf86\LdsMultiWechatA",
+                 "$pf86\LdsDuplicateFileClean\SuperApp\multi_wechat",
+                 "$pf86\LdsSysClean\SuperApp\multi_wechat",
+                 "$pf86\LhpLionProtect\SuperApp\multi_wechat")) {
+  if (-not (Test-Path $d)) { continue }
+  foreach ($f in (Get-ChildItem "$d\*.exe" -ErrorAction SilentlyContinue)) { [void]$cands.Add($f) }
 }
-foreach ($d in @("D:\WeiXin", "C:\QQ")) {
-  foreach ($f in (Get-ChildItem "$d\*.exe")) { [void]$cands.Add($f) }
+# 聊天客户端主程序：在 $appRoots（上面按固定盘扫出的客户端目录）里找，不指定盘符
+foreach ($d in $appRoots) {
+  foreach ($f in (Get-ChildItem $d -Recurse -Depth 3 -File -ErrorAction SilentlyContinue |
+                  Where-Object { $_.Name -match '(?i)^(weixin|wechat|wechatappex|qq)\.exe$' })) {
+    [void]$cands.Add($f)
+  }
 }
-foreach ($f in (Get-ChildItem "C:\QQ\versions\*\QQ.exe")) { [void]$cands.Add($f) }
 $sig = New-Object System.Collections.ArrayList
 $seen = @{}
 foreach ($f in $cands) {
@@ -201,6 +227,13 @@ foreach ($hive in @("HKLM:\Software\Microsoft\Windows\CurrentVersion\Uninstall\*
 }
 Save $soft.ToArray() "software.json"
 
+# 把卸载注册表给的 InstallLocation 并进 $appRoots（上面那段扫固定盘时 $soft 还没建）。
+# 注册表里登记过的目录更精确（如 WeGame 在 LoL 目录内），补进来能多发现一层。
+foreach ($s in $soft) { if ($s.loc) { [void]$appRoots.Add([string]$s.loc) } }
+$appRoots = @($appRoots | Where-Object { $_ -and (Test-Path $_) } | Select-Object -Unique)
+Save $appRoots "app_roots.json"
+
+
 # ---------- recent file activity under Tencent / game roots ----------
 $since  = (Get-Date).AddDays(-4)
 $skipRe = '(?i)\\cache\\|\\temp\\|\\crashpad\\|\\cachedata\\|\\apps\\|\\TinyDLEx\\|\\AntiCheatExpert\\|\\versions\\|\\dumps\\|\\CrashDumps\\'
@@ -210,12 +243,13 @@ foreach ($p in @("$env:APPDATA\Tencent", "$env:LOCALAPPDATA\Tencent",
                  "$env:APPDATA\Microsoft\Windows\Recent")) {
   if (Test-Path $p) { [void]$roots.Add($p) }
 }
-foreach ($p in @("D:\WeiXin", "C:\QQ", "D:\英雄联盟\WeGame\TLog",
-                 "D:\英雄联盟\WeGame\config", "D:\英雄联盟\WeGame\client_config")) {
-  if (Test-Path $p) { [void]$roots.Add($p) }
-}
-foreach ($d in (Get-ChildItem "D:\英雄联盟" -Directory -Recurse -Depth 2 -ErrorAction SilentlyContinue)) {
-  if ($d.Name -match '(?i)^logs?$|^TLog$') { [void]$roots.Add($d.FullName) }
+# 客户端/游戏目录来自上面按固定盘扫出的 $appRoots（不写死盘符）。
+foreach ($p in $appRoots) {
+  [void]$roots.Add($p)
+  # 这些目录里真正有时间价值的是日志/配置子目录，往下补两层
+  foreach ($d in (Get-ChildItem $p -Directory -Recurse -Depth 2 -ErrorAction SilentlyContinue)) {
+    if ($d.Name -match '(?i)^logs?$|^TLog$|^config$') { [void]$roots.Add($d.FullName) }
+  }
 }
 $rf = New-Object System.Collections.ArrayList
 foreach ($root in ($roots | Select-Object -Unique)) {
@@ -274,9 +308,9 @@ $sdkCand = New-Object System.Collections.ArrayList
 foreach ($loc in @($soft | ForEach-Object { $_.loc })) {
   if ($loc) { [void]$sdkCand.Add($loc) }
 }
-foreach ($p in @("D:\英雄联盟\WeGame", "C:\Program Files (x86)\Tencent\WeGame", "D:\WeGame")) {
-  [void]$sdkCand.Add($p)
-}
+# 兜底：WeGame 常装在自定义目录、注册表里未必有 InstallLocation ——
+# 复用上面按固定盘扫出来的客户端目录，而不是写死盘符
+foreach ($p in $appRoots) { if ($p) { [void]$sdkCand.Add([string]$p) } }
 foreach ($base in ($sdkCand | Select-Object -Unique)) {
   if (-not $base -or -not (Test-Path $base)) { continue }
   foreach ($f in (Get-ChildItem $base -Recurse -Depth 2 -File -Filter "QQNTOpenSDK*" -ErrorAction SilentlyContinue)) {

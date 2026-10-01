@@ -14,13 +14,72 @@
 
 用法：
     python session_detail.py                    # 自动探测安装目录
-    python session_detail.py --dir D:\\ToDesk
+    python session_detail.py --dir <ToDesk 安装目录>
     python session_detail.py --json out.json    # 供其他脚本消费
 """
 import os, re, sys, glob, json, argparse, datetime
 
-CANDIDATE_DIRS = [r'D:\ToDesk', r'C:\Program Files\ToDesk',
-                  r'C:\Program Files (x86)\ToDesk']
+def _install_dirs():
+    """ToDesk 装在哪**现找**，不写死盘符。
+
+    写死盘符有两个问题：只对一台机器成立，而且那条路径本身就是那台机器的指纹。
+    来源：卸载注册表的 DisplayName 里带 todesk 的项 + 标准 Program Files 位置
+    （后者用环境变量拼，仍然与盘符无关）。
+    """
+    out, seen = [], set()
+
+    def add(p):
+        if p and p not in seen and os.path.isdir(p):
+            seen.add(p)
+            out.append(p)
+
+    try:
+        import winreg
+        for path in (r'Software\Microsoft\Windows\CurrentVersion\Uninstall',
+                     r'Software\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall'):
+            try:
+                key = winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE, path)
+            except OSError:
+                continue
+            i = 0
+            while True:
+                try:
+                    sub = winreg.EnumKey(key, i)
+                except OSError:
+                    break          # 枚举结束
+                i += 1
+                try:
+                    sk = winreg.OpenKey(key, sub)
+                    disp = str(winreg.QueryValueEx(sk, 'DisplayName')[0])
+                except OSError:
+                    continue
+                if 'todesk' not in disp.lower():
+                    continue
+                # InstallLocation 常常是空的（实测 ToDesk 就是）—— 只看它会漏掉整个程序，
+                # 而"没找到日志目录"读起来正好像"没人连进来过"。退到另外两个值。
+                for val_name in ('InstallLocation', 'UninstallString', 'DisplayIcon'):
+                    try:
+                        raw = str(winreg.QueryValueEx(sk, val_name)[0]).strip()
+                    except OSError:
+                        continue
+                    if raw.startswith('"'):
+                        raw = raw[1:].split('"', 1)[0]
+                    else:
+                        raw = raw.split(',')[0].strip()
+                    if not raw:
+                        continue
+                    add(raw if os.path.isdir(raw) else os.path.dirname(raw))
+    except ImportError:
+        pass
+
+    for var in ('ProgramFiles', 'ProgramFiles(x86)', 'ProgramW6432'):
+        base = os.environ.get(var)
+        if base:
+            add(os.path.join(base, 'ToDesk'))
+    return out
+
+
+CANDIDATE_DIRS = _install_dirs()
 COUNTER = re.compile(
     r'^(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}),\d+.*?'
     r'session send (-?\d+) frame, recv (-?\d+) mouse (-?\d+) key (-?\d+) text (-?\d+)')
