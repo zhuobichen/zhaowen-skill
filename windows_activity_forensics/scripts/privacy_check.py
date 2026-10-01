@@ -122,6 +122,16 @@ def _check_timebase():
             raise SystemExit('TIMEBASE SELFTEST FAILED: %r -> %r' % (p, back))
 
 
+def _nb(s):
+    """渲染前统一去掉 markdown 的 ** 粗体标记。
+
+    这些字段是给 HTML 用的，`**` 不会变成粗体、只会原样显示出来。
+    与其在几十处字符串里逐个提防，不如在出口处一次堵死 ——
+    这类问题已经反复出现好几次了。
+    """
+    return str(s).replace('**', '') if s else s
+
+
 def add(key, title, verdict, evidence, items=None, note='', source=''):
     results.append({'key': key, 'title': title, 'verdict': verdict,
                     'evidence': evidence, 'items': items or [], 'note': note,
@@ -666,14 +676,21 @@ def chk_screenshots():
 
 
 def chk_browser_secrets():
-    """浏览器里的密码库 / 自动填充 / 书签有没有被碰。"""
-    names = ['Login Data', 'Web Data', 'Bookmarks', 'Preferences', 'Shortcuts', 'Top Sites']
+    """浏览器里的密码库 / 自动填充 / 书签 / **Cookie** 有没有被碰。
+
+    **Cookies 必须单独列出来**：它决定"有没有人用我登录着的账号上过网站"。
+    （京东这类站点靠的就是 Cookie 里的登录态 —— 光看历史库 0 条排不掉这一条，
+    因为访问也可能不写历史，但用登录态一定会动 Cookie 库。）
+    """
+    names = ['Login Data', 'Web Data', 'Bookmarks', 'Preferences', 'Shortcuts',
+             'Top Sites', 'Network/Cookies', 'Network/Cookies-journal']
     items, hits, seen = [], 0, 0
     for base, who in ((os.path.join(L, 'Microsoft', 'Edge', 'User Data', 'Default'), 'Edge'),
+                      (os.path.join(L, 'Microsoft', 'Edge', 'User Data', 'Profile 1'), 'Edge/P1'),
                       (os.path.join(L, 'Doubao', 'User Data', 'Default'), '豆包'),
                       (os.path.join(L, 'ima.copilot', 'User Data', 'Default'), 'ima.copilot')):
         for n in names:
-            p = os.path.join(base, n)
+            p = os.path.join(base, n.replace('/', os.sep))
             if not os.path.isfile(p):
                 continue
             seen += 1
@@ -687,9 +704,13 @@ def chk_browser_secrets():
     if seen == 0:
         return dict(verdict=UNKNOWN, evidence='未发现浏览器敏感库文件', items=[])
     return dict(verdict=HIT if hits else CLEAR,
-                evidence='检查 %d 个敏感库文件，窗口内被改动 %d 个' % (seen, hits),
+                evidence='检查 %d 个敏感库文件（含 Cookie），窗口内被改动 %d 个' % (seen, hits),
                 items=items,
-                note='这是间接旁证：浏览器读密码库时不一定会改文件，所以"未改动"弱于"没看过"。')
+                source='Edge/豆包/ima 的 Login Data · Web Data · Bookmarks · '
+                       'Preferences · Network/Cookies',
+                note='这是间接旁证：浏览器读密码库时不一定会改文件，所以"未改动"弱于"没看过"。'
+                     '但 **Cookie 库没被改** 对"用我的登录态上过网站"是较强排除 —— '
+                     '带着登录态访问站点会写 Cookie。')
 
 
 def chk_run_dialog():
@@ -812,10 +833,38 @@ def chk_chat_clients():
         if t and inw(t):
             hit = True
             items.append('%s  <== 窗口内微信日志被写  %s' % (t.strftime('%m-%d %H:%M:%S'), os.path.basename(p)))
+
+    # "跑没跑"之外还要问"**登没登**" —— 登录会在账号目录里留痕，与进程运行是两回事
+    login_probes = (
+        ('微信 登录目录', [os.path.join(R, 'Tencent', 'xwechat', 'login', '*'),
+                          os.path.join(R, 'Tencent', 'xwechat', 'login', '*', '*')]),
+        ('微信 账号数据', [os.path.join(R, 'Tencent', 'xwechat', 'config', '*')]),
+        ('QQ 数据', [os.path.join(R, 'Tencent', 'QQ', '**', '*'),
+                    os.path.join(R, 'Tencent', 'QQNT', '**', '*'),
+                    os.path.join(R, 'Tencent', 'nt_qq_*', '**', '*')]),
+    )
+    for label, pats in login_probes:
+        files = []
+        for pat in pats:
+            files += glob.glob(pat, recursive=True)
+        files = [f for f in files if os.path.isfile(f)]
+        inw_f = [(mtime(f), f) for f in files if mtime(f) and inw(mtime(f))]
+        if inw_f:
+            hit = True
+            for t, f in sorted(inw_f)[:5]:
+                items.append('%s  <== 窗口内 %s 被写  %s'
+                             % (t.strftime('%m-%d %H:%M:%S'), label, f[-80:]))
+        else:
+            items.append('%s：窗口内无写入（%d 个文件）' % (label, len(files)))
+
     return dict(verdict=HIT if hit else CLEAR,
-                evidence='微信/QQ 在窗口内%s运行' % ('有' if hit else '未'),
+                evidence='微信/QQ 在窗口内%s运行、登录痕迹%s'
+                         % ('有' if hit else '未', '有' if hit else '无'),
                 items=items,
-                note='客户端没开 = 聊天记录不可能被界面看到；但直接读本地数据库文件不会留下这里能查的痕迹。')
+                source=r'%SystemRoot%\Prefetch\WEIXIN|WECHATAPPEX|QQ.EXE-*.pf | '
+                       r'%APPDATA%\Tencent\xwechat\login 与 config | QQNT 数据目录',
+                note='客户端没开 = 聊天记录不可能被界面看到；但直接读本地数据库文件不会留下这里能查的痕迹。'
+                     '"没运行"和"没登录"是两个独立的判据，这一项两个都查了。')
 
 
 def _toast_text(payload):
@@ -1964,6 +2013,217 @@ def chk_session_restore():
                      '没被写 = 那一类内容没有被自动恢复出来。')
 
 
+def _browser_roots():
+    """常见浏览器 (显示名, User Data 目录)。"""
+    return (
+        ('Edge', os.path.join(L, 'Microsoft', 'Edge', 'User Data')),
+        ('Chrome', os.path.join(L, 'Google', 'Chrome', 'User Data')),
+        ('QQ浏览器', os.path.join(L, 'Tencent', 'QQBrowser', 'User Data')),
+        ('360Chrome', os.path.join(L, '360Chrome', 'Chrome', 'User Data')),
+        ('360SE', os.path.join(R, '360se6', 'User Data')),
+    )
+
+
+def chk_browser_use():
+    """浏览器在窗口内**被用过**吗 —— 决定"看我的历史记录 / 用我的登录态"是否可能。
+
+    这一项回答的是清单里的两条：
+      · 有没有人翻我的**浏览历史**（打开 edge://history 看）
+      · 有没有人**用我登录着的账号**上网站（京东这类）
+
+    **注意它和「上网」那一项的区别**：那一项数的是"访问了哪些网址"；
+    这一项看的是"浏览器到底有没有在这个窗口里动过" —— 因为**打开 edge://history
+    这类内部页不写历史库**，只靠「上网」的 0 条是排除不掉"他翻了我的历史"的。
+
+    判据用四个互相独立的痕迹，任一在窗口内被写就算被用过：
+      会话文件（Sessions/）、Cookie 库、表单/自动填充、历史库本身。
+    """
+    items = []
+    used = []
+    present = []
+    for name, root in _browser_roots():
+        if not os.path.isdir(root):
+            continue
+        present.append(name)
+        for prof in ('Default',) + tuple('Profile %d' % i for i in range(1, 4)):
+            pd = os.path.join(root, prof)
+            if not os.path.isdir(pd):
+                continue
+            probes = [
+                ('会话/标签页', os.path.join(pd, 'Sessions')),
+                ('Cookie 库', os.path.join(pd, 'Network')),
+                ('历史库', pd),
+                ('自动填充', os.path.join(pd, 'Web Data')),
+            ]
+            for what, path in probes:
+                if what == '历史库':
+                    files = [os.path.join(pd, 'History')]
+                elif what == 'Cookie 库':
+                    files = [os.path.join(path, 'Cookies'), os.path.join(pd, 'Cookies')]
+                elif what == '自动填充':
+                    files = [path]
+                else:
+                    files = glob.glob(os.path.join(path, '*'))
+                for f in files:
+                    if not os.path.isfile(f):
+                        continue
+                    t = mtime(f)
+                    if t and inw(t):
+                        used.append((t, name, prof, what, f))
+    if not present:
+        return dict(verdict=UNKNOWN,
+                    evidence='本机没有常见的浏览器数据目录',
+                    items=[], source=' / '.join(r for _, r in _browser_roots()),
+                    note='没装 = 不适用。')
+    if used:
+        used.sort()
+        for t, name, prof, what, f in used[:12]:
+            items.append('%s  %s/%s  %s 被写  <== 窗口内用过浏览器'
+                         % (t.strftime('%m-%d %H:%M:%S'), name, prof, what))
+        return dict(verdict=HIT,
+                    evidence='窗口内浏览器数据被写过 —— 浏览器确实被用过（%d 处）' % len(used),
+                    items=items,
+                    source=' / '.join(present) + ' 的 Sessions / Cookies / History / Web Data',
+                    note='被用过 **不等于**"翻了历史或用你的账号" —— 它只排除了"完全没碰过"。'
+                         '具体访问了什么要看「上网」那一项；用没用你的登录态要看 Cookie 有没有变。')
+    return dict(verdict=CLEAR,
+                evidence='窗口内浏览器没有任何数据被写过（本机有：%s）—— '
+                         '浏览历史、Cookie、会话都没有被碰' % '、'.join(present),
+                items=items,
+                source=' / '.join(present) + ' 的 Sessions / Cookies / History / Web Data',
+                note='这一项排除了"他翻我的浏览历史 / 用我的登录态上网站"这类操作：'
+                     '真做过就会写这些文件。**唯一的例外**是浏览器纯后台启动'
+                     '（startup boost，不显示窗口、不写会话），那种情况这一项看不到。')
+
+
+def chk_ai_clients():
+    """我和 AI 的聊天记录（网页版 + 客户端）有没有被人翻过。
+
+    网页版归「上网」和「浏览器有没有被用过」管；这一项管**本地客户端**：
+    豆包 / ima / ChatGPT 桌面版 / Claude / Codex 这些，聊天都存在本地数据目录里。
+
+    判据：窗口内有没有**非缓存**（即不是启动时自动生成的 cache/日志/扩展清单）
+    的数据文件被写。启动会刷新一堆缓存，把它们算成"翻过聊天"等于每次都命中。
+    """
+    targets = (
+        ('豆包', [os.path.join(L, 'Doubao'), os.path.join(R, 'Doubao')]),
+        ('ima.copilot', [os.path.join(L, 'ima.copilot')]),
+        ('ChatGPT 桌面版', [os.path.join(R, 'ChatGPT'), os.path.join(L, 'ChatGPT')]),
+        ('通义/千问', [os.path.join(L, 'Tongyi'), os.path.join(R, 'Tongyi')]),
+        ('Kimi', [os.path.join(L, 'Kimi'), os.path.join(R, 'Kimi')]),
+        ('Claude Code', [os.path.join(HOME, '.claude')]),
+        ('Codex', [os.path.join(HOME, '.codex')]),
+    )
+    CACHEISH = ('\\cache\\', '\\code cache\\', '\\gpucache\\', '\\service worker\\',
+                '\\crashpad\\', '\\bugly\\', '\\dawncache\\', '\\blob_storage\\',
+                'clientcertificates', 'site characteristics', 'discounts_db',
+                '\\component_crx_cache\\', '\\extensions\\', 'sync data',
+                '\\logs\\', '\\log\\', '\\.log', '\\log.old', 'crashpad', '\\temp\\',
+                '\\blob_storage', '\\session storage\\',
+                '\\monitor\\', '\\sdk_storage\\', '\\sbox\\', '\\parfait\\',
+                '\\agent_infra\\', '\\metrics\\', '\\telemetry\\')
+    items, hits, present = [], 0, []
+    for label, bases in targets:
+        bases = [b for b in bases if os.path.isdir(b)]
+        if not bases:
+            continue
+        present.append(label)
+        rows = []
+        for b in bases:
+            for p in glob.glob(os.path.join(b, '**', '*'), recursive=True):
+                if not os.path.isfile(p):
+                    continue
+                t = mtime(p)
+                if t and inw(t):
+                    rows.append((t, p))
+        data = [(t, p) for t, p in rows
+                if not any(c in p.lower() for c in CACHEISH)]
+        if data:
+            hits += len(data)
+            for t, p in sorted(data)[:6]:
+                items.append('%s  %s  <== 窗口内被写（不是缓存）  %s'
+                             % (label, t.strftime('%m-%d %H:%M:%S'), p[-85:]))
+        else:
+            items.append('%s：窗口内只有启动缓存被写（%d 个），数据/会话文件没有被动过'
+                         % (label, len(rows)))
+    # 「客户端有没有运行」才是能给结论的那半边 —— 没运行就一定没被翻
+    exes = {
+        '豆包': ('DOUBAO',),
+        'ima.copilot': ('IMA.COPILOT', 'IMA'),
+        'ChatGPT 桌面版': ('CHATGPT',),
+        '通义/千问': ('TONGYI', 'QWEN'),
+        'Kimi': ('KIMI',),
+        'Claude Code': ('CLAUDE',),
+        'Codex': ('CODEX',),
+    }
+    ran = []
+    runs = _all_prefetch_runs()
+    for label, names in exes.items():
+        for t, exe in runs:
+            up = exe.upper()
+            if any(n in up for n in names) and inw(t):
+                ran.append((label, t, exe))
+                break
+
+    if not present:
+        return dict(verdict=UNKNOWN,
+                    evidence='本机没有检测到已知的 AI 客户端',
+                    items=[], source='豆包 / ima / ChatGPT / 通义 / Kimi / Claude / Codex',
+                    note='也可能是装了但目录名不在清单里 —— "没查到"不等于"没有"。')
+    if ran:
+        for label, t, exe in ran:
+            items.append('%s 在窗口内运行过：%s  %s'
+                         % (label, t.strftime('%m-%d %H:%M:%S'), exe))
+        return dict(verdict=UNKNOWN,
+                    evidence='窗口内这些 AI 客户端运行过：%s —— 但"有没有人翻过聊天"查不出来'
+                             % '、'.join(sorted({l for l, _, _ in ran})),
+                    items=items, source=' / '.join(present) + ' 的数据目录 + Prefetch 运行历史',
+                    note='**为什么给不出结论**：翻看**已有的**聊天记录是"只读"操作，'
+                         '**不写任何文件** —— 没有痕迹可查。这里只能确认客户端当时开着，'
+                         '不能确认有没有人看过。'
+                         '（能被查到的是"发新消息/改动会话"，而那不等于"翻过旧聊天"。）')
+    return dict(verdict=CLEAR,
+                evidence='窗口内没有任何 AI 客户端运行过（本机装了：%s）'
+                         % '、'.join(present),
+                items=items, source=' / '.join(present) + ' 的数据目录 + Prefetch 运行历史',
+                note='客户端没运行 = 它的聊天界面不可能被看到。这是**有效排除**，不是弱证据。')
+
+
+def chk_off_hours():
+    """窗口内的活动，落在这台机器**平时不活动的时段**吗 —— "异常时间"。
+
+    基线用 Prefetch 里**全部程序的运行历史**按小时统计：这台机器平时几点在动。
+    然后看窗口内的每一次运行，落在"少见时段"的要单独标出来。
+    注意基线本身是有限的（Prefetch 每个程序只留最近 8 次），所以这是**参考**不是判据。
+    """
+    runs = _all_prefetch_runs()
+    if not runs:
+        return dict(verdict=UNKNOWN, evidence='读不到程序运行历史，无法建基线',
+                    items=[], source='C:\\Windows\\Prefetch\\*.pf')
+    hist = {}
+    for t, _exe in runs:
+        hist[t.hour] = hist.get(t.hour, 0) + 1
+    total = sum(hist.values())
+    in_window_runs = [(t, e) for t, e in runs if inw(t)]
+    items = ['历史运行按小时的分布（共 %d 条记录）：%s'
+             % (total, '、'.join('%02d时×%d' % (h, hist[h]) for h in sorted(hist)))]
+    odd = []
+    for t, exe in in_window_runs:
+        share = hist.get(t.hour, 0) / float(total)
+        if share < 0.01:                      # 该小时占历史不足 1%
+            odd.append((t, exe, share))
+    for t, exe, share in odd[:20]:
+        items.append('%s  %s  <== 该时段历史上只占 %.2f%% 的运行量'
+                     % (t.strftime('%m-%d %H:%M:%S'), exe, share * 100))
+    return dict(verdict=HIT if odd else CLEAR,
+                evidence=('窗口内 %d 次运行中，有 %d 次落在该机器平时几乎不活动的时段'
+                          % (len(in_window_runs), len(odd))) if odd else
+                         '窗口内的活动都落在该机器平时的活跃时段内',
+                items=items, source=r'C:\Windows\Prefetch\*.pf 的运行历史',
+                note='基线只来自 Prefetch 保留的最近 8 次运行，样本有限，**只能当参考**；'
+                     '机器刚装好或历史被清理过时，这个"异常时段"判定会失真。')
+
+
 CHECKS = [
     ('开机初始态', '开机时屏幕上会出现什么', chk_boot_screen),
     ('会话恢复', '上次没关的东西有没有被自动摆回屏幕', chk_session_restore),
@@ -1974,6 +2234,9 @@ CHECKS = [
     ('Office', 'Office 最近文档', chk_office),
     ('文件夹', '资源管理器里翻过哪些文件夹', chk_folder_browsing),
     ('上网', '浏览器访问记录', chk_browsing),
+    ('浏览器被用过', '有没有人翻我的历史 / 用我的登录态', chk_browser_use),
+    ('AI 聊天记录', '有没有人翻我和 AI 的聊天', chk_ai_clients),
+    ('异常时段', '窗口内的活动是不是平时不活动的时段', chk_off_hours),
     ('截图', '截图 / 录屏', chk_screenshots),
     ('缩略图', '有没有人用缩略图看过图片', chk_thumbcache),
     ('打印', '有没有人打印过东西', chk_printing),
@@ -2198,22 +2461,23 @@ def write_html(path, n_hit, n_clear, n_unk, pc=None):
         v = r['verdict']
         P.append('<div class="r" style="border-left-color:%s;background:%s">' % (col[v], bg[v]))
         P.append('<div class="t">%s <span style="color:%s;font-size:12px">［%s］</span></div>'
-                 % (e(r['title']), col[v], lbl[v]))
-        P.append('<div class="s">%s</div>' % e(r['evidence']))
+                 % (e(_nb(r['title'])), col[v], lbl[v]))
+        P.append('<div class="s">%s</div>' % e(_nb(r['evidence'])))
         if r.get('source'):
             # 技能里写着"每一项都要打印它实际看了哪个数据源，以便人工复核" ——
             # 这里必须真的打出来，否则那条纪律只存在于文档里。
             P.append('<div style="font-size:11.5px;color:#8b98a8;font-family:Consolas,monospace;'
-                     'margin-top:5px;word-break:break-all">数据源 · %s</div>' % e(r['source']))
+                     'margin-top:5px;word-break:break-all">数据源 · %s</div>' % e(_nb(r['source'])))
         if r['items']:
             P.append('<ul>')
             for it in r['items'][:40]:
-                P.append('<li>%s</li>' % e(it))
+                P.append('<li>%s</li>' % e(_nb(it)))
             if len(r['items']) > 40:
                 P.append('<li>…（共 %d 条）</li>' % len(r['items']))
             P.append('</ul>')
         if r['note']:
-            P.append('<div class="n">注意：%s</div>' % e(r['note']).replace('\n', '<br>'))
+            P.append('<div class="n">注意：%s</div>'
+                     % e(_nb(r['note'])).replace('\n', '<br>'))
         P.append('</div>')
     P.append('</section>')
 
