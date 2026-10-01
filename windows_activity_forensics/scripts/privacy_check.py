@@ -180,6 +180,32 @@ def power_context():
             'window_seconds': (W1 - W0).total_seconds()}
 
 
+_APPIDS = None
+
+
+def resolve_appid(appid):
+    """跳转列表 AppID（散列）-> 应用名。
+
+    表来自 EricZimmerman/JumpList 的 AppIDs.txt（733 条，`"HASH"|"名称"`）。
+    **查不到就返回 None，不要猜** —— 猜错会给出错误的应用名，比"未知"更坏。
+    注意该表只覆盖经典应用：本机 74 个跳转列表里只认出 20 个，
+    未命中不等于可疑（VS Code、Game Bar 这类新版应用常不在表内）。
+    """
+    global _APPIDS
+    if _APPIDS is None:
+        _APPIDS = {}
+        p = os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                         '..', 'references', 'AppIDs.txt')
+        try:
+            for line in open(p, encoding='utf-8', errors='ignore'):
+                if '|' in line:
+                    a, b = line.split('|', 1)
+                    _APPIDS[a.strip().strip('"').upper()] = b.strip().strip('"')
+        except OSError:
+            pass
+    return _APPIDS.get(str(appid).upper())
+
+
 def chk_external_storage():
     """有没有插 U 盘/移动硬盘 —— 拷走东西的第一步。"""
     items = []
@@ -470,15 +496,23 @@ def chk_jumplists():
             t = mtime(p)
             if t and inw(t):
                 hits += 1
-                items.append('%s  <== 窗口内  %s (%s)' % (t.strftime('%m-%d %H:%M:%S'),
-                                                        os.path.basename(p), tag))
+                appid = os.path.basename(p).split('.')[0]
+                name = resolve_appid(appid)
+                items.append('%s  <== 窗口内  %s%s (%s)'
+                             % (t.strftime('%m-%d %H:%M:%S'),
+                                '' if name else 'AppID=%s ' % appid,
+                                name or '（表里没有）', tag))
     if total == 0:
         return dict(verdict=UNKNOWN, evidence='未发现跳转列表目录', items=[])
+    known = sum(1 for p in glob.glob(os.path.join(ad, '*'))
+                if resolve_appid(os.path.basename(p).split('.')[0]))
     return dict(verdict=HIT if hits else CLEAR,
-                evidence='跳转列表 %d 个，窗口内被更新 %d 个' % (total, hits),
+                evidence='跳转列表 %d 个（表内认出 %d 个），窗口内被更新 %d 个'
+                         % (total, known, hits),
                 items=items, source=ad,
-                note='AppID 未解析成应用名 —— 解析需要额外映射表，'
-                     '硬猜会给出错误的应用名，所以这里只报文件名与时间。')
+                note='应用名来自 EricZimmerman/JumpList 的 AppIDs.txt，'
+                     '**未命中不等于可疑** —— 该表只覆盖经典应用，新版应用常不在表内。'
+                     '表里没有的只报 AppID 与时间，不猜。')
 
 
 def chk_recycle():

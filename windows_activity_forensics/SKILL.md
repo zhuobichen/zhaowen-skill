@@ -65,7 +65,7 @@ python scripts/analyze.py --work <采集目录> --out <报告路径>
 
 | 源 | 能回答 | 硬限制 |
 |---|---|---|
-| Prefetch `*.pf` mtime | 程序**最后一次**何时运行 | 只保留最后一次；上限 1024 条；只覆盖系统盘 |
+| Prefetch `*.pf` | 程序**运行次数 + 最近 8 次运行时间** | 解 MAM 压缩后可得；上限约 1000 条且**会被清理工具删**；只覆盖系统盘 |
 | UserAssist | 由**用户界面**发起过哪些启动 | 只记 UI 启动；自动启动不写这里 |
 | 安全日志 4624 | 有没有远程(RDP)登录 | 需 4624 审计；只能区分登录类型，不能区分人 |
 | 安全日志 4688 | 精确启动时间 + 父进程 + 发起账户 | **默认关闭**，多半查不到 |
@@ -96,10 +96,24 @@ python scripts/analyze.py --work <采集目录> --out <报告路径>
 不互逆就直接 `SystemExit` 并打印偏移量。**任何一对"编码/解码"函数都该这样自测**，
 因为这类错误的唯一症状是"数据变少"，而"变少"看起来永远像"本来就没有"。
 
-### 2. Prefetch 新格式
-Windows 11 24H2+ 的 `.pf` 头是 `4d 41 4d 04`（"MAM"），不是老的 `53434341`（"SCCA"）。
-老解析器和网上的 prefetch 解析工具**都读不出**"最近 8 次运行时间"。此时只能退回用**文件 mtime**，
-并如实说明拿不到运行次数。
+### 2. Prefetch "读不出"是错觉 —— 它只是压缩了
+`.pf` 头前 3 字节是 `MAM` 时，很容易得出「Win11 24H2 新格式，读不出运行次数」的结论。
+**这个结论是错的。** `MAM` 是 **Windows 8+ 默认的压缩形式**（MS-XCA §2.2.4 的 LZ77+Huffman），
+解开之后**仍是标准的 v30/v31 布局**：`run_count` 在偏移 200 或 208
+（取决于文件信息表在 `0x128` 还是 `0x130`），最多 8 个 `last_runs` 在偏移 128。
+
+**判据**：前 3 字节 `MAM` → 先解压再按 SCCA 解析；否则直接解析。
+`scripts/prefetch_parse.py` 是 [Sootmark/prefetch](https://github.com/Sootmark/prefetch)（MIT/Apache-2.0，Rust，零依赖）
+的 Python 逐行移植，自带两个锚点自检（解压器错一个移位只会输出垃圾、不会报错）。
+
+**"只看 mtime"会造成的实际损失**（实测）：WPS 在他那次开机（00:34:32）启动过，
+但当天 14:42 又跑过一次，mtime 只剩 14:42 —— **单看 mtime 会把 00:34 那次整个漏掉**。
+能读运行历史后才发现。同理，同一可执行文件有多个 `.pf`（不同安装路径）时**必须合并**，
+只留一个是错的（豆包有多个路径，合并后次数从 222 变 397）。
+
+**另一个必须记住的限制**：Prefetch **会被清理**。本机在一次会话期间从 552 个 `.pf`
+掉到 ~210 个（`SilentCleanup` 计划任务 + 360/鲁大师常驻清理都在跑，未能确证是哪一次）。
+所以「Prefetch 里没有」永远不能当成「没运行过」。
 
 ### 3. UserAssist 运行次数多半取不到
 不少 Win11 版本里计数字段恒为 0。**别直接报 0**：先统计所有记录的该字段最大值，
@@ -187,6 +201,18 @@ session send <帧数> frame, recv <字节> mouse <鼠标事件> key <按键> tex
   例：鲁大师的 `LdsMultiWechatA` 会在每次登录后 1 分钟自动拉起微信多开。
 - 两个独立来源（Prefetch vs UserAssist）对同一程序的时间要**并排比对**；
   差值接近整小时的整数倍 = 时区错。脚本已内置该自检。
+
+## 来源与许可（接进来的第三方）
+
+| 用在哪 | 来源 | 许可 |
+|---|---|---|
+| `scripts/prefetch_parse.py`（MAM 解压 + v17–31 字段） | [Sootmark/prefetch](https://github.com/Sootmark/prefetch) 的 Python 移植 | MIT OR Apache-2.0 |
+| `references/AppIDs.txt`（跳转列表 AppID → 应用名，733 条） | [EricZimmerman/JumpList](https://github.com/EricZimmerman/JumpList) | Apache-2.0 |
+
+**未接入但已评估**（都是检索结果，**没在本机验证过能否跑通**，不要当既有能力）：
+`MarkBaggett/srum-dump`（SRUM 按小时应用使用，可补 Prefetch 答不了的那段）、
+`kacos2000/Win10` 的 Notifications 查询集与 `labcif/YPA` NotifAnalyzer（wpndatabase.db + WAL 恢复已删除通知）、
+`puffyCid/artemis`（现代跨平台，可作参考实现）。
 
 ## 局限（写进报告，不要省略）
 

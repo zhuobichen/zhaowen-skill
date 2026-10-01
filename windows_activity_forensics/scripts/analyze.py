@@ -10,6 +10,9 @@ are no hand-copied verdicts baked into the text.
 """
 import os, sys, json, glob, struct, datetime, html, re, shutil, sqlite3, argparse
 
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import prefetch_parse          # 同目录，解 MAM 压缩的 Prefetch（见该文件顶部说明）
+
 _ap = argparse.ArgumentParser(description='Local activity / remote-access forensics report')
 _ap.add_argument('--days', type=int, default=2,
                  help='window length in days ending at --to (default 2 = yesterday + today)')
@@ -316,6 +319,8 @@ def _check_timebase():
 
 
 _check_timebase()
+prefetch_parse._selftest()     # 解压器错一个移位就输出垃圾而不报错，必须锚定
+print('prefetch selftest: OK (MAM decompressor anchors)')
 
 
 def _sqlite_copy(src):
@@ -557,6 +562,61 @@ def collect_prefetch_all():
     return res
 
 
+def collect_prefetch_detail():
+    """可执行名(大写) -> {runs, version, compressed, last8}
+
+    Windows 8 起 Prefetch 默认压缩（文件头 `MAM\\x04`），只看文件 mtime 只能得到
+    "最后一次运行"。用 prefetch_parse 解开之后能拿到**运行次数**和**最近 8 次运行时间** ——
+    这才看得见"某程序在那次开机时启动过、但之后又被运行过所以 mtime 被顶掉"。
+    """
+    out = {}
+    for p in glob.glob(os.path.join(PF, '*.pf')):
+        try:
+            r = prefetch_parse.parse(open(p, 'rb').read())
+        except Exception:
+            continue
+        exe = os.path.basename(p).split('-')[0]
+        if exe.upper().endswith('.EXE'):
+            exe = exe[:-4]
+        key = exe.upper()
+        # 同一个可执行文件可能有多个 .pf（不同安装路径各一个），
+        # **必须合并**：只留其中一个是错的 —— 豆包有好几个路径，
+        # 只留次数最多的那个会把它在别的路径上的启动时刻全丢掉。
+        cur = out.setdefault(key, {'runs': 0, 'version': r['version'],
+                                   'compressed': r['compressed'], 'last8': [],
+                                   'paths': 0})
+        cur['runs'] += r['run_count']
+        cur['paths'] += 1
+        cur['last8'] = sorted(
+            {t for t in cur['last8'] + [prefetch_parse.filetime_to_dt(x) for x in r['last_runs']] if t},
+            reverse=True)[:8]
+    return out
+
+
+def boot_started_programs(boot_times, detail, within_sec=240):
+    """开机后 within_sec 内启动过的程序。
+
+    这是"他登录后屏幕上本来就会出现什么"的依据：自启项不写任何日志，
+    但它的运行时刻留在 Prefetch 的最近 8 次记录里。
+
+    **分母只能用每个程序实际存下的记录数**（最多 8），不能用"机器开过多少次机" ——
+    Prefetch 只保留最近 8 次运行，机器开过 20 次时用 20 当分母，永远显示 "7/20"，
+    看起来像"偶尔启动"，其实可能每次开机都起。
+    """
+    rows = []
+    for exe, d in detail.items():
+        runs = [t for t in d.get('last8', []) if t]
+        after = [t for t in runs
+                 if any(datetime.timedelta(0) <= (t - bt) <= datetime.timedelta(seconds=within_sec)
+                        for bt in boot_times)]
+        if after:
+            rows.append({'exe': exe, 'boot_runs': len(after), 'recorded': len(runs),
+                         'total': d.get('runs', 0), 'last': max(after)})
+    rows.sort(key=lambda r: (-r['boot_runs'], -r['total']))
+    return rows
+
+
+
 def collect_todesk():
     """ToDesk remote-control sessions, split by DIRECTION.
 
@@ -746,6 +806,7 @@ day = d2        # the timeline section renders the last day of the window
 
 # broad privacy sweep for the two focus days
 pf_all            = collect_prefetch_all()
+pf_detail         = collect_prefetch_detail()
 bhist, bdl, bstat = collect_browser_history(d1, d2)
 timeline          = collect_timeline(d1, d2)
 recycled, recycled_all = collect_recycle(d1, d2)
@@ -1147,30 +1208,70 @@ for _t, _exe in _pf_focus:
     _by_cat.setdefault(app_cat(_exe), []).append((_t, _exe))
 _priv_hits = [c for c in _by_cat if c in PRIVACY_CATS]
 A('<div class="note">这是本机能拿到的最全"程序被运行过"证据，覆盖全部 %d 个 Prefetch 条目。'
-  '<b>但只保留"最后一次运行"</b>：某程序若 9/30 与 10/1 都跑过，只会出现在 10/1。'
-  '因此"某分类在 9/30 没出现"不等于那天没跑。没有运行次数。</div>' % len(pf_all))
+  '<b>已解开 Windows 8+ 的 MAM 压缩</b>，所以除了"最后一次运行"，'
+  '还能给出<b>累计运行次数</b>与<b>最近 8 次运行时间</b>。'
+  '次数少而时间集中的，是偶尔手动打开；次数多而均匀的，多为后台服务。</div>' % len(pf_all))
+
+
+def _runs_of(exe):
+    return (pf_detail.get(exe.upper()) or {}).get('runs')
+
+
+def _freq(exe):
+    r = _runs_of(exe)
+    return '' if r is None else '(%d次)' % r
+
+
 if _priv_hits:
     A('<p class="cap"><b>隐私相关分类命中：%s</b></p>' % esc('、'.join(_priv_hits)))
     A('<table><thead><tr><th style="width:150px">分类</th><th style="width:170px">最后运行</th>'
-      '<th>程序</th></tr></thead><tbody>')
+      '<th style="width:90px">累计次数</th><th>程序</th></tr></thead><tbody>')
     for cat in PRIVACY_CATS:
         rows_c = sorted(_by_cat.get(cat, []), reverse=True)
         for t, exe in rows_c:
-            A('<tr><td>%s</td><td class="mono">%s</td><td class="mono">%s</td></tr>'
-              % (esc(cat), t.strftime('%m-%d %H:%M:%S'), esc(exe)))
+            A('<tr><td>%s</td><td class="mono">%s</td><td class="mono">%s</td>'
+              '<td class="mono">%s</td></tr>'
+              % (esc(cat), t.strftime('%m-%d %H:%M:%S'),
+                 esc(_runs_of(exe)), esc(exe)))
     A('</tbody></table>')
 A('<h4>全部 %d 个分类</h4>' % len(_by_cat))
 A('<table><thead><tr><th style="width:170px">分类</th><th style="width:90px">程序数</th>'
   '<th style="width:170px">最近一次</th><th>程序</th></tr></thead><tbody>')
 for cat in sorted(_by_cat, key=lambda c: (c not in PRIVACY_CATS, -len(_by_cat[c]))):
     rows_c = sorted(_by_cat[cat], reverse=True)
-    names = '、'.join(e for _, e in rows_c[:26])
+    names = '、'.join(e + _freq(e) for _, e in rows_c[:26])
     if len(rows_c) > 26:
         names += ' …(共 %d)' % len(rows_c)
     A('<tr><td>%s</td><td>%d</td><td class="mono">%s</td>'
       '<td class="mono" style="word-break:break-all">%s</td></tr>'
       % (esc(cat), len(rows_c), rows_c[0][0].strftime('%m-%d %H:%M'), esc(names)))
 A('</tbody></table>')
+
+# ---- 2.5b 每次开机都启动的程序（"本来就在眼前"的来源）----
+_boots = sorted({parse_s(r.get('time')) for r in boot
+                 if str(r.get('id')) == '6005' and parse_s(r.get('time'))})
+_boot_rows = boot_started_programs(_boots, pf_detail)
+A('<h3>2.5b 开机后自动启动的程序（= 他登录后屏幕上本来就会出现的）</h3>')
+A('<div class="note">自启项不写任何日志，但<b>它的运行时刻留在 Prefetch 的最近 8 次记录里</b>。'
+  '下表是"运行时刻落在某次开机后 4 分钟内"的程序 —— 这些与你在不在无关，'
+  '是桌面上本来就会开的东西；其中会开窗口的，就是<b>"他可能看到的内容"</b>。'
+  '<b>分母是每个程序实际留下的记录数（最多 8）</b>，不是机器开过多少次机。</div>')
+if _boot_rows:
+    A('<table><thead><tr><th style="width:280px">程序</th>'
+      '<th style="width:180px">开机后启动 / 有记录</th><th style="width:110px">累计运行</th>'
+      '<th>最近一次开机后启动</th></tr></thead><tbody>')
+    for r in _boot_rows:
+        every = (r['boot_runs'] == r['recorded'] and r['recorded'] >= 2)
+        tag = ('<span class="tag t-red">每次都是</span>' if every
+               else '%d / %d' % (r['boot_runs'], r['recorded']))
+        A('<tr><td class="mono">%s</td><td>%s</td><td class="mono">%d</td>'
+          '<td class="mono">%s</td></tr>'
+          % (esc(r['exe']), tag, r['total'], esc(r['last'].strftime('%m-%d %H:%M:%S'))))
+    A('</tbody></table>')
+    A('<p class="cap">已取到的开机时刻：%s</p>'
+      % esc('、'.join(t.strftime('%m-%d %H:%M') for t in _boots[-8:])))
+else:
+    A('<p>（Prefetch 里没有可用的运行历史，或没有取到开机事件）</p>')
 
 # ---- 2.6 browser history ----
 A('<h3>2.6 浏览器访问与下载记录</h3>')
