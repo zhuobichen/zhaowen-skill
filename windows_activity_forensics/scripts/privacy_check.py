@@ -130,6 +130,56 @@ def reg_key_times(paths):
 
 # ---------------------------------------------------------------- checks
 
+def power_context():
+    """窗口内机器实际开机多久。
+
+    这不是一条 HIT/CLEAR/UNKNOWN 检查，而是所有检查的前提：如果机器整段是关着的，
+    「12 项全部无记录」是必然的，跟「他很规矩」毫无关系。不先摆出来就会误读。
+    """
+    # Look back far enough to find the boot that was in progress when the window
+    # opened. 7 days is NOT enough: a machine that has been up for a fortnight
+    # has no 6005/6006 in that range, and the check then reports "unknown"
+    # about a machine that is plainly running.
+    look = W0 - datetime.timedelta(days=365)
+    out, _ = ps(
+        "$ErrorActionPreference='SilentlyContinue';"
+        "Get-WinEvent -FilterHashtable @{LogName='System';Id=6005,6006;"
+        "StartTime=[datetime]'%s';EndTime=[datetime]'%s'} -MaxEvents 3000 | "
+        "Sort-Object TimeCreated | ForEach-Object { $_.TimeCreated.ToString('s')+'|'+$_.Id }"
+        % (look.strftime('%Y-%m-%d %H:%M:%S'), W1.strftime('%Y-%m-%d %H:%M:%S')))
+    evs = []
+    for line in out.splitlines():
+        p = line.strip().split('|')
+        if len(p) == 2:
+            try:
+                evs.append((datetime.datetime.fromisoformat(p[0]), int(p[1])))
+            except ValueError:
+                pass
+    if not evs:
+        return {'ok': False, 'on_seconds': None, 'intervals': [],
+                'note': '取不到开关机事件（6005/6006），无法判断窗口内机器是否在运行'}
+    # 6005=开机, 6006=关机。窗口开始时若已开机，从窗口起点算。
+    state = None
+    intervals = []
+    start = None
+    for t, eid in evs:
+        if t < W0:
+            state = 'on' if eid == 6005 else 'off'
+            continue
+        if eid == 6005 and state != 'on':
+            state, start = 'on', t
+        elif eid == 6006 and state == 'on':
+            intervals.append((max(start or W0, W0), t))
+            state, start = 'off', None
+    if state == 'on':
+        # start is None when the machine was already up before the window opened
+        # -- max(None, W0) would raise TypeError.
+        intervals.append((start or W0, W1))
+    total = sum((b - a).total_seconds() for a, b in intervals)
+    return {'ok': True, 'on_seconds': total, 'intervals': intervals,
+            'window_seconds': (W1 - W0).total_seconds()}
+
+
 def chk_external_storage():
     """有没有插 U 盘/移动硬盘 —— 拷走东西的第一步。"""
     items = []
@@ -553,11 +603,24 @@ def main():
         except Exception as e:
             add(key, title, UNKNOWN, '检查过程抛异常: %s: %s' % (type(e).__name__, e), [])
 
+    pc = power_context()
     n_hit = sum(1 for r in results if r['verdict'] == HIT)
     n_clear = sum(1 for r in results if r['verdict'] == CLEAR)
     n_unk = sum(1 for r in results if r['verdict'] == UNKNOWN)
 
     print('WINDOW  %s -> %s' % (W0, W1))
+    if pc['ok']:
+        pct = pc['on_seconds'] / pc['window_seconds'] * 100 if pc['window_seconds'] else 0
+        print('POWER   on %s of %s (%.0f%%)'
+              % (str(datetime.timedelta(seconds=int(pc['on_seconds']))),
+                 str(datetime.timedelta(seconds=int(pc['window_seconds']))), pct))
+        for _s, _e in pc['intervals']:
+            print('        ON  %s -> %s' % (_s.strftime('%m-%d %H:%M:%S'), _e.strftime('%m-%d %H:%M:%S')))
+        if pct < 50:
+            print('        NOTE 机器在窗口内大部分时间是关着的 —— 无记录是必然的，'
+                  '不等于「他很规矩」')
+    else:
+        print('POWER   UNKNOWN  %s' % pc['note'])
     print('CHECKS  %d total: %d HIT / %d CLEAR / %d UNKNOWN'
           % (len(results), n_hit, n_clear, n_unk))
     print()
@@ -573,11 +636,11 @@ def main():
             json.dump({'window': [W0.isoformat(), W1.isoformat()], 'results': results,
                        'blind_spots': BLIND_SPOTS}, f, ensure_ascii=False, indent=2)
     if a.out:
-        write_html(a.out, n_hit, n_clear, n_unk)
+        write_html(a.out, n_hit, n_clear, n_unk, pc)
     return 0
 
 
-def write_html(path, n_hit, n_clear, n_unk):
+def write_html(path, n_hit, n_clear, n_unk, pc=None):
     import html as H
     e = lambda s: H.escape(str(s if s is not None else ''))
     col = {HIT: '#a02a1e', CLEAR: '#0d5c33', UNKNOWN: '#8a5800'}
@@ -605,7 +668,30 @@ def write_html(path, n_hit, n_clear, n_unk):
          '方法：三态判定（发现接触 / 已检查无记录 / 无法确认）；「无法确认」不计入「无记录」</div></div></header>' % (
              e(W0.strftime('%Y-%m-%d %H:%M')), e(W1.strftime('%Y-%m-%d %H:%M')))]
 
-    P.append('<div class="w"><section><h2>总览</h2><div class="k">')
+    P.append('<div class="w">')
+    if pc and pc.get('ok'):
+        pct = pc['on_seconds'] / pc['window_seconds'] * 100 if pc['window_seconds'] else 0
+        P.append('<section><h2>前提：窗口内机器开机多久</h2>')
+        P.append('<p style="font-size:13.5px">窗口共 <b>%s</b>，其中<b>开机 %s（%.0f%%）</b>。</p>'
+                 % (e(str(datetime.timedelta(seconds=int(pc['window_seconds'])))),
+                    e(str(datetime.timedelta(seconds=int(pc['on_seconds'])))), pct))
+        if pc['intervals']:
+            P.append('<table><tr><th style="width:150px">开机时段</th><th>起</th><th>止</th></tr>')
+            for i, (x, y) in enumerate(pc['intervals'], 1):
+                P.append('<tr><td>第 %d 段</td><td>%s</td><td>%s</td></tr>'
+                         % (i, e(x.strftime('%m-%d %H:%M:%S')), e(y.strftime('%m-%d %H:%M:%S'))))
+            P.append('</table>')
+        if pct < 50:
+            P.append('<div class="r" style="border-left-color:#8a5800;background:#fdf9ef">'
+                     '<div class="t">先读这一条</div><div class="s">机器在窗口内大部分时间是关着的。'
+                     '下面的「无记录」有很大一部分只是因为没有开机 —— '
+                     '<b>不能读成「这段时间他很规矩」</b>。请把下面的结论只看作'
+                     '「开机时段内」的结论。</div></div>')
+        P.append('</section>')
+    elif pc:
+        P.append('<section><h2>前提：窗口内机器开机多久</h2><p>%s</p></section>' % e(pc.get('note', '')))
+
+    P.append('<section><h2>总览</h2><div class="k">')
     for v, n in ((HIT, n_hit), (CLEAR, n_clear), (UNKNOWN, n_unk)):
         P.append('<div class="c" style="border-left-color:%s;background:%s"><b style="color:%s">%d</b>'
                  '<span>%s</span></div>' % (col[v], bg[v], col[v], n, lbl[v]))
