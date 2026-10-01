@@ -69,6 +69,7 @@ python scripts/analyze.py --work <采集目录> --out <报告路径>
 | 源 | 能回答 | 硬限制 |
 |---|---|---|
 | Prefetch `*.pf` | 程序**运行次数 + 最近 8 次运行时间** | 解 MAM 压缩后可得；上限约 1000 条且**会被清理工具删**；只覆盖系统盘 |
+| **BAM / DAM**（注册表） | 每个程序**最后一次执行**的时刻 | 独立于 Prefetch，**不受 Prefetch 清理影响**；实测**有执行 Prefetch 完全没记**（见陷阱 10） |
 | UserAssist | 由**用户界面**发起过哪些启动 | 只记 UI 启动；自动启动不写这里 |
 | 安全日志 4624 | 有没有远程(RDP)登录 | 需 4624 审计；只能区分登录类型，不能区分人 |
 | 安全日志 4688 | 精确启动时间 + 父进程 + 发起账户 | **默认关闭**，多半查不到 |
@@ -171,6 +172,25 @@ session send <帧数> frame, recv <字节> mouse <鼠标事件> key <按键> tex
 
 同时检查有无录制与文件传输产物（`*.mp4` / `*.tos`、`%USERPROFILE%\Downloads\ToDesk`）。
 
+### 10. Prefetch 会漏记 —— 必须用 BAM 补差集
+
+**「Prefetch 里没有」≠「没运行过」。** 两个独立原因：
+
+1. **会被清理**：系统维护任务与第三方"系统清理"工具都会删 `.pf`（实测一次会话里少了一半以上）。
+2. **会漏记**：同一台机器上 BAM 记到了某次执行，对应的 `.pf` **完全没有**
+   （用两个源都能对上的程序做过对照，确认不是 BAM 读数错）。
+
+BAM 位置：`HKLM\SYSTEM\CurrentControlSet\Services\bam\State\UserSettings\<SID>`，
+值名是程序完整路径，数据前 8 字节是最后一次执行的 FILETIME。
+`privacy_check.py` 的「执行记录差集」一项就是列**两个源的差集**（不是重复列运行过的程序）。
+
+配套的一条：**OpenWith.exe 是"有人在打开文件"的代理指标**。它不一定写进 RecentDocs ——
+实测窗口内 RecentDocs 更新 0 个、OpenWith 却真的跑了。
+所以「有没有打开过文档」不能只看 MRU，要叠执行证据，否则会给出一个**假的 CLEAR**。
+
+**两个源的时间不能直接相加**：同一次执行，Prefetch 与 BAM 记的时刻差几秒（实测 4 秒）。
+相加会把"一次"报成"两次"，数字看着更严重但是假的 —— 要按时间容差合并。
+
 ## 通知中心：唯一能给出「屏幕上出现过什么字」的源
 
 `%LOCALAPPDATA%\Microsoft\Windows\Notifications\wpndatabase.db`（SQLite）里的 `Notification`
@@ -214,6 +234,18 @@ session send <帧数> frame, recv <字节> mouse <鼠标事件> key <按键> tex
 已知盲区（报告里会列出，不要省略）：屏幕内容（本来就在屏幕上的东西，看一眼不留痕）、
 `edge://` / `chrome://` 内部页不写历史库、未列入清单的嵌入式浏览器、纯只读访问、
 时间戳可被管理员改写。
+
+## 远程访问：不能只查一种软件
+
+`analyze.py` 的 2.10b 会逐个查已知远控软件（ToDesk / AnyDesk / TeamViewer / 向日葵 /
+RustDesk / ScreenConnect / LogMeIn / VNC）的安装与日志，2.10c 给 mstsc 的出站历史。
+
+**只查 ToDesk 会给出假的安全结论**：报告若只写「未发现 ToDesk 日志目录」，
+读起来像"没人连进来过"，而对方完全可能用的是别的远控。
+结论要说成「**已知的这些远控软件本机都没有安装**」，而不是「没发现 ToDesk」。
+
+入站 RDP 不在这里查 —— 安全日志的登录类型 10/3/8 已在「登录与远程访问」一节统计过，
+重复查会给出两个可能不一致的数字。
 
 ## 解读要点
 

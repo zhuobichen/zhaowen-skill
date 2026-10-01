@@ -776,6 +776,79 @@ def collect_todesk():
     return info
 
 
+REMOTE_TOOLS = (
+    # 显示名, 卸载注册表关键字, 标准安装目录名
+    ('ToDesk',        'todesk',       'ToDesk'),
+    ('AnyDesk',       'anydesk',      'AnyDesk'),
+    ('TeamViewer',    'teamviewer',   'TeamViewer'),
+    ('向日葵 SunloginClient', 'sunlogin', 'SunloginClient'),
+    ('向日葵 AweSun',  'awesun',       'AweSun'),
+    ('RustDesk',      'rustdesk',     'RustDesk'),
+    ('ScreenConnect', 'screenconnect', 'ScreenConnect'),
+    ('LogMeIn',       'logmein',      'LogMeIn'),
+    ('RealVNC / TightVNC', 'vnc',     'vnc'),
+)
+
+
+def collect_other_remote():
+    """除 ToDesk 之外的远控途径。
+
+    **只查一种远控软件会给出假的安全结论。** 报告若只写「未发现 ToDesk 日志目录」，
+    读起来像「没人连进来过」—— 而对方完全可能用的是 AnyDesk / 向日葵 / TeamViewer。
+    所以这里把已知的远控软件逐个查"装没装、有没有日志"，再叠上 mstsc（RDP 客户端）
+    连过谁的历史。
+
+    入站 RDP 不在这里查：安全日志的登录类型 10/3/8 已经在上面「登录与远程访问」一节
+    统计过了，重复查会给出两个可能不一致的数字。
+    """
+    pf = os.environ.get('ProgramFiles', r'C:\Program Files')
+    pf86 = os.environ.get('ProgramFiles(x86)', r'C:\Program Files (x86)')
+    tools = []
+    for label, hint, dirname in REMOTE_TOOLS:
+        extra = ()
+        if dirname:
+            extra = (os.path.join(pf, dirname), os.path.join(pf86, dirname))
+        dirs = find_install_dirs(hint, extra)
+        logs = []
+        for d in dirs:
+            for pat in ('*.log', '*.txt', os.path.join('Logs', '*'),
+                        os.path.join('logs', '*')):
+                for f in glob.glob(os.path.join(d, pat))[:6]:
+                    t = None
+                    try:
+                        t = datetime.datetime.fromtimestamp(os.path.getmtime(f))
+                    except OSError:
+                        pass
+                    logs.append((t, f))
+        logs = sorted({(t, f) for t, f in logs},
+                      key=lambda x: x[0] or datetime.datetime.min, reverse=True)[:6]
+        tools.append({'name': label, 'dirs': dirs, 'logs': logs,
+                      'installed': bool(dirs) or bool(logs)})
+
+    # mstsc：本机主动连出去过哪些地址（没有时间戳，只能给"连过谁"）
+    mstsc = []
+    try:
+        import winreg
+        for sub, val in ((r'Software\Microsoft\Terminal Server Client\Default', 'MRU'),
+                         (r'Software\Microsoft\Terminal Server Client\Servers', '')):
+            try:
+                k = winreg.OpenKey(winreg.HKEY_CURRENT_USER, sub)
+            except OSError:
+                continue
+            i = 0
+            while True:
+                try:
+                    n, v, _ = winreg.EnumValue(k, i)
+                    i += 1
+                except OSError:
+                    break
+                if str(n).startswith(val) or not val:
+                    mstsc.append('%s = %s' % (n, v))
+    except Exception:
+        pass
+    return {'tools': tools, 'mstsc': mstsc}
+
+
 def prefetch_magic():
     rows = as_list(load('pfmagic.json'))
     rows = [r for r in rows if isinstance(r, dict)]
@@ -905,6 +978,7 @@ timeline          = collect_timeline(d1, d2)
 recycled, recycled_all = collect_recycle(d1, d2)
 dlfiles           = collect_downloads(d1, d2)
 todesk            = collect_todesk()
+other_remote      = collect_other_remote()
 
 tl = []
 
@@ -1570,6 +1644,38 @@ else:
       '本机 <code>TfaForConn=%s</code>（0 = 未启用连接双因素）。</div>'
       % (esc(todesk['earliest'] or '?'), esc(todesk['earliest'] or '?'),
          esc(todesk['config'].get('TfaForConn', '?'))))
+# ---- 2.10b other remote-control tools ----
+_or_inst = [t for t in other_remote['tools'] if t['installed']]
+A('<h4>2.10b 其它远程控制软件 —— 只查 ToDesk 会给假的安全结论</h4>')
+if not _or_inst:
+    A('<p>已知的其它远控软件（AnyDesk / TeamViewer / 向日葵 / RustDesk / ScreenConnect / '
+      'LogMeIn / VNC）<b>本机都没有安装</b>。所以"没有远程连入"这个结论，'
+      '在远控软件这一路上是完整的，不是只看了 ToDesk 就下的。</p>')
+else:
+    A('<div class="note">这些是本机<b>装了的</b>其它远控软件。装了不等于被用过，'
+      '但装了就有用过的可能，需要逐个看日志。</div>')
+    A('<table><thead><tr><th style="width:200px">软件</th><th>安装目录 / 最近的日志</th>'
+      '</tr></thead><tbody>')
+    for t in _or_inst:
+        cell = []
+        for d in t['dirs'][:2]:
+            cell.append('<div class="mono">%s</div>' % esc(d))
+        for tm, f in t['logs'][:4]:
+            cell.append('<div class="mono">%s  %s</div>'
+                        % (tm.strftime('%m-%d %H:%M') if tm else '?', esc(f)))
+        A('<tr><td><b>%s</b></td><td>%s</td></tr>'
+          % (esc(t['name']), ''.join(cell) or '<span class="muted">已安装，未找到日志</span>'))
+    A('</tbody></table>')
+    A('<p class="cap">"已安装，未找到日志"不等于没被用过 —— 有些工具把会话记录放在别处或根本不落盘。</p>')
+
+A('<h4>2.10c 本机主动连出去的 RDP 目标（mstsc 历史）</h4>')
+if other_remote['mstsc']:
+    A('<p class="cap">这是<b>本机作为客户端连出去</b>的目标，与"有人连进来"是反方向，'
+      '只作背景参考。注册表里没有时间戳，所以给不出"什么时候连的"。</p>')
+    A('<ul>%s</ul>' % ''.join('<li class="mono">%s</li>' % esc(x)
+                              for x in other_remote['mstsc'][:10]))
+else:
+    A('<p>没有本机连出去的 RDP 历史。</p>')
 A('</section>')
 
 # ================= 3. limits =================

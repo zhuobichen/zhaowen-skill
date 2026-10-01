@@ -261,8 +261,97 @@ def chk_external_storage():
                 source=' | '.join(src))
 
 
+def _sid():
+    """当前用户的 SID（BAM 的键按 SID 分）。"""
+    try:
+        out, _ = ps('[System.Security.Principal.WindowsIdentity]::GetCurrent().User.Value')
+        return out.strip().splitlines()[-1].strip() if out.strip() else None
+    except Exception:
+        return None
+
+
+def bam_entries():
+    """BAM/DAM：每个程序**最后一次执行**的时刻。
+
+    位置 HKLM\\SYSTEM\\CurrentControlSet\\Services\\bam\\State\\UserSettings\\<SID>，
+    值名是程序完整路径，数据前 8 字节是 FILETIME。
+
+    为什么必须有这个源：Prefetch **会被清理**（实测本机在一次会话里少了一半以上），
+    而且**实测有些执行根本没写进 Prefetch**（同一台机器上 BAM 有、对应 .pf 里没有，
+    已用两个源都记到的程序做对照确认 BAM 读数本身是对的）。
+    所以「Prefetch 里没有」不能当「没运行过」，BAM 是这个缺口的补丁。
+
+    返回 [(naive local datetime, 路径)]，读不到返回 None。
+    """
+    s = _sid()
+    if not s:
+        return None
+    base = (r'SYSTEM\CurrentControlSet\Services\bam\State\UserSettings\\' + s)
+    out = []
+    try:
+        import winreg
+        k = winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE, base)
+    except Exception:
+        return None
+    i = 0
+    while True:
+        try:
+            name, data, _typ = winreg.EnumValue(k, i)
+            i += 1
+        except OSError:
+            break
+        if not isinstance(data, (bytes, bytearray)) or len(data) < 8:
+            continue
+        t = filetime_to_dt(int.from_bytes(bytes(data[:8]), 'little'))
+        if t:
+            out.append((t, name))
+    out.sort()
+    return out
+
+
+def prefetch_last_runs(exe):
+    """某个可执行文件（不含扩展名，大写）在 Prefetch 里记录的全部运行时刻。
+
+    返回 (最后一次, 全部次数, 是否有 .pf)，读不到时最后一次为 None。
+    """
+    pf = os.path.join(os.environ.get('SystemRoot', r'C:\Windows'), 'Prefetch')
+    hits = glob.glob(os.path.join(pf, exe.upper() + '.EXE-*.pf'))
+    if not hits:
+        return None, 0, False
+    best = None
+    total = 0
+    try:
+        sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+        import prefetch_parse as pp
+    except Exception:
+        pp = None
+    for p in hits:
+        if pp is not None:
+            try:
+                r = pp.parse(open(p, 'rb').read())
+                total += r['run_count']
+                for v in r['last_runs']:
+                    t = pp.filetime_to_dt(v)
+                    if t and (best is None or t > best):
+                        best = t
+                continue
+            except Exception:
+                pass
+        t = mtime(p)                 # 退路：.pf 的修改时间
+        if t and (best is None or t > best):
+            best = t
+    return best, total, True
+
+
 def chk_documents():
-    """有没有打开过文档 —— 按扩展名的 MRU 子键时间。"""
+    """有没有打开过文档 —— 按扩展名的 MRU 子键时间。
+
+    **不能只看 RecentDocs。** 实测：RecentDocs 在窗口内 0 条，但同一窗口里
+    `OpenWith.exe`（"你要用什么打开这个文件"对话框）真的被运行过 —— 也就是
+    确实有人去打开了一个文件，只是那次动作没写进 RecentDocs。
+    所以这里再叠一层**执行证据**（Prefetch + BAM 两个源取并集）。
+    只看 MRU 会给出一个假的 CLEAR，而这正是这套工具最要避免的错。
+    """
     base = r'HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\RecentDocs'
     exts = ['.pdf', '.docx', '.doc', '.xlsx', '.xls', '.pptx', '.txt', '.md',
             '.jpg', '.jpeg', '.png', '.mp4', '.zip', '.one', '.html']
@@ -287,12 +376,31 @@ def chk_documents():
             items.append('%s  <== 窗口内' % t.strftime('%m-%d %H:%M:%S'))
         else:
             items.append('%s  %s' % (t.strftime('%m-%d %H:%M'), e))
+    # 叠加执行证据：OpenWith.exe = "你要用什么打开这个文件" 对话框，
+    # 是"有人试图打开一个文件"的直接痕迹，而且它不一定写进 RecentDocs
+    # （实测窗口内 RecentDocs 0 条，OpenWith 却真的跑了）。
+    ow_pre, _n, ow_has = prefetch_last_runs('OPENWITH')
+    ow_bam = [t for t, p in (bam_entries() or []) if p.lower().endswith('\\openwith.exe')]
+    ow = sorted(t for t in ([ow_pre] if ow_pre else []) + ow_bam if t)
+    ow = _merge_times(ow)            # 两个源对同一次执行的时间要合成一个
+    ow_in = [t for t in ow if inw(t)]
+    for t in ow_in:
+        items.append('%s  <== 窗口内运行过「打开方式」对话框 '
+                     '(OpenWith.exe：有人试图打开一个文件)'
+                     % t.strftime('%m-%d %H:%M:%S'))
+    src = base + ' | OpenWith.exe 执行时刻 (Prefetch + BAM)'
+    if ow:
+        items.append('OpenWith.exe 已知执行时刻：%s'
+                     % (', '.join(x.strftime('%m-%d %H:%M') for x in ow[-6:]) or '无'))
     tot = times.get(base, '')
-    return dict(verdict=HIT if hits else CLEAR,
-                evidence='RecentDocs 各类型子键共 %d 个，窗口内被更新 %d 个；总键=%s'
+    # 注意：RecentDocs 的更新次数与 OpenWith 的运行次数**必须分开计数** ——
+    # 混在一起会把"文档 MRU 被更新 0 个"报成 2 个，看着像有两条证据。
+    return dict(verdict=HIT if (hits or ow_in) else CLEAR,
+                evidence='RecentDocs 各类型子键共 %d 个，窗口内被更新 %d 个；总键=%s%s'
                          % (len([x for x in times if x != base and times[x] not in ('', 'ERR')]),
-                            hits, tot or '?'),
-                items=items, source=base)
+                            hits, tot or '?',
+                            '；另：OpenWith.exe 窗口内运行 %d 次' % len(ow_in) if ow_in else ''),
+                items=items, source=src)
 
 
 def chk_file_dialogs():
@@ -666,7 +774,7 @@ def chk_notifications():
         return dict(verdict=HIT,
                     evidence='窗口内有 %d 条通知到达' % len(inside),
                     items=items,
-                    note='这些是通知栏里出现过的**内容**（发件人 / 主题），'
+                    note='这些是通知栏里出现过的内容本身（发件人 / 主题），'
                          '不是"他点过什么"。屏幕上是否真的可见，取决于当时显示器状态，文件层面判断不了。')
 
     before = [t for t, _, _ in arrivals if t < W0]
@@ -690,6 +798,81 @@ def chk_notifications():
                 items=[], note='这一项没查成，不要读成"没有通知"。')
 
 
+def _merge_times(times, tol=120):
+    """把两个源对同一次执行记录的时刻合并成一个。
+
+    Prefetch 与 BAM 记的是同一次运行的两个时间点，相差几秒（实测 4 秒）。
+    直接相加会把"一次执行"报成"两次"—— 数字看着更严重，但它是假的。
+    """
+    out = []
+    for t in sorted(x for x in times if x):
+        if out and (t - out[-1]).total_seconds() <= tol:
+            continue
+        out.append(t)
+    return out
+
+
+def _short_path(p):
+    """\\Device\\HarddiskVolume3\\Users\\x\\a.exe -> C:?\\Users\\x\\a.exe 之外的干净形式。
+
+    不猜盘符（那是另一台机器上会静默猜错的事），只把设备前缀去掉。
+    """
+    p = re.sub(r'^\\Device\\HarddiskVolume\d+', '', p or '')
+    return p or '(未知路径)'
+
+
+def chk_bam_missing():
+    """窗口内执行过、但 **Prefetch 里没有** 的程序 —— 专补会被漏掉的那部分。
+
+    为什么单列这一项：Prefetch **会被清理**（实测本机在一次会话里少了一半以上），
+    而且**实测有执行根本没写进 Prefetch**（同一台机器上 BAM 记到了某次执行，
+    对应的 .pf 完全没有 —— BAM 的读数本身是对的，已用两个源都能对上的程序做过对照）。
+    这些被漏掉的执行如果落在窗口内，只看 Prefetch 就是看不见的。
+
+    所以这里列的是**两个源的差集**，不重复列"运行过的程序"（那在主报告 2.5 节）。
+    差集非空才报 HIT —— 差集为空说明 Prefetch 在窗口内没有漏东西。
+    """
+    ent = bam_entries()
+    if ent is None:
+        return dict(verdict=UNKNOWN,
+                    evidence='读不到 BAM（HKLM\\SYSTEM\\...\\bam\\State\\UserSettings\\<SID>）',
+                    items=[], note='读不到不等于没有 —— 这是"没查成"，不要读成"没有"。')
+    inside = [(t, p) for t, p in ent if inw(t)]
+    src = r'HKLM\SYSTEM\CurrentControlSet\Services\bam\State\UserSettings'
+    if not inside:
+        return dict(verdict=CLEAR,
+                    evidence='BAM 共 %d 条记录，窗口内执行 0 条' % len(ent),
+                    items=[], source=src)
+
+    items, missed = [], []
+    for t, path in inside:
+        exe = os.path.basename(path)
+        if exe.lower().endswith('.exe'):
+            exe = exe[:-4]
+        last, _cnt, has = prefetch_last_runs(exe)
+        gap = (not has) or last is None or not inw(last)
+        if gap:
+            missed.append((t, path))
+        items.append('%s  %s%s' % (
+            t.strftime('%m-%d %H:%M:%S'), _short_path(path),
+            '   <== Prefetch 里没有这次（%s）'
+            % ('无 .pf' if not has else
+               '它记的最后一次是 %s' % last.strftime('%m-%d %H:%M')) if gap else ''))
+
+    if not missed:
+        return dict(verdict=CLEAR,
+                    evidence='窗口内执行 %d 个程序，全部在 Prefetch 里也有记录（无差集）'
+                             % len(inside),
+                    items=items, source=src)
+    return dict(verdict=HIT,
+                evidence='窗口内执行 %d 个程序，其中 %d 个 Prefetch 里没有 '
+                         '（只看 Prefetch 会整个漏掉）' % (len(inside), len(missed)),
+                items=items, source=src,
+                note='Prefetch 里没有有两种解释，本项无法区分：(a) 那次执行没写 .pf，'
+                     '(b) .pf 事后被清理掉了。两者都意味着：不能拿「Prefetch 没有」当「没运行过」。'
+                     '主报告的程序清单若以 Prefetch 为准，需要拿这里的差集补一下。')
+
+
 CHECKS = [
     ('外部存储', '有没有插 U 盘 / 移动硬盘', chk_external_storage),
     ('文档', '有没有打开过文档', chk_documents),
@@ -704,6 +887,7 @@ CHECKS = [
     ('回收站', '窗口内删了什么', chk_recycle),
     ('聊天客户端', '微信/QQ 当时开着吗', chk_chat_clients),
     ('通知中心', '屏幕上有没有弹出过消息预览', chk_notifications),
+    ('执行记录差集', '窗口内跑过、但 Prefetch 漏掉的程序', chk_bam_missing),
 ]
 
 BLIND_SPOTS = [
@@ -712,11 +896,11 @@ BLIND_SPOTS = [
     '浏览器内部页：edge:// / chrome:// 页面（历史、密码、书签设置页）不写入历史库。',
     '应用内自带浏览器：任何未列入检查清单的嵌入式 Chromium 都可能有自己的历史库。',
     '只读访问：多数检查靠"文件/注册表被改动"判断，纯读取可能不留痕。',
-    '活动历史 / 时间线（ActivitiesCache.db）：**本机有这个库，但它不含回答本问题所需的信息** '
+    '活动历史 / 时间线（ActivitiesCache.db）：本机有这个库，但它不含回答本问题所需的信息 '
     '—— 逐条查过，记录里没有应用名也没有文档标题（实测 1126 条全为空壳），'
-    '所以它提供不了"当时前台是什么"。**不要在报告里把它算成一项通过的检查**：'
+    '所以它提供不了"当时前台是什么"。不要把它算成一项通过的检查：'
     '查这种空库得到的 0 条不带任何信息，却会让人以为"看过屏幕内容了"。',
-    '剪贴板历史（Win+V）：系统默认关闭。**未启用时，历史上复制过的内容根本没有被记录过** —— '
+    '剪贴板历史（Win+V）：系统默认关闭。未启用时，历史上复制过的内容根本没有被记录过 —— '
     '这里查不到既不能推出"没复制过"，也不代表"复制过但被清掉了"。'
     '判断是否启用：注册表 HKCU\\Software\\Microsoft\\Clipboard 的 EnableClipboardHistory，'
     '以及 %LOCALAPPDATA%\\Microsoft\\Windows\\Clipboard 目录是否存在；两者都没有就是从未启用。',
