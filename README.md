@@ -39,7 +39,7 @@
 | PM2.5 日均浓度 | [`process-daily-pm25/`](process-daily-pm25/) | 小时监测数据转日均（≥20 有效小时质控） |
 | PPT 提示词审计 | [`prompt-auditor/`](prompt-auditor/) | 逐条对照源码验证提示词事实声明 |
 | 微信消息桥接 | [`wechat-claude-code/`](wechat-claude-code/) | 微信中与 Claude Code 聊天 |
-| 本机活动痕迹检查 | [`windows_activity_forensics/`](windows_activity_forensics/) | 查本机某段时间有没有被人用过 / 被人**远程连进来**：Prefetch、UserAssist、安全日志、计划任务、自启动、浏览器历史、回收站、远程控制软件日志 → HTML 报告。默认窗口为最近两天；含时间基准往返自检、回收站 `$I` 偏移、远程控制连接方向、会话内输入计数器等静默出错点 |
+| 本机活动痕迹检查——查本机某段时间有没有 | [`windows_activity_forensics/`](windows_activity_forensics/) | 本机活动痕迹检查——查本机某段时间有没有被人用过、有没有人远程连进来。读 Prefetch/UserAssist/安全日 |
 
 ## 借鉴自 Tiangong AI Skills
 
