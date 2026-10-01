@@ -31,7 +31,7 @@ python scripts/privacy_check.py --from "2026-01-02 09:00" --to "2026-01-02 12:00
 | | `analyze.py` | `privacy_check.py` |
 |---|---|---|
 | 问题 | **他做了什么** | **他碰到了我什么** |
-| 证据源 | Prefetch / UserAssist / 安全日志 / 计划任务 / 自启动 / 浏览器历史 / 回收站 / 远程控制日志 | USB / MRU / shellbags / 文件对话框 / Office / 截图 / 浏览器敏感库 / Win+R / 跳转列表 / **通知中心** |
+| 证据源 | Prefetch / UserAssist / BAM / 安全日志 / 计划任务 / 自启动 / 浏览器历史 / 回收站 / 远程控制日志 | 远程连入 / USB / MRU / shellbags / 文件对话框 / Office / 截图 / 浏览器敏感库 / Win+R / 跳转列表 / 通知中心 / 摄像头麦克风 / 下载 / 命令行 / 痕迹是否被抹 |
 | 时间粒度 | 天（`--days` / `--from/--to` 到日） | **到分钟**（`--from "YYYY-MM-DD HH:MM"`） |
 
 两者证据源几乎不重叠，**要一起跑**。

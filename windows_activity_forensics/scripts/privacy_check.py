@@ -1311,7 +1311,229 @@ def chk_tampering():
                 items=items, source=src)
 
 
+_REMOTE_TOOLS = (
+    ('ToDesk', 'todesk', 'ToDesk'),
+    ('AnyDesk', 'anydesk', 'AnyDesk'),
+    ('TeamViewer', 'teamviewer', 'TeamViewer'),
+    ('向日葵 SunloginClient', 'sunlogin', 'SunloginClient'),
+    ('向日葵 AweSun', 'awesun', 'AweSun'),
+    ('RustDesk', 'rustdesk', 'RustDesk'),
+    ('ScreenConnect', 'screenconnect', 'ScreenConnect'),
+    ('LogMeIn', 'logmein', 'LogMeIn'),
+    ('RealVNC / TightVNC', 'vnc', 'vnc'),
+)
+
+
+def _installed_dirs(hint, extra=()):
+    """按卸载注册表显示名找安装目录。InstallLocation 常为空，要退到另两个值。"""
+    out = []
+    if winreg is not None:
+        for hive, path in (
+                (winreg.HKEY_LOCAL_MACHINE,
+                 r'Software\Microsoft\Windows\CurrentVersion\Uninstall'),
+                (winreg.HKEY_LOCAL_MACHINE,
+                 r'Software\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall'),
+                (winreg.HKEY_CURRENT_USER,
+                 r'Software\Microsoft\Windows\CurrentVersion\Uninstall')):
+            try:
+                k = winreg.OpenKey(hive, path)
+            except OSError:
+                continue
+            i = 0
+            while True:
+                try:
+                    sub = winreg.EnumKey(k, i)
+                    i += 1
+                except OSError:
+                    break
+                try:
+                    sk = winreg.OpenKey(k, sub)
+                    disp = str(winreg.QueryValueEx(sk, 'DisplayName')[0])
+                except OSError:
+                    continue
+                if hint.lower() not in disp.lower():
+                    continue
+                for vn in ('InstallLocation', 'UninstallString', 'DisplayIcon'):
+                    try:
+                        raw = str(winreg.QueryValueEx(sk, vn)[0]).strip()
+                    except OSError:
+                        continue
+                    if raw.startswith('"'):
+                        raw = raw[1:].split('"', 1)[0]
+                    else:
+                        raw = raw.split(',')[0].strip()
+                    if not raw:
+                        continue
+                    c = raw if os.path.isdir(raw) else os.path.dirname(raw)
+                    if c and os.path.isdir(c):
+                        out.append(c)
+                        break
+    for c in extra:
+        if os.path.isdir(c):
+            out.append(c)
+    return list(dict.fromkeys(out))
+
+
+def chk_remote_access():
+    """有没有人**远程连进来**过。
+
+    这一项问的和别的项不是同一件事：对方可以根本不坐在你电脑前，而是通过 RDP
+    或远控软件连进来操作 —— 那样"没人开机登录""没人翻你文件"可以同时成立，
+    但屏幕照样被看到了。**只查本机活动会整条漏掉。**
+
+    两种方向必须分开，两行日志长得几乎一样：
+      `host   recv connect request, myid=…` = 本机是**被控端**（有人连进来）
+      `client recv connect request, myid=…` = 本机**主动连出去**
+    搞反了，结论就完全相反。
+    """
+    items = []
+    hits = 0
+    failed = []
+
+    # 1) RDP 是否被允许 + 窗口内有没有 RDP 登录（4624 类型 10 = RemoteInteractive）
+    if winreg is not None:
+        try:
+            k = winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE,
+                               r'SYSTEM\CurrentControlSet\Control\Terminal Server')
+            deny = int(winreg.QueryValueEx(k, 'fDenyTSConnections')[0])
+            items.append('远程桌面（RDP）：%s（fDenyTSConnections=%d）'
+                         % ('已禁用' if deny else '允许连入', deny))
+        except (OSError, ValueError):
+            failed.append('fDenyTSConnections')
+    else:
+        failed.append('winreg')
+
+    cmd = ("$ErrorActionPreference='SilentlyContinue';"
+           "Get-WinEvent -FilterHashtable @{LogName='Security';Id=4624;"
+           "StartTime='%s';EndTime='%s'} | ForEach-Object {"
+           " $x=[xml]$_.ToXml(); $d=@{};"
+           " foreach($n in $x.Event.EventData.Data){$d[[string]$n.Name]=[string]$n.'#text'};"
+           " \"$($_.TimeCreated.ToString('s'))`t$($d['LogonType'])`t"
+           "$($d['TargetUserName'])`t$($d['IpAddress'])\" }"
+           % (W0.strftime('%Y-%m-%dT%H:%M:%S'), W1.strftime('%Y-%m-%dT%H:%M:%S')))
+    out, err = ps(cmd)
+    rdp_rows = []
+    for line in out.splitlines():
+        parts = line.strip().split('\t')
+        if len(parts) >= 4:
+            rdp_rows.append(parts)
+    if not out.strip() and err:
+        failed.append('4624 查询')
+        items.append('窗口内 4624 登录事件：查询失败（需要管理员权限）')
+    else:
+        rdp_in = [r for r in rdp_rows if r[1] == '10']
+        net_in = [r for r in rdp_rows if r[1] in ('3', '8')]
+        items.append('窗口内登录事件：RDP 类型10 %d 条、网络类型3/8 %d 条、合计 %d 条'
+                     % (len(rdp_in), len(net_in), len(rdp_rows)))
+        for r in rdp_in[:6]:
+            hits += 1
+            items.append('%s  <== 窗口内 RDP 登录：%s 来自 %s'
+                         % (r[0], r[2], r[3] or '(本机)'))
+        for r in net_in[:6]:
+            items.append('%s  网络登录：%s 来自 %s' % (r[0], r[2], r[3] or '(本机)'))
+
+    # 2) 远控软件的会话日志（方向是关键）
+    pf = os.environ.get('ProgramFiles', r'C:\Program Files')
+    pf86 = os.environ.get('ProgramFiles(x86)', r'C:\Program Files (x86)')
+    tdirs = _installed_dirs('todesk', (os.path.join(pf, 'ToDesk'),
+                                       os.path.join(pf86, 'ToDesk')))
+    logdir = None
+    for d in tdirs:
+        if os.path.isdir(os.path.join(d, 'Logs')):
+            logdir = os.path.join(d, 'Logs')
+            break
+    if logdir:
+        host_in, client_in, span = [], [], []
+        for p in glob.glob(os.path.join(logdir, '*.log')):
+            try:
+                for line in open(p, encoding='utf-8', errors='ignore'):
+                    s = line.strip()
+                    m = re.match(r'^(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2})', s)
+                    if not m:
+                        continue
+                    t = _as_dt(m.group(1))
+                    span.append(t)
+                    if 'host recv connect request, myid=' in s:
+                        if t and inw(t):
+                            host_in.append(t)
+                    elif 'client recv connect request, myid=' in s:
+                        if t and inw(t):
+                            client_in.append(t)
+            except OSError:
+                continue
+        if span:
+            items.append('ToDesk 日志可回溯到 %s（窗口前最近的记录对比用）'
+                         % min(x for x in span if x).strftime('%m-%d %H:%M'))
+        if host_in:
+            for t in host_in[:8]:
+                hits += 1
+                items.append('%s  <== 有人连进本机（host recv connect request）'
+                             % t.strftime('%m-%d %H:%M:%S'))
+        else:
+            items.append('窗口内没有被控端连接请求（host recv connect request）')
+        if client_in:
+            items.append('窗口内有 %d 次本机主动连出去（client，方向相反，不算命中）'
+                         % len(client_in))
+    else:
+        items.append('未发现 ToDesk 日志目录')
+
+    # 3) 其它远控软件装没装 —— 只查 ToDesk 会给出假的安全结论
+    installed = []
+    for label, hint, dirname in _REMOTE_TOOLS:
+        if label.startswith('ToDesk'):
+            continue
+        extra = ()
+        if dirname:
+            extra = (os.path.join(pf, dirname), os.path.join(pf86, dirname))
+        if _installed_dirs(hint, extra):
+            installed.append(label)
+    items.append('其它已知远控软件：%s'
+                 % ('、'.join(installed) + '  <== 装了，需单独看它的日志'
+                    if installed else '本机都没有安装'))
+
+    # 4) mstsc 出站历史（反方向，仅背景）
+    mstsc = []
+    if winreg is not None:
+        try:
+            k = winreg.OpenKey(winreg.HKEY_CURRENT_USER,
+                               r'Software\Microsoft\Terminal Server Client\Default')
+            i = 0
+            while True:
+                try:
+                    n, v, _ = winreg.EnumValue(k, i)
+                    i += 1
+                except OSError:
+                    break
+                if str(n).startswith('MRU'):
+                    mstsc.append('%s = %s' % (n, v))
+        except OSError:
+            pass
+    if mstsc:
+        items.append('本机作为客户端连出去的 RDP 目标（无时间戳，仅背景）：%s'
+                     % '、'.join(mstsc[:4]))
+
+    src = ('HKLM\\SYSTEM\\...\\Terminal Server\\fDenyTSConnections | '
+           'Security 4624（类型10/3/8） | ToDesk Logs | 各远控软件安装目录')
+    note = ('两种方向必须分看：`host recv connect request` = 有人连进来，'
+            '`client recv ...` = 本机连出去。这一项只看前者。')
+    if hits:
+        return dict(verdict=HIT,
+                    evidence='窗口内发现 %d 条远程连入的证据' % hits,
+                    items=items, source=src, note=note)
+    if failed:
+        return dict(verdict=UNKNOWN,
+                    evidence='没能查成：%s —— 其余部分未发现远程连入'
+                             % '、'.join(failed),
+                    items=items, source=src,
+                    note=note + ' 查不到不等于没有，别读成"没被连过"。')
+    return dict(verdict=CLEAR,
+                evidence='窗口内没有远程连入的证据（RDP 关闭 / 无类型10登录 / '
+                         '无被控端连接请求 / 其它远控软件均未安装）',
+                items=items, source=src, note=note)
+
+
 CHECKS = [
+    ('远程连入', '有没有人远程连进来过', chk_remote_access),
     ('外部存储', '有没有插 U 盘 / 移动硬盘', chk_external_storage),
     ('文档', '有没有打开过文档', chk_documents),
     ('文件对话框', '打开/保存对话框用过的文件', chk_file_dialogs),
