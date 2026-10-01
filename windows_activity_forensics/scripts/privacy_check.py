@@ -1536,6 +1536,87 @@ def chk_remote_access():
                 items=items, source=src, note=note)
 
 
+def chk_file_search():
+    """按文件名全盘搜索的痕迹（Everything）。
+
+    为什么单列一项：Everything 这类工具**输入即列出全盘文件名**，
+    是"不打开任何文件就能通览你硬盘里有什么"的最有效手段，而它**几乎不留痕**。
+    两个开关决定了能查到什么，必须分别看：
+
+      search_history_enabled  —— 搜过什么关键字。**关掉就完全没有记录。**
+      run_history_enabled     —— 从结果里**打开**过什么文件（`Run History.csv`）。
+
+    只报"没打开过文件"就把这一项写成 CLEAR 是错的：**搜到文件名本身**就是泄露，
+    而那条路在被关掉时无迹可查。
+    """
+    base = os.path.join(R, 'Everything')
+    if not os.path.isdir(base):
+        return dict(verdict=UNKNOWN,
+                    evidence='本机没有 Everything 的配置目录（可能没装/没用过）',
+                    items=[], source=base,
+                    note='没装 = 不适用。但装了却读不到配置才是"没查成"。')
+
+    ini = os.path.join(base, 'Everything.ini')
+    cfg = {}
+    if os.path.isfile(ini):
+        for line in open(ini, encoding='utf-8', errors='ignore'):
+            if '=' in line:
+                k, v = line.split('=', 1)
+                cfg[k.strip()] = v.strip()
+
+    items = []
+    if cfg:
+        items.append('搜索历史记录开关 search_history_enabled=%s'
+                     % cfg.get('search_history_enabled', '?'))
+        items.append('打开历史记录开关 run_history_enabled=%s'
+                     % cfg.get('run_history_enabled', '?'))
+
+    # 从结果里打开过哪些文件（有逐条时间戳）
+    hist = os.path.join(base, 'Run History.csv')
+    opened_in = []
+    total = 0
+    if os.path.isfile(hist):
+        for line in open(hist, encoding='utf-8-sig', errors='ignore'):
+            line = line.strip()
+            if not line or line.startswith('Filename'):
+                continue
+            try:
+                path, _cnt, ft = line.rsplit(',', 2)
+                t = filetime_to_dt(int(ft))
+            except (ValueError, IndexError):
+                continue
+            if t is None:
+                continue
+            total += 1
+            if inw(t):
+                opened_in.append((t, path.strip().strip('"')))
+        opened_in.sort()
+        for t, pa in opened_in[:10]:
+            items.append('%s  <== 窗口内从搜索结果打开  %s'
+                         % (t.strftime('%m-%d %H:%M:%S'), pa[:110]))
+        items.append('该记录共 %d 条（永久保留）；窗口内 %d 条' % (total, len(opened_in)))
+    else:
+        items.append('没有 Run History.csv（从未从搜索结果打开过文件，或该功能被关）')
+
+    src = base + r'\Everything.ini 与 Run History.csv'
+    if opened_in:
+        return dict(verdict=HIT,
+                    evidence='窗口内从搜索结果打开了 %d 个文件' % len(opened_in),
+                    items=items, source=src)
+    if cfg.get('search_history_enabled', '') == '0':
+        return dict(verdict=UNKNOWN,
+                    evidence='没有"从搜索结果打开文件"的记录，但搜索历史被关掉了 —— '
+                             '"有没有人敲关键字搜过你的文件名"无迹可查',
+                    items=items, source=src,
+                    note='这一项只排除了"打开文件"，没有排除"搜到并看到文件名"。'
+                         'Everything 输入即列全盘文件名，看一眼不留痕；'
+                         '而 search_history_enabled=0 意味着那一步根本没记录。'
+                         '不要把它读成"他没有按文件名翻过我的东西"。')
+    return dict(verdict=CLEAR,
+                evidence='没有从搜索结果打开文件的记录（搜索历史是开着的）',
+                items=items, source=src)
+
+
 CHECKS = [
     ('远程连入', '有没有人远程连进来过', chk_remote_access),
     ('外部存储', '有没有插 U 盘 / 移动硬盘', chk_external_storage),
@@ -1561,6 +1642,7 @@ CHECKS = [
     ('摄像头/麦克风', '有没有开过摄像头、录过音', chk_camera_mic),
     ('下载', '窗口内下载过什么文件', chk_downloads),
     ('命令行', '窗口内有没有人敲过命令', chk_console_history),
+    ('按名搜索', '有没有人用 Everything 搜过你的文件名', chk_file_search),
     ('痕迹是否被抹', '日志/审计/记录有没有被人动过', chk_tampering),
 ]
 
