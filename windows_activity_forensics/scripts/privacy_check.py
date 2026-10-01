@@ -1718,6 +1718,47 @@ def write_html(path, n_hit, n_clear, n_unk, pc=None):
                  '这些项不能当作「没有」，报告下方列出了原因。</p>' % n_unk)
     P.append('</section>')
 
+    # ---- 结论：先给一个不懂细节的人也能用的判断 ----
+    # 全是按本次实际判定拼出来的句子，没有写死任何结论。
+    _hits = [r for r in results if r['verdict'] == HIT]
+    _clr = [r for r in results if r['verdict'] == CLEAR]
+    _unk = [r for r in results if r['verdict'] == UNKNOWN]
+    P.append('<section style="border-left:6px solid #1f7a4d;background:#f4fbf6">'
+             '<h2>结论（先看这一节）</h2>')
+    if pc['ok'] and pc['window_seconds']:
+        _pct = pc['on_seconds'] / pc['window_seconds'] * 100
+        P.append('<p style="font-size:14.5px">这个窗口一共 <b>%s</b>，'
+                 '其中机器<b>开着 %s（%.0f%%）</b>。'
+                 '下面所有的检查只覆盖<b>开着的那段时间</b> —— 关机时段的"没有记录"是必然的，'
+                 '不能读成"那段时间很规矩"。</p>'
+                 % (e(str(datetime.timedelta(seconds=int(pc['window_seconds'])))),
+                    e(str(datetime.timedelta(seconds=int(pc['on_seconds'])))), _pct))
+    else:
+        P.append('<p style="font-size:14.5px">窗口内开机时长<b>无法确认</b>，'
+                 '因此下面所有"没有记录"都不能下结论。</p>')
+    if _hits:
+        P.append('<p style="font-size:14.5px">开机的那段时间里，'
+                 '<b>有 %d 项查到了接触痕迹：%s</b>。'
+                 '这些是"确实发生过"的，逐条列在下面 —— 请自己判断每一条是否正常。</p>'
+                 % (len(_hits), e('、'.join(r['key'] for r in _hits))))
+    else:
+        P.append('<p style="font-size:14.5px">开机的那段时间里，'
+                 '<b>没有任何一项查到接触痕迹。</b></p>')
+    if _clr:
+        P.append('<p style="font-size:14.5px">另有 <b>%d 项</b>检查跑到了、'
+                 '确认<b>没有</b>相关记录：%s。<br>'
+                 '这些"没有"是有意义的 —— 它和"没查"不是一回事。</p>'
+                 % (len(_clr), e('、'.join(r['key'] for r in _clr))))
+    if _unk:
+        P.append('<p style="font-size:14.5px;color:#8a5800">还有 <b>%d 项无法确认</b>：%s。<br>'
+                 '这几项<b>不能</b>当作"没有"。</p>'
+                 % (len(_unk), e('、'.join(r['key'] for r in _unk))))
+    P.append('<p style="font-size:13px;color:#5a6672"><b>这份报告能回答什么、不能回答什么：</b>'
+             '它能回答"他有没有主动去打开 / 搜索 / 复制 / 翻看"。'
+             '它<b>不能</b>回答"屏幕上本来就在那儿的东西有没有被看到" —— '
+             '看一眼不留任何痕迹，这一条任何本地检查都做不到。</p>')
+    P.append('</section>')
+
     P.append('<section><h2>逐项结果</h2>')
     for r in results:
         v = r['verdict']
