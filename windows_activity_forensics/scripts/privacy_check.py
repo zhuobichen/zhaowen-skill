@@ -873,6 +873,108 @@ def chk_bam_missing():
                      '主报告的程序清单若以 Prefetch 为准，需要拿这里的差集补一下。')
 
 
+_LOL_LOG_RE = re.compile(
+    r'CurrentSummoner:\s*\{"accountId":(\d+),.*?"gameName":"([^"]*)".*?'
+    r'"summonerLevel":(\d+).*?"tagLine":"([^"]*)"')
+
+
+def _lol_log_dirs():
+    """英雄联盟客户端日志目录 —— 按固定盘扫名字找，不写死盘符。"""
+    out = []
+    try:
+        import ctypes
+        drives = []
+        buf = ctypes.create_unicode_buffer(512)
+        n = ctypes.windll.kernel32.GetLogicalDriveStringsW(512, buf)
+        for d in buf[:n].split('\x00'):
+            if d and ctypes.windll.kernel32.GetDriveTypeW(d) == 3:
+                drives.append(d)
+    except Exception:
+        drives = []
+    for dr in drives:
+        try:
+            entries = os.listdir(dr)
+        except OSError:
+            continue
+        for e in entries:
+            if not re.search(r'英雄联盟|League of Legends|Riot Games', e, re.I):
+                continue
+            for sub in glob.glob(os.path.join(dr, e, '**', 'LeagueClient Logs'),
+                                 recursive=True):
+                if os.path.isdir(sub):
+                    out.append(sub)
+    return out
+
+
+def chk_logged_accounts():
+    """窗口内这台机器上登录过哪些账号。
+
+    最直接的证据是**客户端自己记的"当前登录身份"**：
+    英雄联盟客户端的 `LeagueClient.log` 里有 `CurrentSummoner: {...}`，
+    那是客户端认定的本人身份，**不会和同局的其他玩家混淆**（这点很重要 ——
+    日志里绝大多数名字是别人的，只有这一行写的是"我是谁"）。
+
+    还能顺手拿到一条硬证据：如果这台机器常用的账号和窗口内登录的不是同一个，
+    客户端会打印 `local file belongs to another player, resetting file A B`
+    —— 它自己就说明了"A 的配置被 B 顶掉了"。
+    """
+    dirs = _lol_log_dirs()
+    if not dirs:
+        return dict(verdict=UNKNOWN,
+                    evidence='没找到英雄联盟客户端日志目录（本机可能没装）', items=[],
+                    note='没装 = 不适用；但如果确实装了却找不到，那是"没查成"，不是"没有"。')
+    sessions = []
+    for d in dirs:
+        for f in glob.glob(os.path.join(d, '*LeagueClient.log')):
+            b = os.path.basename(f)
+            m = re.match(r'(\d{4}-\d{2}-\d{2})T(\d{2})-(\d{2})-(\d{2})', b)
+            if not m:
+                continue
+            try:
+                started = datetime.datetime.strptime(
+                    '%s %s:%s:%s' % m.groups(), '%Y-%m-%d %H:%M:%S')
+            except ValueError:
+                continue
+            try:
+                txt = open(f, 'rb').read().decode('utf-8', 'ignore')
+            except OSError:
+                continue
+            cm = _LOL_LOG_RE.search(txt)
+            if not cm:
+                continue
+            swap = re.findall(r'belongs to another player, resetting file (\d+) (\d+)', txt)
+            sessions.append(dict(t=started, file=b, acct=cm.group(1),
+                                 name=cm.group(2), lvl=cm.group(3),
+                                 tag=cm.group(4), swap=swap))
+    if not sessions:
+        return dict(verdict=UNKNOWN,
+                    evidence='找到了客户端日志目录，但没有解析出"当前登录身份"', items=[])
+
+    sessions.sort(key=lambda s: s['t'])
+    inside = [s for s in sessions if inw(s['t'])]
+    items = []
+    for s in sessions:
+        mark = '  <== 窗口内' if inw(s['t']) else ''
+        items.append('%s  %s#%s（等级 %s）%s'
+                     % (s['t'].strftime('%m-%d %H:%M'), s['name'], s['tag'], s['lvl'], mark))
+    if not inside:
+        return dict(verdict=CLEAR,
+                    evidence='窗口内没有客户端登录会话；本机共 %d 次登录记录' % len(sessions),
+                    items=items)
+    names = {s['name'] for s in inside}
+    note = ('日志里绝大多数名字是同一局的其他玩家，这里只取 CurrentSummoner 一行 —— '
+            '那是客户端自己认定的登录身份。')
+    swaps = [x for s in inside for x in s['swap']]
+    if swaps:
+        note += (' 另外客户端自己打印了 "local file belongs to another player, '
+                 'resetting file <A> <B>"：说明这台机器上原本属于账号 A 的本地配置'
+                 '被账号 B 顶掉了 —— 这是"A 不是这次的登录者"的硬证据。')
+    return dict(verdict=HIT,
+                evidence='窗口内有 %d 次客户端登录，登录身份是 %s'
+                         % (len(inside), '、'.join(sorted(names))),
+                items=items, note=note)
+
+
 CHECKS = [
     ('外部存储', '有没有插 U 盘 / 移动硬盘', chk_external_storage),
     ('文档', '有没有打开过文档', chk_documents),
@@ -888,6 +990,7 @@ CHECKS = [
     ('聊天客户端', '微信/QQ 当时开着吗', chk_chat_clients),
     ('通知中心', '屏幕上有没有弹出过消息预览', chk_notifications),
     ('执行记录差集', '窗口内跑过、但 Prefetch 漏掉的程序', chk_bam_missing),
+    ('登录账号', '窗口内登录过哪些账号', chk_logged_accounts),
 ]
 
 BLIND_SPOTS = [

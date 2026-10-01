@@ -235,6 +235,24 @@ BAM 位置：`HKLM\SYSTEM\CurrentControlSet\Services\bam\State\UserSettings\<SID
 `edge://` / `chrome://` 内部页不写历史库、未列入清单的嵌入式浏览器、纯只读访问、
 时间戳可被管理员改写。
 
+## 「是谁在用」—— 登录账号，最直接的证据
+
+同一个 Windows 账户下，系统层面区分不了操作人。但**游戏/客户端自己记着"我是谁"**：
+
+- **英雄联盟**：`<安装目录>\Game\Logs\LeagueClient Logs\<时间戳>_LeagueClient.log` 里有一行
+  `CurrentSummoner: {"accountId":…,"gameName":"…","tagLine":"…","summonerLevel":…}`。
+  **这是客户端认定的登录身份，不会和同一局的其他玩家混淆**
+  —— 日志里绝大多数名字是别人的，只有这一行写的是"我是谁"，取错就会得出反的结论。
+- **WeGame**：`%APPDATA%\Tencent\WeGame\login_pic\` 下**每个出现在登录界面的账号一个文件，文件名即 QQ 号**；
+  腾讯系游戏的 `%APPDATA%\Tencent\Cross\FileCache\<账号>\` 也是按账号分目录。
+
+**加分证据**：如果机器上原本有 A 的配置，而这次登录的是 B，客户端会自己打印
+`local file belongs to another player, resetting file <A> <B>` ——
+它直接说明了"A 的配置被 B 顶掉了"，是"A 不是这次的登录者"的硬证据。
+
+判断"这台机器平时是谁在用"的方法是**横向对比多次会话**：把该客户端所有历史日志里的
+`CurrentSummoner` 列出来，窗口内的那条如果和前后所有会话都不同，就是换人了。
+
 ## 远程访问：不能只查一种软件
 
 `analyze.py` 的 2.10b 会逐个查已知远控软件（ToDesk / AnyDesk / TeamViewer / 向日葵 /
