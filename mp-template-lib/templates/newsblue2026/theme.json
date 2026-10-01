@@ -1,0 +1,149 @@
+{
+  "name": "newsblue2026",
+  "source": "https://mp.weixin.qq.com/s/6JZ0RJr6O87Xe6qDo-OTsw",
+  "title": "国安部：一批与OpenAI相关的AI智能体在执行测试任务期间，“劫持”了德国程序员维基网站，偷建“地下论坛”交流信息、分享答案",
+  "body_chars": 20515,
+  "tokens": {
+    "colors": [
+      {
+        "value": "rgb(2, 30, 170)",
+        "count": 3
+      },
+      {
+        "value": "rgb(178, 178, 178)",
+        "count": 3
+      },
+      {
+        "value": "rgba(0, 0, 0, 0.9)",
+        "count": 1
+      }
+    ],
+    "font_families": [
+      {
+        "value": "&quot",
+        "count": 1
+      },
+      {
+        "value": "mp-quote, &quot",
+        "count": 1
+      }
+    ],
+    "font_sizes": [
+      {
+        "value": "15px",
+        "count": 9
+      },
+      {
+        "value": "12px",
+        "count": 3
+      },
+      {
+        "value": "16px",
+        "count": 1
+      }
+    ],
+    "line_heights": [
+      {
+        "value": "1.75em",
+        "count": 24
+      }
+    ],
+    "letter_spacing": [
+      {
+        "value": "0.578px",
+        "count": 10
+      },
+      {
+        "value": "0.544px",
+        "count": 1
+      }
+    ],
+    "border_radius": [],
+    "box_shadow": [],
+    "padding": [],
+    "margin": [
+      {
+        "value": "0px 8px 16px",
+        "count": 10
+      },
+      {
+        "value": "16px 8px 0px",
+        "count": 3
+      }
+    ]
+  },
+  "components": {
+    "images": {
+      "label": "图片",
+      "count": 5
+    },
+    "mp_video": {
+      "label": "视频号视频卡片",
+      "count": 1
+    },
+    "mp_profile": {
+      "label": "公众号名片",
+      "count": 1
+    },
+    "mp_other": {
+      "label": "其他 <mp*>（多为无意义标记，如 mp-style-type）",
+      "count": 1,
+      "note": "原始 <mp*> 共 3 个，其中已识别的嵌入组件 2 个"
+    },
+    "blockquote": {
+      "label": "原生引用块 blockquote",
+      "count": 4,
+      "note": "class 含 js_blockquote_wrap"
+    }
+  },
+  "structure": {
+    "tags": {
+      "span": 56,
+      "section": 19,
+      "p": 17,
+      "img": 5,
+      "blockquote": 4,
+      "a": 4,
+      "mp": 3,
+      "div": 1,
+      "br": 1
+    },
+    "borders": [],
+    "border_sides": [],
+    "backgrounds": [
+      {
+        "value": "rgb(255, 255, 255)",
+        "count": 1
+      }
+    ],
+    "displays": [
+      {
+        "value": "none",
+        "count": 1
+      }
+    ],
+    "flex_direction": [],
+    "text_align": [
+      {
+        "value": "justify",
+        "count": 9
+      },
+      {
+        "value": "center",
+        "count": 7
+      }
+    ],
+    "small_elements": []
+  },
+  "generated_by": "mp-template-lib/extract_theme.py",
+  "note": "数值经实测抠取；结构必须靠 preview.png 人工复核，见 reference.md",
+  "fingerprint": {
+    "fonts": [
+      "mp-quote, &quot"
+    ],
+    "colors": [
+      "rgb(2,30,170)"
+    ]
+  },
+  "duplicate_of": null
+}

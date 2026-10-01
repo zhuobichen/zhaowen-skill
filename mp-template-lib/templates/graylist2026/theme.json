@@ -1,0 +1,432 @@
+{
+  "name": "_dup_test",
+  "source": "https://mp.weixin.qq.com/s/zYxS8xsStShYVmdz7rcMJA",
+  "title": "狂揽 57.9K+ Star！爆火开源多Agent 神器 ！解决长任务失忆跑偏难题",
+  "body_chars": 191925,
+  "tokens": {
+    "colors": [
+      {
+        "value": "#333333",
+        "count": 190
+      },
+      {
+        "value": "#252525",
+        "count": 114
+      },
+      {
+        "value": "rgba(0, 0, 0, 0)",
+        "count": 101
+      },
+      {
+        "value": "#222222",
+        "count": 95
+      },
+      {
+        "value": "rgba(239, 239, 239, 0.8)",
+        "count": 33
+      },
+      {
+        "value": "#ddd",
+        "count": 30
+      },
+      {
+        "value": "rgb(51, 51, 51)",
+        "count": 21
+      },
+      {
+        "value": "rgba(0, 0, 0, 0.06)",
+        "count": 9
+      },
+      {
+        "value": "#f2f2f2",
+        "count": 5
+      },
+      {
+        "value": "rgb(34, 34, 34)",
+        "count": 3
+      },
+      {
+        "value": "rgb(0, 82, 255)",
+        "count": 1
+      }
+    ],
+    "font_families": [
+      {
+        "value": "Optima-Regular, PingFangTC-light",
+        "count": 62
+      },
+      {
+        "value": "Consolas, Menlo, Courier, monospace",
+        "count": 9
+      }
+    ],
+    "font_sizes": [
+      {
+        "value": "15px",
+        "count": 218
+      },
+      {
+        "value": "18px",
+        "count": 67
+      },
+      {
+        "value": "14px",
+        "count": 46
+      },
+      {
+        "value": "16px",
+        "count": 38
+      }
+    ],
+    "line_heights": [
+      {
+        "value": "28px",
+        "count": 60
+      },
+      {
+        "value": "25px",
+        "count": 22
+      },
+      {
+        "value": "1em",
+        "count": 16
+      },
+      {
+        "value": "1.5em",
+        "count": 15
+      },
+      {
+        "value": "24px",
+        "count": 11
+      },
+      {
+        "value": "2em",
+        "count": 3
+      }
+    ],
+    "letter_spacing": [
+      {
+        "value": "1px",
+        "count": 184
+      }
+    ],
+    "border_radius": [
+      {
+        "value": "50%",
+        "count": 76
+      },
+      {
+        "value": "3px",
+        "count": 9
+      }
+    ],
+    "box_shadow": [],
+    "padding": [
+      {
+        "value": "0px",
+        "count": 98
+      },
+      {
+        "value": "5px 10px",
+        "count": 30
+      },
+      {
+        "value": "0px 3px",
+        "count": 22
+      },
+      {
+        "value": "4px 8px",
+        "count": 22
+      },
+      {
+        "value": "0 0 0 30px",
+        "count": 16
+      },
+      {
+        "value": "14px",
+        "count": 11
+      },
+      {
+        "value": "1px 3px",
+        "count": 9
+      },
+      {
+        "value": "2px 12px",
+        "count": 3
+      }
+    ],
+    "margin": [
+      {
+        "value": "0px",
+        "count": 96
+      },
+      {
+        "value": "16px 0px 0px",
+        "count": 16
+      },
+      {
+        "value": "0px 2px",
+        "count": 9
+      },
+      {
+        "value": "16px 0px",
+        "count": 2
+      },
+      {
+        "value": "0px 0px 8px",
+        "count": 2
+      },
+      {
+        "value": "-1px 0px 0px -1px",
+        "count": 1
+      },
+      {
+        "value": "0px 0px 0px 6px",
+        "count": 1
+      }
+    ]
+  },
+  "components": {
+    "quote": {
+      "label": "引用块（左侧竖线）",
+      "count": 11,
+      "sample_style": "border-left:6px solid #222222;padding:14px;background:rgba(239, 239, 239, 0.8);width:100%;box-sizing:border-box;max-width:100% !important",
+      "variants": [
+        {
+          "style": "border-left:6px solid #222222;padding:14px;background:rgba(239, 239, 239, 0.8);width:100%;box-sizing:border-box;max-width:100% !important",
+          "n": 11
+        }
+      ]
+    },
+    "dot": {
+      "label": "圆形元素（序号/圆点）",
+      "count": 76,
+      "sample_style": "width:9px;height:9px;background:#252525;border-radius:50%;box-sizing:border-box",
+      "variants": [
+        {
+          "style": "width:9px;height:9px;background:#252525;border-radius:50%;box-sizing:border-box",
+          "n": 38
+        },
+        {
+          "style": "width:9px;height:9px;border:1px solid #252525;border-radius:50%;margin-left:-4px;box-sizing:border-box",
+          "n": 38
+        }
+      ]
+    },
+    "tables": {
+      "label": "表格",
+      "count": 1
+    },
+    "images": {
+      "label": "图片",
+      "count": 14
+    },
+    "bordered_box": {
+      "label": "描边盒（1-3px 实线边框）",
+      "count": 60,
+      "sample_style": "border:1px solid #222222;box-sizing:border-box",
+      "variants": [
+        {
+          "style": "width:9px;height:9px;border:1px solid #252525;border-radius:50%;margin-left:-4px;box-sizing:border-box",
+          "n": 38
+        },
+        {
+          "style": "border:1px solid #222222;box-sizing:border-box",
+          "n": 21
+        },
+        {
+          "style": "-webkit-tap-highlight-color:rgba(0, 0, 0, 0);margin:0px;padding:0px;outline:0px;max-width:100%;box-sizing:border-box;overflow-wrap:break-word !important;border:1px solid rgb(34, 34, 34)",
+          "n": 1
+        }
+      ]
+    },
+    "filled_label": {
+      "label": "底色式标题条/标签块（实色底 + 内边距 + 大字号或居中）",
+      "count": 44,
+      "sample_style": "background:#222222;font-size:18px;color:#FFFFFF;line-height:28px;text-align:center;padding:0px 3px;height:auto;margin-top:-1px;margin-left:-1px;box-sizing:content-box !important;transform:translate(-1.5px, -1.5px);-webkit-transform:translate(-1.5px, -1.5px);-moz-transform:translate(-1.5px, -1.5px);-o-transform:translate(-1.5px, -1.5px)",
+      "variants": [
+        {
+          "style": "background:#222222;font-size:18px;color:#FFFFFF;line-height:28px;text-align:center;padding:0px 3px;height:auto;margin-top:-1px;margin-left:-1px;box-sizing:content-box !important;transform:translate(-1.5px, -1.5px);-webkit-transform:translate(-1.5px, -1.5px);-moz-transform:translate(-1.5px, -1.5px);-o-transform:translate(-1.5px, -1.5px)",
+          "n": 21
+        },
+        {
+          "style": "flex:1;font-size:18px;line-height:25px;background:rgba(239, 239, 239, 0.8);padding:4px 8px;margin-left:6px;box-sizing:border-box",
+          "n": 21
+        },
+        {
+          "style": "-webkit-tap-highlight-color:rgba(0, 0, 0, 0);margin:-1px 0px 0px -1px;padding:0px 3px;outline:0px;max-width:100%;box-sizing:content-box !important;overflow-wrap:break-word !important;background:rgb(34, 34, 34);font-size:18px;color:rgb(255, 255, 255);line-height:28px;text-align:center;height:auto;transform:translate(-1.5px, -1.5px)",
+          "n": 1
+        }
+      ]
+    },
+    "lists": {
+      "label": "原生列表 ul/ol（含 li）",
+      "count": 78,
+      "note": "ul=15 ol=4 li=78"
+    },
+    "strong": {
+      "label": "粗体引词 strong",
+      "count": 111
+    },
+    "code": {
+      "label": "行内代码 code",
+      "count": 32
+    },
+    "mp_profile": {
+      "label": "公众号名片",
+      "count": 4
+    },
+    "mp_other": {
+      "label": "其他 <mp*>（多为无意义标记，如 mp-style-type）",
+      "count": 1,
+      "note": "原始 <mp*> 共 5 个，其中已识别的嵌入组件 4 个"
+    },
+    "blockquote": {
+      "label": "原生引用块 blockquote",
+      "count": 1,
+      "note": ""
+    }
+  },
+  "structure": {
+    "tags": {
+      "section": 734,
+      "span": 569,
+      "br": 145,
+      "strong": 111,
+      "li": 78,
+      "code": 32,
+      "td": 20,
+      "ul": 15,
+      "img": 14,
+      "a": 14,
+      "th": 10,
+      "tr": 6,
+      "mp": 5,
+      "ol": 4,
+      "p": 3,
+      "pre": 2,
+      "div": 1,
+      "table": 1
+    },
+    "borders": [
+      {
+        "value": "1px solid #252525",
+        "count": 38
+      },
+      {
+        "value": "1px solid #ddd",
+        "count": 30
+      },
+      {
+        "value": "1px solid #222222",
+        "count": 21
+      },
+      {
+        "value": "1px solid rgb(34, 34, 34)",
+        "count": 1
+      }
+    ],
+    "border_sides": [
+      {
+        "value": "6px solid #222222",
+        "count": 11
+      }
+    ],
+    "backgrounds": [
+      {
+        "value": "#222222",
+        "count": 42
+      },
+      {
+        "value": "#252525",
+        "count": 38
+      },
+      {
+        "value": "rgba(239, 239, 239, 0.8)",
+        "count": 33
+      },
+      {
+        "value": "rgba(0, 0, 0, 0.06)",
+        "count": 9
+      },
+      {
+        "value": "transparent",
+        "count": 8
+      },
+      {
+        "value": "#f2f2f2",
+        "count": 5
+      },
+      {
+        "value": "url(&quot",
+        "count": 3
+      },
+      {
+        "value": "rgb(34, 34, 34)",
+        "count": 1
+      }
+    ],
+    "displays": [
+      {
+        "value": "flex",
+        "count": 180
+      },
+      {
+        "value": "none",
+        "count": 1
+      }
+    ],
+    "flex_direction": [
+      {
+        "value": "column",
+        "count": 22
+      }
+    ],
+    "text_align": [
+      {
+        "value": "left",
+        "count": 41
+      },
+      {
+        "value": "center",
+        "count": 34
+      }
+    ],
+    "small_elements": [
+      {
+        "value": "9px",
+        "count": 152
+      },
+      {
+        "value": "28px",
+        "count": 98
+      },
+      {
+        "value": "6px",
+        "count": 42
+      },
+      {
+        "value": "25px",
+        "count": 22
+      },
+      {
+        "value": "24px",
+        "count": 11
+      }
+    ]
+  },
+  "fingerprint": {
+    "fonts": [
+      "optima-regular, pingfangtc-light",
+      "consolas, menlo, courier, monospace"
+    ],
+    "colors": [
+      "#333333",
+      "#252525",
+      "#222222"
+    ]
+  },
+  "duplicate_of": "graylist2026",
+  "generated_by": "mp-template-lib/extract_theme.py",
+  "note": "数值经实测抠取；结构必须靠 preview.png 人工复核，见 reference.md"
+}

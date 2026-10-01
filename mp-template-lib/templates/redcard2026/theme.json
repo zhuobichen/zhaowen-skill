@@ -1,0 +1,650 @@
+{
+  "name": "redcard2026",
+  "source": "C:\\Users\\Administrator\\AppData\\Local\\Temp\\mp\\article_body.html",
+  "title": "AI Agent 架构终于讲清楚了：Planner、Reasoning、Tool、MCP、Memory、Reflection 全链路拆解",
+  "body_chars": 86490,
+  "tokens": {
+    "colors": [
+      {
+        "value": "rgb(220, 38, 38)",
+        "count": 114
+      },
+      {
+        "value": "rgb(55, 65, 81)",
+        "count": 58
+      },
+      {
+        "value": "rgb(254, 202, 202)",
+        "count": 56
+      },
+      {
+        "value": "rgb(254, 226, 226)",
+        "count": 39
+      },
+      {
+        "value": "rgb(153, 27, 27)",
+        "count": 36
+      },
+      {
+        "value": "rgb(252, 165, 165)",
+        "count": 26
+      },
+      {
+        "value": "rgb(28, 25, 23)",
+        "count": 21
+      },
+      {
+        "value": "rgb(254, 242, 242)",
+        "count": 20
+      },
+      {
+        "value": "rgb(75, 85, 99)",
+        "count": 12
+      },
+      {
+        "value": "rgb(156, 163, 175)",
+        "count": 5
+      },
+      {
+        "value": "rgb(226, 232, 240)",
+        "count": 2
+      },
+      {
+        "value": "rgba(220, 38, 38, 0.15)",
+        "count": 1
+      },
+      {
+        "value": "rgb(214, 211, 209)",
+        "count": 1
+      },
+      {
+        "value": "rgb(250, 250, 250)",
+        "count": 1
+      },
+      {
+        "value": "rgb(30, 41, 59)",
+        "count": 1
+      },
+      {
+        "value": "rgba(15, 23, 42, 0.4)",
+        "count": 1
+      },
+      {
+        "value": "rgb(15, 23, 42)",
+        "count": 1
+      },
+      {
+        "value": "rgb(255, 95, 86)",
+        "count": 1
+      },
+      {
+        "value": "rgb(255, 189, 46)",
+        "count": 1
+      },
+      {
+        "value": "rgb(39, 201, 63)",
+        "count": 1
+      }
+    ],
+    "font_families": [
+      {
+        "value": "-apple-system, BlinkMacSystemFont, &quot",
+        "count": 31
+      },
+      {
+        "value": "&quot",
+        "count": 2
+      },
+      {
+        "value": "Consolas, Monaco, monospace",
+        "count": 1
+      }
+    ],
+    "font_sizes": [
+      {
+        "value": "15px",
+        "count": 84
+      },
+      {
+        "value": "14px",
+        "count": 34
+      },
+      {
+        "value": "12px",
+        "count": 32
+      },
+      {
+        "value": "18px",
+        "count": 28
+      },
+      {
+        "value": "10px",
+        "count": 14
+      },
+      {
+        "value": "16px",
+        "count": 7
+      },
+      {
+        "value": "13px",
+        "count": 5
+      },
+      {
+        "value": "11px",
+        "count": 4
+      },
+      {
+        "value": "0px",
+        "count": 3
+      },
+      {
+        "value": "28px",
+        "count": 2
+      }
+    ],
+    "line_heights": [
+      {
+        "value": "1.8",
+        "count": 84
+      },
+      {
+        "value": "1.3",
+        "count": 14
+      },
+      {
+        "value": "1.7",
+        "count": 13
+      },
+      {
+        "value": "0",
+        "count": 3
+      },
+      {
+        "value": "1",
+        "count": 2
+      },
+      {
+        "value": "1.6",
+        "count": 2
+      },
+      {
+        "value": "1.75",
+        "count": 1
+      },
+      {
+        "value": "1.9",
+        "count": 1
+      }
+    ],
+    "letter_spacing": [
+      {
+        "value": "0.5px",
+        "count": 45
+      },
+      {
+        "value": "3px",
+        "count": 15
+      },
+      {
+        "value": "1px",
+        "count": 6
+      }
+    ],
+    "border_radius": [
+      {
+        "value": "50%",
+        "count": 36
+      },
+      {
+        "value": "4px",
+        "count": 16
+      },
+      {
+        "value": "999px",
+        "count": 16
+      },
+      {
+        "value": "6px",
+        "count": 14
+      },
+      {
+        "value": "10px",
+        "count": 11
+      },
+      {
+        "value": "0px 10px 10px 0px",
+        "count": 6
+      },
+      {
+        "value": "0px 8px 8px 0px",
+        "count": 2
+      },
+      {
+        "value": "12px",
+        "count": 1
+      },
+      {
+        "value": "8px",
+        "count": 1
+      }
+    ],
+    "box_shadow": [
+      {
+        "value": "rgba(220, 38, 38, 0.15) 0px 4px 24px -4px",
+        "count": 1
+      },
+      {
+        "value": "rgba(15, 23, 42, 0.4) 0px 4px 16px -8px",
+        "count": 1
+      }
+    ],
+    "padding": [
+      {
+        "value": "0px 10px",
+        "count": 29
+      },
+      {
+        "value": "3px 10px",
+        "count": 16
+      },
+      {
+        "value": "4px 14px",
+        "count": 14
+      },
+      {
+        "value": "2px 10px",
+        "count": 11
+      },
+      {
+        "value": "18px 22px",
+        "count": 6
+      },
+      {
+        "value": "8px 12px",
+        "count": 6
+      },
+      {
+        "value": "18px 20px",
+        "count": 6
+      },
+      {
+        "value": "2px 8px",
+        "count": 5
+      }
+    ],
+    "margin": [
+      {
+        "value": "0px",
+        "count": 82
+      },
+      {
+        "value": "0px 0px 2px",
+        "count": 14
+      },
+      {
+        "value": "0px 0px 6px",
+        "count": 12
+      },
+      {
+        "value": "0px 0px 8px",
+        "count": 8
+      },
+      {
+        "value": "0px 6px 8px 0px",
+        "count": 8
+      },
+      {
+        "value": "0px 0px 24px",
+        "count": 3
+      },
+      {
+        "value": "0px 0px 4px",
+        "count": 2
+      },
+      {
+        "value": "10px 10px 32px",
+        "count": 1
+      }
+    ]
+  },
+  "components": {
+    "card": {
+      "label": "卡片外层（圆角 + 阴影）",
+      "count": 2,
+      "sample_style": "color:rgb(55, 65, 81);font-family:-apple-system, BlinkMacSystemFont, &quot;PingFang SC&quot;, &quot;Hiragino Sans GB&quot;, &quot;Microsoft YaHei&quot;, sans-serif;font-size:medium;font-style:normal;font-variant-ligatures:normal;font-variant-caps:normal;font-weight:400;letter-spacing:0.5px;orphans:2;text-align:start;text-indent:0px;text-transform:none;widows:2;word-spacing:0px;-webkit-text-stroke-",
+      "variants": [
+        {
+          "style": "color:rgb(55, 65, 81);font-family:-apple-system, BlinkMacSystemFont, &quot;PingFang SC&quot;, &quot;Hiragino Sans GB&quot;, &quot;Microsoft YaHei&quot;, sans-serif;font-size:medium;font-style:normal;font-variant-ligatures:normal;font-variant-caps:normal;font-weight:400;letter-spacing:0.5px;orphans:2;text-align:start;text-indent:0px;text-transform:none;widows:2;word-spacing:0px;-webkit-text-stroke-",
+          "n": 1
+        },
+        {
+          "style": "margin:0px 0px 20px;border-radius:8px;overflow:hidden;background:rgb(30, 41, 59);box-shadow:rgba(15, 23, 42, 0.4) 0px 4px 16px -8px",
+          "n": 1
+        }
+      ]
+    },
+    "section_header": {
+      "label": "章节标题条（挂在 section 上的底部实线）",
+      "count": 14,
+      "sample_style": "display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;padding-bottom:14px;border-bottom:3px solid rgb(220, 38, 38)",
+      "variants": [
+        {
+          "style": "display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;padding-bottom:14px;border-bottom:3px solid rgb(220, 38, 38)",
+          "n": 14
+        }
+      ]
+    },
+    "divider": {
+      "label": "分隔线（渐变）",
+      "count": 13,
+      "sample_style": "height:1px;background:linear-gradient(to right, transparent, rgb(252, 165, 165), rgb(220, 38, 38), rgb(252, 165, 165), transparent);margin:0px",
+      "variants": [
+        {
+          "style": "height:1px;background:linear-gradient(to right, transparent, rgb(252, 165, 165), rgb(220, 38, 38), rgb(252, 165, 165), transparent);margin:0px",
+          "n": 13
+        }
+      ]
+    },
+    "quote": {
+      "label": "引用块（左侧竖线）",
+      "count": 8,
+      "sample_style": "background:rgb(254, 242, 242);border-radius:0px 10px 10px 0px;border-left:4px solid rgb(220, 38, 38);padding:18px 22px;margin-bottom:24px;visibility:visible",
+      "variants": [
+        {
+          "style": "background:rgb(254, 242, 242);border-radius:0px 10px 10px 0px;border-left:4px solid rgb(220, 38, 38);padding:18px 22px;margin-bottom:24px",
+          "n": 3
+        },
+        {
+          "style": "background:rgb(254, 242, 242);border-radius:0px 10px 10px 0px;border-left:4px solid rgb(220, 38, 38);padding:18px 22px;margin-bottom:20px",
+          "n": 2
+        },
+        {
+          "style": "background:rgb(254, 242, 242);border-radius:0px 10px 10px 0px;border-left:4px solid rgb(220, 38, 38);padding:18px 22px;margin-bottom:24px;visibility:visible",
+          "n": 1
+        }
+      ]
+    },
+    "pill": {
+      "label": "胶囊标签（大圆角）",
+      "count": 16,
+      "sample_style": "display:inline-block;font-size:14px;font-weight:700;color:rgb(153, 27, 27);background:rgb(254, 226, 226);padding:3px 10px;border-radius:999px",
+      "variants": [
+        {
+          "style": "display:inline-block;font-size:14px;font-weight:700;color:rgb(153, 27, 27);background:rgb(254, 226, 226);padding:3px 10px;border-radius:999px",
+          "n": 16
+        }
+      ]
+    },
+    "dot": {
+      "label": "圆形元素（序号/圆点）",
+      "count": 36,
+      "sample_style": "display:inline-block;width:6px;height:6px;background:rgb(220, 38, 38);border-radius:50%;margin-right:5px;vertical-align:middle",
+      "variants": [
+        {
+          "style": "display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;background:rgb(220, 38, 38);color:rgb(255, 255, 255);font-size:12px;font-weight:700;border-radius:50%;flex-shrink:0;margin-top:2px",
+          "n": 17
+        },
+        {
+          "style": "display:inline-block;width:6px;height:6px;background:rgb(220, 38, 38);border-radius:50%;margin-right:5px;vertical-align:middle",
+          "n": 16
+        },
+        {
+          "style": "display:inline-block;width:10px;height:10px;border-radius:50%;background:rgb(255, 95, 86);margin-right:7px;font-size:0px;line-height:0;overflow:hidden",
+          "n": 1
+        }
+      ]
+    },
+    "highlight": {
+      "label": "行内高亮（span 上的下划线）",
+      "count": 50,
+      "sample_style": "border-bottom:2px solid rgb(254, 202, 202);font-weight:600;visibility:visible",
+      "variants": [
+        {
+          "style": "border-bottom:2px solid rgb(254, 202, 202);font-weight:600",
+          "n": 43
+        },
+        {
+          "style": "border-bottom:2px solid rgb(254, 202, 202);font-weight:600;visibility:visible",
+          "n": 7
+        }
+      ]
+    },
+    "tables": {
+      "label": "表格",
+      "count": 1
+    },
+    "images": {
+      "label": "图片",
+      "count": 3
+    },
+    "bordered_box": {
+      "label": "描边盒（1-3px 实线边框）",
+      "count": 11,
+      "sample_style": "flex:1 1 0%;background:rgb(254, 242, 242);border-radius:10px;padding:16px 12px;margin-right:8px;text-align:center;border:1px solid rgb(254, 226, 226)",
+      "variants": [
+        {
+          "style": "background:rgb(254, 242, 242);border-radius:10px;padding:18px 20px;margin-bottom:24px;border:1px solid rgb(254, 202, 202)",
+          "n": 5
+        },
+        {
+          "style": "flex:1 1 0%;background:rgb(254, 242, 242);border-radius:10px;padding:16px 12px;margin-right:8px;text-align:center;border:1px solid rgb(254, 226, 226)",
+          "n": 2
+        },
+        {
+          "style": "flex:1 1 0%;background:rgb(254, 242, 242);border-radius:10px;padding:16px 12px;text-align:center;border:1px solid rgb(254, 226, 226)",
+          "n": 1
+        }
+      ]
+    },
+    "filled_label": {
+      "label": "底色式标题条/标签块（实色底 + 内边距 + 大字号或居中）",
+      "count": 5,
+      "sample_style": "flex:1 1 0%;background:rgb(254, 242, 242);border-radius:10px;padding:16px 12px;margin-right:8px;text-align:center;border:1px solid rgb(254, 226, 226)",
+      "variants": [
+        {
+          "style": "flex:1 1 0%;background:rgb(254, 242, 242);border-radius:10px;padding:16px 12px;margin-right:8px;text-align:center;border:1px solid rgb(254, 226, 226)",
+          "n": 2
+        },
+        {
+          "style": "flex:1 1 0%;background:rgb(254, 242, 242);border-radius:10px;padding:16px 12px;text-align:center;border:1px solid rgb(254, 226, 226)",
+          "n": 1
+        },
+        {
+          "style": "flex:1 1 0%;background:rgb(254, 242, 242);border-radius:10px;padding:18px 16px;margin-right:8px;text-align:center;border:1px solid rgb(254, 226, 226)",
+          "n": 1
+        }
+      ]
+    },
+    "strong": {
+      "label": "粗体引词 strong",
+      "count": 10
+    },
+    "mp_other": {
+      "label": "其他 <mp*>（多为无意义标记，如 mp-style-type）",
+      "count": 1,
+      "note": "原始 <mp*> 共 1 个，其中已识别的嵌入组件 0 个"
+    }
+  },
+  "structure": {
+    "tags": {
+      "span": 506,
+      "section": 161,
+      "p": 149,
+      "br": 31,
+      "h3": 14,
+      "strong": 10,
+      "td": 4,
+      "img": 3,
+      "tr": 3,
+      "th": 2,
+      "div": 1,
+      "table": 1,
+      "thead": 1,
+      "tbody": 1,
+      "mp": 1
+    },
+    "borders": [
+      {
+        "value": "1px solid rgb(254, 202, 202)",
+        "count": 6
+      },
+      {
+        "value": "1px solid rgb(254, 226, 226)",
+        "count": 5
+      }
+    ],
+    "border_sides": [
+      {
+        "value": "2px solid rgb(254, 202, 202)",
+        "count": 50
+      },
+      {
+        "value": "3px solid rgb(220, 38, 38)",
+        "count": 14
+      },
+      {
+        "value": "1px solid rgb(254, 226, 226)",
+        "count": 10
+      },
+      {
+        "value": "4px solid rgb(220, 38, 38)",
+        "count": 7
+      },
+      {
+        "value": "4px solid rgb(214, 211, 209)",
+        "count": 1
+      }
+    ],
+    "backgrounds": [
+      {
+        "value": "rgb(220, 38, 38)",
+        "count": 57
+      },
+      {
+        "value": "rgb(254, 226, 226)",
+        "count": 24
+      },
+      {
+        "value": "rgb(254, 242, 242)",
+        "count": 20
+      },
+      {
+        "value": "linear-gradient(to right, transparent, rgb(2",
+        "count": 14
+      },
+      {
+        "value": "rgb(255, 255, 255)",
+        "count": 1
+      },
+      {
+        "value": "rgb(250, 250, 250)",
+        "count": 1
+      },
+      {
+        "value": "rgb(30, 41, 59)",
+        "count": 1
+      },
+      {
+        "value": "rgb(15, 23, 42)",
+        "count": 1
+      },
+      {
+        "value": "rgb(255, 95, 86)",
+        "count": 1
+      },
+      {
+        "value": "rgb(255, 189, 46)",
+        "count": 1
+      },
+      {
+        "value": "rgb(39, 201, 63)",
+        "count": 1
+      },
+      {
+        "value": "linear-gradient(to left, transparent, rgb(22",
+        "count": 1
+      }
+    ],
+    "displays": [
+      {
+        "value": "inline-block",
+        "count": 63
+      },
+      {
+        "value": "flex",
+        "count": 52
+      },
+      {
+        "value": "inline-flex",
+        "count": 17
+      },
+      {
+        "value": "none",
+        "count": 1
+      }
+    ],
+    "flex_direction": [],
+    "text_align": [
+      {
+        "value": "justify",
+        "count": 69
+      },
+      {
+        "value": "start",
+        "count": 31
+      },
+      {
+        "value": "center",
+        "count": 17
+      },
+      {
+        "value": "left",
+        "count": 2
+      }
+    ],
+    "small_elements": [
+      {
+        "value": "22px",
+        "count": 34
+      },
+      {
+        "value": "6px",
+        "count": 32
+      },
+      {
+        "value": "0px",
+        "count": 31
+      },
+      {
+        "value": "1px",
+        "count": 13
+      },
+      {
+        "value": "10px",
+        "count": 6
+      },
+      {
+        "value": "2px",
+        "count": 2
+      },
+      {
+        "value": "60px",
+        "count": 2
+      }
+    ]
+  },
+  "generated_by": "mp-template-lib/extract_theme.py",
+  "note": "数值经实测抠取；结构必须靠 preview.png 人工复核，见 reference.md",
+  "fingerprint": {
+    "fonts": [
+      "-apple-system, blinkmacsystemfont, &quot",
+      "consolas, monaco, monospace"
+    ],
+    "colors": [
+      "rgb(220,38,38)",
+      "rgb(55,65,81)",
+      "rgb(254,202,202)"
+    ]
+  },
+  "duplicate_of": null
+}

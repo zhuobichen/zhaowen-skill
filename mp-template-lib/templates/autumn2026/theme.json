@@ -1,0 +1,399 @@
+{
+  "name": "autumn2026",
+  "source": "https://mp.weixin.qq.com/s/u1bjI3pJPv5CI539Mffqjw",
+  "title": "˗ˋˏ🥮ˎˊ˗一眼爱上，中秋里的双十园……",
+  "body_chars": 168394,
+  "tokens": {
+    "colors": [
+      {
+        "value": "rgba(155, 104, 41, 0.39)",
+        "count": 21
+      },
+      {
+        "value": "rgb(115, 63, 15)",
+        "count": 19
+      },
+      {
+        "value": "#f6f6f6",
+        "count": 11
+      },
+      {
+        "value": "rgb(176, 101, 75)",
+        "count": 10
+      },
+      {
+        "value": "rgb(62, 62, 62)",
+        "count": 9
+      },
+      {
+        "value": "rgba(0, 0, 0, 0.16)",
+        "count": 6
+      },
+      {
+        "value": "rgba(155, 104, 41, 0.74)",
+        "count": 4
+      },
+      {
+        "value": "rgba(0, 0, 0, 0.14)",
+        "count": 3
+      },
+      {
+        "value": "rgba(255, 251, 245, 0.66)",
+        "count": 1
+      },
+      {
+        "value": "rgb(255, 255, 250)",
+        "count": 1
+      },
+      {
+        "value": "rgba(28, 46, 105, 0.11)",
+        "count": 1
+      },
+      {
+        "value": "rgb(247, 218, 119)",
+        "count": 1
+      },
+      {
+        "value": "rgb(234, 234, 234)",
+        "count": 1
+      },
+      {
+        "value": "rgb(192, 80, 77)",
+        "count": 1
+      }
+    ],
+    "font_families": [
+      {
+        "value": "PingFangSC-light",
+        "count": 1
+      }
+    ],
+    "font_sizes": [
+      {
+        "value": "13px",
+        "count": 10
+      },
+      {
+        "value": "16px",
+        "count": 1
+      }
+    ],
+    "line_heights": [
+      {
+        "value": "0",
+        "count": 163
+      },
+      {
+        "value": "2",
+        "count": 5
+      }
+    ],
+    "letter_spacing": [
+      {
+        "value": "1.5px",
+        "count": 1
+      }
+    ],
+    "border_radius": [
+      {
+        "value": "100%",
+        "count": 11
+      },
+      {
+        "value": "55px",
+        "count": 8
+      },
+      {
+        "value": "20px",
+        "count": 2
+      }
+    ],
+    "box_shadow": [
+      {
+        "value": "rgba(0, 0, 0, 0.16) 0px 6px 10px 0px",
+        "count": 6
+      },
+      {
+        "value": "rgba(155, 104, 41, 0.74) 1px 1px 3px 0px",
+        "count": 4
+      },
+      {
+        "value": "rgba(0, 0, 0, 0.14) 1px 1px 3px 1px",
+        "count": 3
+      },
+      {
+        "value": "rgba(155, 104, 41, 0.39) -3px 3px 3px 0px",
+        "count": 2
+      },
+      {
+        "value": "rgba(155, 104, 41, 0.39) -3px 0px 3px 0px",
+        "count": 2
+      },
+      {
+        "value": "rgba(155, 104, 41, 0.39) 0px 0px 3px 0px",
+        "count": 1
+      }
+    ],
+    "padding": [
+      {
+        "value": "0px",
+        "count": 163
+      },
+      {
+        "value": "5px",
+        "count": 4
+      },
+      {
+        "value": "8px 8px 16px",
+        "count": 4
+      },
+      {
+        "value": "0px 20px",
+        "count": 2
+      },
+      {
+        "value": "13px 13px 45px",
+        "count": 1
+      },
+      {
+        "value": "25px 25px 30px",
+        "count": 1
+      },
+      {
+        "value": "0px 10px 5px",
+        "count": 1
+      },
+      {
+        "value": "10px 10px 15px",
+        "count": 1
+      }
+    ],
+    "margin": [
+      {
+        "value": "0px",
+        "count": 177
+      },
+      {
+        "value": "0px 0px 10px",
+        "count": 22
+      },
+      {
+        "value": "0.5em 0px",
+        "count": 10
+      },
+      {
+        "value": "0px 0% -2px",
+        "count": 8
+      },
+      {
+        "value": "20px 0px 0px",
+        "count": 6
+      },
+      {
+        "value": "0px 0px -40px",
+        "count": 4
+      },
+      {
+        "value": "10px 0px 0px",
+        "count": 3
+      },
+      {
+        "value": "0px 5px 0px 0px",
+        "count": 3
+      }
+    ]
+  },
+  "components": {
+    "svg_real": {
+      "label": "SVG（已滤掉 width:0 的编辑器占位符）",
+      "count": 13,
+      "note": "原始 <svg> 共 40 个，其中空占位符 27 个"
+    },
+    "images": {
+      "label": "图片",
+      "count": 63
+    },
+    "bordered_box": {
+      "label": "描边盒（1-3px 实线边框）",
+      "count": 1,
+      "sample_style": "padding:5px;box-sizing:border-box;border:2px solid rgb(0, 0, 0);max-width:100%",
+      "variants": [
+        {
+          "style": "padding:5px;box-sizing:border-box;border:2px solid rgb(0, 0, 0);max-width:100%",
+          "n": 1
+        }
+      ]
+    },
+    "strong": {
+      "label": "粗体引词 strong",
+      "count": 27
+    }
+  },
+  "structure": {
+    "tags": {
+      "section": 409,
+      "span": 172,
+      "p": 160,
+      "img": 63,
+      "br": 43,
+      "svg": 40,
+      "strong": 27,
+      "g": 13,
+      "a": 10,
+      "foreignObject": 9,
+      "animate": 4,
+      "div": 1,
+      "animateTransform": 1,
+      "rect": 1,
+      "path": 1,
+      "mp": 1
+    },
+    "borders": [
+      {
+        "value": "2px solid rgb(0, 0, 0)",
+        "count": 1
+      }
+    ],
+    "border_sides": [
+      {
+        "value": "1px dashed rgb(176, 101, 75)",
+        "count": 10
+      },
+      {
+        "value": "1px solid rgb(115, 63, 15)",
+        "count": 1
+      }
+    ],
+    "backgrounds": [
+      {
+        "value": "rgba(155, 104, 41, 0.39)",
+        "count": 16
+      },
+      {
+        "value": "#f6f6f6",
+        "count": 11
+      },
+      {
+        "value": "rgb(255, 255, 255)",
+        "count": 10
+      },
+      {
+        "value": "rgba(255, 251, 245, 0.66)",
+        "count": 1
+      },
+      {
+        "value": "rgb(255, 255, 250)",
+        "count": 1
+      }
+    ],
+    "displays": [
+      {
+        "value": "inline-block",
+        "count": 133
+      },
+      {
+        "value": "flex",
+        "count": 47
+      },
+      {
+        "value": "contents",
+        "count": 5
+      },
+      {
+        "value": "block",
+        "count": 4
+      },
+      {
+        "value": "none",
+        "count": 1
+      }
+    ],
+    "flex_direction": [
+      {
+        "value": "row",
+        "count": 2
+      }
+    ],
+    "text_align": [
+      {
+        "value": "center",
+        "count": 80
+      },
+      {
+        "value": "justify",
+        "count": 33
+      },
+      {
+        "value": "right",
+        "count": 10
+      },
+      {
+        "value": "left",
+        "count": 9
+      }
+    ],
+    "small_elements": [
+      {
+        "value": "15px",
+        "count": 22
+      },
+      {
+        "value": "14px",
+        "count": 16
+      },
+      {
+        "value": "10px",
+        "count": 12
+      },
+      {
+        "value": "5px",
+        "count": 9
+      },
+      {
+        "value": "6px",
+        "count": 8
+      },
+      {
+        "value": "0px",
+        "count": 8
+      },
+      {
+        "value": "70px",
+        "count": 2
+      },
+      {
+        "value": "26px",
+        "count": 1
+      },
+      {
+        "value": "71px",
+        "count": 1
+      },
+      {
+        "value": "87px",
+        "count": 1
+      },
+      {
+        "value": "94px",
+        "count": 1
+      },
+      {
+        "value": "42px",
+        "count": 1
+      }
+    ]
+  },
+  "generated_by": "mp-template-lib/extract_theme.py",
+  "note": "数值经实测抠取；结构必须靠 preview.png 人工复核，见 reference.md",
+  "fingerprint": {
+    "fonts": [
+      "pingfangsc-light"
+    ],
+    "colors": [
+      "rgba(155,104,41,0.39)",
+      "rgb(115,63,15)",
+      "#f6f6f6"
+    ]
+  },
+  "duplicate_of": null
+}

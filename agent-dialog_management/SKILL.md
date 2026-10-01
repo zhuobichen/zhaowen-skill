@@ -127,6 +127,49 @@ python <脚本> export 79b26d95 --out "E:/CodeProject/notes/对话.md"
 - **只读用户数据**：扫描/读取 JSONL 从不修改；唯一写入的是本 skill 自己的 `state/notes.json`。
 - **Codex 会话管理**（归档/删除）用官方命令：`codex archive <id>` / `codex delete <id>`，
   skill 不做绕过。
+
+### 为什么 Claude Code 侧没有归档/删除（2026-10-02 查证）
+
+用户问「能不能归档或删除 Claude Code 对话」。查证结论：**两边都没有这个能力，
+而且原因是产品设计不同，不是 skill 偷懒。**
+
+证据来自两边二进制的字符串（不是文档推测）：
+
+**Codex —— 归档是一等公民**
+```
+"Archive this session now"
+"This will archive the current session and exit Codex"
+archived_at INTEGER NOT NULL DEFAULT ...    ← 数据库字段
+unarchive ×8                                 ← 可撤销
+```
+所以 `codex archive` / `codex delete` 是官方命令，本 skill 只需转告。
+
+**Claude Code —— 本地会话只有「保留期」，没有归档态**
+```
+cleanupPeriodDays  ×25
+"cleanupPeriodDays must be at least 1. To keep transcripts for a long time,
+ set a large number (e.g. 3650 for ~10 years)."
+"Transcript retention cleanup is paused until the settings errors above are fixed"
+```
+
+> ⚠️ 容易误判：Claude Code 二进制里**确实有** `archiveSession()` / `unarchiveSession()` /
+> `fleet_view_archive_session` / `POST /v1/sessions/<id>/archive` —— 但那些全是
+> **remote-bridge / fleet**（远程控制与后台智能体会话）的，**不碰本地对话记录**。
+> 只看到 "archive" 就下结论「Claude Code 也有归档」是错的。
+
+**设计取向的区别**（这句是解读，不是事实）：
+
+| | Codex | Claude Code |
+|---|---|---|
+| 本地会话状态 | 「在用」/「已归档」**两态** | 只有「在」，**没有第二态** |
+| 到期怎么办 | 你自己决定收不收 | **按保留期自动删**（默认 30 天）|
+| 想长留 | 归档 | 把 `cleanupPeriodDays` 设大 |
+
+可以理解为：Codex 把本地会话当**用户资产**（给你「收起来」的动作），
+Claude Code 把它当**缓存**（用保留期策略管理）。
+
+**对本 skill 的影响**：Claude Code 侧的「收藏」只是 `notes.json` 里一个标记，
+**不是归档** —— 文件仍在原地，仍会被保留期清掉。要长留必须改 `cleanupPeriodDays`。
 - **标题兜底**：无 AI 标题时取第一条用户消息，无消息则显示 `(无标题)`。
 - **running 判定**：活跃 = 最近 N 分钟有写入且未归档。Codex 后台 app-server 会 touch
   旧会话文件造成误报，因此当 Codex 无交互进程时，其"活跃"记录会标注为后台服务活动。

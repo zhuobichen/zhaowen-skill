@@ -15,6 +15,7 @@
 
 | Skill | 目录 | 用途 |
 |-------|------|------|
+| 公众号模板库 | [`mp-template-lib/`](mp-template-lib/) | 把一篇已发表文章反推成可复用主题：`extract_theme.py` 吐出设计令牌 + 组件形态 + 对照图；每个模板带**人工复核清单**。含 5 个实测模板与 9 条反推踩坑记录（**样本是他人文章原文/截图，按 .gitignore 不入库，本地保留**） |
 | ABaCAS 平台操纵 | [`abacas-cloud-ops/`](abacas-cloud-ops/) | ABaCAS Cloud 平台任务/文件/费效评估/结果导入与本地可视化（9 个脚本） |
 | n8n 工作流操纵 | [`n8n-web-ops/`](n8n-web-ops/) | n8n 网页操纵：登录、执行记录只读查看、callback_token 自动提取 |
 | 网申表单速填 | [`job-form-autofill/`](job-form-autofill/) | 按简历填任意网页的求职/网申表单：闭合选项（下拉/单选）交给 Jev 一次批量判定，需要写字的由助手依据简历生成；**绝不提交**，没依据的一律留空并列出"需要你提供"清单 |

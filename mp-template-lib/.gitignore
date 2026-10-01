@@ -1,0 +1,14 @@
+# 样本与截图**不入公开仓库** —— 它们是别人公众号文章的原文和整页截图。
+#
+# `sample.html` 是文章的完整 HTML 正文（含文字、图片链接、排版），
+# `preview.png` 是渲染后的整页截图。两者都是**他人作品**，
+# 把五篇别人的文章连图带文推到公开仓库有版权问题（尤其是学校/媒体的号）。
+#
+# 分析产物（theme.json / reference.md）和提取器（extract_theme.py）是本仓库自己的
+# 输出，正常入库 —— 它们只记录「版式怎么做的」，不含文章内容。
+#
+# 样本留在本机不影响使用：需要对照图时重跑一次提取器就生成。
+# 模板库在别人机器上 clone 后，用 templates/<name>/reference.md 里的 source URL
+# 自己跑一遍提取器即可复原样本。
+templates/*/sample.html
+templates/*/preview.png
