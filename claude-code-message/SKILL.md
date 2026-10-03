@@ -52,14 +52,19 @@ PID     SESSION_ID                              CWD                             
 
 ### 2.2 向指定会话发消息
 
+**⚠ 必须指定 `--cwd` 为目标代码仓库根目录**，否则 Claude 的工具权限会被限定在当前目录，导致读不到目标代码、也写不进去。
+
 ```bash
-python scripts/claude_message.py --session b0fcf1fe-ce5c-4709-9981-af8d797efae6 --message "你的消息内容"
+python scripts/claude_message.py --session b0fcf1fe-... --message "你的消息" --cwd /path/to/repo
 ```
 
-或直接用原始命令：
+脚本默认会添加 `--dangerously-skip-permissions`（否则只有读权限，写文件/执行命令会被拦截）。如需关闭，加 `--no-skip-permissions`。
+
+或直接用原始命令（注意先 `cd` 到目标目录）：
 
 ```bash
-claude --resume b0fcf1fe-ce5c-4709-9981-af8d797efae6 --print "你的消息内容" < NUL
+cd /path/to/repo
+claude --resume <sessionId> --dangerously-skip-permissions --print "你的消息"
 ```
 
 ### 2.3 安全测试（不污染原会话）
@@ -87,29 +92,44 @@ python scripts/claude_message.py --session <id> --latest 5
 | `--list` | 列出当前运行的 Claude Code 会话 |
 | `--session <uuid>` | 目标会话 ID（可从 `--list` 获取） |
 | `--message "<text>"` | 要发送的消息内容 |
+| `--cwd <path>` | **运行命令的工作目录（重要）**——应设为目标代码仓库根目录，否则 Claude 读不到目标代码、也写不进去 |
 | `--fork` | 创建分支会话，不写入原会话 |
 | `--latest <n>` | 查看该会话最近 n 条对话（不发消息） |
 | `--timeout <sec>` | 等待回复的超时时间（默认 300 秒） |
+| `--no-skip-permissions` | 不添加 `--dangerously-skip-permissions`（默认会添加；不加的话只有读权限） |
 
 ### 原始 CLI 命令
 
 ```bash
-# 基本用法
-claude --resume <sessionId> --print "消息"
+# 基本用法（先 cd 到目标代码目录！）
+cd /path/to/repo
+claude --resume <sessionId> --dangerously-skip-permissions --print "消息"
 
 # 分支模式（安全测试）
-claude --resume <sessionId> --fork-session --print "消息"
+claude --resume <sessionId> --fork-session --dangerously-skip-permissions --print "消息"
 
 # 指定模型
-claude --resume <sessionId> --model sonnet --print "消息"
-
-# 跳过权限确认（如果原会话开了的话）
-claude --resume <sessionId> --dangerously-skip-permissions --print "消息"
+claude --resume <sessionId> --dangerously-skip-permissions --model sonnet --print "消息"
 ```
+
+**两个关键参数：**
+- `--dangerously-skip-permissions`：不加的话只有读权限，写文件/执行命令会被拦截
+- 工作目录：必须在目标代码仓库根目录下运行，否则 Claude 的工具权限被限定在当前目录
 
 ---
 
 ## 四、注意事项
+
+### 4.0 ⚠ 工作目录与权限（最常见的坑）
+
+实测踩过两次，务必注意：
+
+| 问题 | 现象 | 解决 |
+|---|---|---|
+| **工作目录不对** | Claude 能回复，但说"读不到目标代码"、"权限被拒" | 必须加 `--cwd /path/to/repo`，或先 `cd` 到目标目录再运行 |
+| **没加 skip-permissions** | Claude 能读代码，但写文件/执行 git 全被拦 | 默认已加 `--dangerously-skip-permissions`；如用原始命令需手动加 |
+
+**原理**：`--print` 模式下，Claude Code 的工具信任域基于**当前工作目录**。从错误的目录启动，它就只能访问那个目录。
 
 ### 4.1 性能与成本
 
@@ -144,8 +164,8 @@ claude --resume <sessionId> --dangerously-skip-permissions --print "消息"
 # 1. 列出会话，找到目标
 python scripts/claude_message.py --list
 
-# 2. 发消息请求帮助
-python scripts/claude_message.py --session b0fcf1fe-... --message "帮我查一下 PF-ERSM 里 transportX 的定义，贴出相关代码行"
+# 2. 发消息请求帮助（必须指定 --cwd 为目标代码目录）
+python scripts/claude_message.py --session b0fcf1fe-... --cwd /path/to/repo --message "帮我查一下 PF-ERSM 里 transportX 的定义，贴出相关代码行"
 
 # 3. 等待回复输出
 ```

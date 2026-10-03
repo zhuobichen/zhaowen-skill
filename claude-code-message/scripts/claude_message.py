@@ -225,22 +225,50 @@ def extract_text(content):
     return str(content)
 
 
-def send_message(session_id, message, fork=False, timeout=300):
-    """向指定会话发送消息并获取回复"""
+def send_message(session_id, message, fork=False, timeout=300, cwd=None, skip_permissions=True):
+    """向指定会话发送消息并获取回复
+
+    Args:
+        session_id: 目标会话 UUID
+        message: 消息内容
+        fork: 是否创建分支会话（不污染原会话）
+        timeout: 超时秒数
+        cwd: 运行命令的工作目录（重要：应设为目标代码仓库根目录，
+             否则 Claude 的工具权限会被限定在当前目录，导致读不到目标代码）
+        skip_permissions: 是否添加 --dangerously-skip-permissions
+             （重要：不加的话只有读权限，写文件/执行命令会被拦截。
+              仅在你完全信任该会话且目标目录是你自己的代码时开启。）
+    """
     binary = find_claude_binary()
 
     cmd = [binary, "--resume", session_id, "--print", message]
     if fork:
         cmd.insert(2, "--fork-session")
+    if skip_permissions:
+        cmd.insert(2, "--dangerously-skip-permissions")
 
     # Windows 下重定向 stdin 避免警告
     stdin = subprocess.DEVNULL
 
-    print(f"执行: {' '.join(cmd[:4])} ...")
+    # 切换工作目录
+    original_cwd = os.getcwd()
+    if cwd:
+        cwd = os.path.abspath(os.path.expanduser(cwd))
+        if not os.path.isdir(cwd):
+            print(f"[错误] 工作目录不存在: {cwd}")
+            return False
+        os.chdir(cwd)
+
+    print(f"执行: {' '.join(cmd[:5])} ...")
+    print(f"工作目录: {os.getcwd()}")
     if fork:
         print("模式: 分支会话（不污染原会话）")
     else:
         print("模式: 直接写入原会话")
+    if skip_permissions:
+        print("权限: 跳过权限确认（可读写/执行）")
+    else:
+        print("权限: 默认（可能需要手动批准）")
     print(f"超时: {timeout} 秒")
     print()
 
@@ -286,6 +314,10 @@ def send_message(session_id, message, fork=False, timeout=300):
     except Exception as e:
         print(f"[错误] {e}")
         return False
+    finally:
+        # 恢复原工作目录
+        if cwd:
+            os.chdir(original_cwd)
 
 
 def main():
@@ -295,8 +327,9 @@ def main():
         epilog="""
 示例:
   %(prog)s --list
-  %(prog)s --session <uuid> --message "你好"
+  %(prog)s --session <uuid> --message "你好" --cwd /path/to/repo
   %(prog)s --session <uuid> --message "测试" --fork
+  %(prog)s --session <uuid> --message "写代码" --cwd E:\\CodeProject\\hcyx
   %(prog)s --session <uuid> --latest 10
         """,
     )
@@ -307,6 +340,12 @@ def main():
     parser.add_argument("--latest", type=int, metavar="N", help="查看该会话最近 N 条对话")
     parser.add_argument("--timeout", type=int, default=300, help="等待回复超时秒数（默认 300）")
     parser.add_argument("--ids-only", action="store_true", help="--list 时只输出会话 ID")
+    parser.add_argument("--cwd", type=str, default=None,
+                        help="运行命令的工作目录（重要：应设为目标代码仓库根目录，"
+                             "否则 Claude 读不到目标代码、也写不进去）")
+    parser.add_argument("--no-skip-permissions", action="store_true",
+                        help="不添加 --dangerously-skip-permissions（默认会添加，"
+                             "不加的话只有读权限，写文件/执行命令会被拦截）")
 
     args = parser.parse_args()
 
@@ -330,6 +369,8 @@ def main():
             args.message,
             fork=args.fork,
             timeout=args.timeout,
+            cwd=args.cwd,
+            skip_permissions=not args.no_skip_permissions,
         )
         sys.exit(0 if success else 1)
     else:
