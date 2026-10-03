@@ -6,7 +6,6 @@
 
 | Skill | 目录 | 用途 |
 |-------|------|------|
-| 分层解释法(Layered Explai | [`layered-explainer/`](layered-explainer/) | 分层解释法(Layered Explainer)——把"看不下去的长输出/听不懂的概念"按理解成本逐级升级成真正看得懂的 |
 | docx 转公众号（clz） | [`clz_docx_to_mp/`](clz_docx_to_mp/) | 把 docx 转成公众号图文并推送草稿箱：解析 → 渲染微信兼容 HTML → 推送。内容忠实保留只做样式；含横滑相册、GIF 动效、平台硬限制实测记录 |
 | 科研文献证据工程（ylx） | [`ylx_research_evidence_synthesis/`](ylx_research_evidence_synthesis/) | ylx·科研文献证据工程与 Related Work 写作：Claim-first（证据矩阵 + 逻辑树 + 综述），含输出样例 |
 | one-hub 用量监测（ylx） | [`ylx_onehub_usage_monitor/`](ylx_onehub_usage_monitor/) | 监测 one-hub API 用量与费用：总额度/已用/剩余、每日每月记账、各模型单价对比 |
@@ -33,6 +32,7 @@
 | CNKI 结果解析 | [`cnki-parse-results/`](cnki-parse-results/) | 解析搜索结果列表为结构化数据 |
 | 智能体对话管理 | [`agent-dialog_management/`](agent-dialog_management/) | Claude Code + Codex 对话统一列表/搜索/恢复/导出 |
 | 横纵分析法 | [`hv-analysis/`](hv-analysis/) | 系统性深度研究（产品/公司/概念/人物） |
+| 分层解释法 | [`layered-explainer/`](layered-explainer/) | 把看不下去的长输出/听不懂的概念按理解成本逐级升级：受控语言重写(ASD-STE100) → 一张图 → 单文件交互 HTML → Manim 视频。每级都带产物验证（跑 lint / 看渲染图 / 数页面节点 / ffprobe 抽帧），不以"命令成功"结案 |
 | 公众号长文写作 | [`khazix-writer/`](khazix-writer/) | 数字生命卡兹克公众号长文（四层自检） |
 | LaTeX 论文写作 | [`latex-paper-writing/`](latex-paper-writing/) | LaTeX 论文写作 / 编译 PDF |
 | MEMORY 整理 | [`memory-organizer/`](memory-organizer/) | MEMORY 笔记整理工作流 |
