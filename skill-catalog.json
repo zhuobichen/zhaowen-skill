@@ -29,6 +29,14 @@
       "upstream": null
     },
     {
+      "name": "claude-code-message",
+      "path": "claude-code-message/",
+      "display_name": "Claude Code Message",
+      "short_description": "Send messages to running Claude Code sessions and get replies",
+      "ui_metadata": "agents/openai.yaml",
+      "upstream": null
+    },
+    {
       "name": "clz_docx_to_mp",
       "path": "clz_docx_to_mp/",
       "display_name": "DOCX to WeChat Draft",

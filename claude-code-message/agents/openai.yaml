@@ -1,0 +1,4 @@
+interface:
+  display_name: "Claude Code Message"
+  short_description: "Send messages to running Claude Code sessions and get replies"
+  default_prompt: "Use $claude-code-message to list active Claude Code sessions, send a message to a target session, or inspect its latest conversation."
