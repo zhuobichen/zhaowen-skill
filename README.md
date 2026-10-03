@@ -32,7 +32,7 @@
 | CNKI 结果解析 | [`cnki-parse-results/`](cnki-parse-results/) | 解析搜索结果列表为结构化数据 |
 | 智能体对话管理 | [`agent-dialog_management/`](agent-dialog_management/) | Claude Code + Codex 对话统一列表/搜索/恢复/导出 |
 | 横纵分析法 | [`hv-analysis/`](hv-analysis/) | 系统性深度研究（产品/公司/概念/人物） |
-| 分层解释法 | [`layered-explainer/`](layered-explainer/) | 把看不下去的长输出/听不懂的概念按理解成本逐级升级：受控语言重写(ASD-STE100) → 一张图 → 单文件交互 HTML → Manim 视频。每级都带产物验证（跑 lint / 看渲染图 / 数页面节点 / ffprobe 抽帧），不以"命令成功"结案 |
+| 真正搞懂一个东西(不是"看着懂了"),两 | [`layered-explainer/`](layered-explainer/) | 真正搞懂一个东西(不是"看着懂了"),两个方向。方向A【读】把看不下去的长输出按理解成本逐级升级:受控语言重写(ASD- |
 | 公众号长文写作 | [`khazix-writer/`](khazix-writer/) | 数字生命卡兹克公众号长文（四层自检） |
 | LaTeX 论文写作 | [`latex-paper-writing/`](latex-paper-writing/) | LaTeX 论文写作 / 编译 PDF |
 | MEMORY 整理 | [`memory-organizer/`](memory-organizer/) | MEMORY 笔记整理工作流 |
