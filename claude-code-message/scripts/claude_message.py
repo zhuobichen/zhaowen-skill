@@ -241,11 +241,13 @@ def send_message(session_id, message, fork=False, timeout=300, cwd=None, skip_pe
     """
     binary = find_claude_binary()
 
-    cmd = [binary, "--resume", session_id, "--print", message]
-    if fork:
-        cmd.insert(2, "--fork-session")
+    # 按正确顺序构建命令：可选参数在前，--resume <id> --print <msg> 在后
+    cmd = [binary]
     if skip_permissions:
-        cmd.insert(2, "--dangerously-skip-permissions")
+        cmd.append("--dangerously-skip-permissions")
+    if fork:
+        cmd.append("--fork-session")
+    cmd.extend(["--resume", session_id, "--print", message])
 
     # Windows 下重定向 stdin 避免警告
     stdin = subprocess.DEVNULL
