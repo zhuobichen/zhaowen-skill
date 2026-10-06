@@ -36,7 +36,7 @@ AI 标题或第一条用户消息）、归档状态。
 # 先定义（建议每次执行前定义，避免拼错）
 DIALOG="$HOME/.claude/skills/agent-dialog_management/scripts/agent_dialog.py"
 # 或直接写绝对路径：
-#   C:\Users\chenlizhuo\.claude\skills\agent-dialog_management\scripts\agent_dialog.py
+#   C:\Users\<你的用户名>\.claude\skills\agent-dialog_management\scripts\agent_dialog.py
 ```
 
 | 用户意图 | 执行命令 |
@@ -48,6 +48,7 @@ DIALOG="$HOME/.claude/skills/agent-dialog_management/scripts/agent_dialog.py"
 | 导出 | `python <脚本> export <短ID> --out <路径.md>` |
 | 备注 | `python <脚本> note <短ID> <文本>` |
 | 收藏/取消 | `python <脚本> star <短ID>` |
+| 命名对话 | `python <脚本> rename <短ID> <名字>` |
 | 列出有备注的 | `python <脚本> notes` |
 | 查看正在运行的对话 | `python <脚本> running [--minutes 30]` |
 | 搜索早期输入历史 | `python <脚本> hist <关键词> [--limit 30]` |
@@ -122,9 +123,67 @@ python <脚本> notes                # 列出所有带备注/收藏的
 python <脚本> export 79b26d95 --out "E:/CodeProject/notes/对话.md"
 ```
 
+### 6. 命名对话（让对话认得出）
+
+```bash
+python <脚本> rename 79b26d95 "简历项目整理"
+```
+
+一个会话的名字有**两层存储**，本命令同时写两处：
+
+| 记录 | 作用 |
+|---|---|
+| `{"type":"custom-title","customTitle":...}` | `/resume` 选择器显示的名字；`claude --resume <名字>` 用它定位 |
+| `{"type":"agent-name","agentName":...}` | 会话**自身**的名字，重启时采用（同时体现在 `~/.claude/sessions/<pid>.json`） |
+
+> 实测（2026-10，Claude Code 2.1.288 / 2.1.291）：
+>
+> - **终端标签标题改不动**：运行中的会话把名字放在内存里（只写不读），改转录、改 session 文件都不会让标签变。
+>   要让标签立刻变，只能**在那个会话的窗口里敲 `/rename <名字>`**。
+> - **不保证永久**：运行中的会话会周期性重写自己的 `agent-name`；部分会话（重启后 `nameSource` 变回 `auto`）
+>   会在启动时**自动重新命名**，把写入覆盖掉。实测 3 个会话里 2 个成功、1 个被覆盖。
+> - **想钉住标签标题**：开标签时用
+>   `wt -w new new-tab -d <目录> --title "<名字>" --suppressApplicationTitle powershell -NoExit -EncodedCommand <b64>`
+>   —— `--suppressApplicationTitle` 之后，程序自己发的改名转义序列压不过它（WT 1.24 实测有效）。
+> - 会话内还有：`/rename`（改名，别名 `/name`）、`/color`（给输入栏上色）——官方对"同时开多个会话"的推荐组合；
+>   启动时命名用 `claude -n <名字>`。
+
+### 7. 会话之间发消息（跨会话 SendMessage）
+
+Claude Code 自带会话间消息通道：先列本机其它会话，再点对点发。
+
+| 动作 | 工具 |
+|---|---|
+| 列出本机其它会话（名字/状态/启动时间） | `ListAgents` |
+| 给某个会话发消息 | `SendMessage`（`to` 填会话名） |
+
+**默认行为：按「权限模式对等」送达** —— 发送方与接收方的权限模式类别相同（bypass↔bypass 或 prompting↔prompting）才自动投递；
+不一致就**扣住等对方批准**；发送方没声明模式而接收方是 bypass 时也扣住。
+
+用 settings 里的 `crossSessionInbound` 改这个行为（用户级 `~/.claude/settings.json`，对全机生效）：
+
+| 值 | 行为 |
+|---|---|
+| `"accept"` | **收到就直接投递**，不弹批准（显式值总是优先于默认的对等规则） |
+| `"hold"` | 扣住等人工审阅，不让 Claude 自动行动 |
+| `"refuse"` | 本会话直接拒收 |
+
+> 请注意几点（2026-10 实测 / 二进制核实）：
+> - **被扣住不等于送达**。会收到一条 `[Cross-session delivery notice]`（held / released / denied / expired 各一条）；
+>   **别把接口返回的 `success: true` 当成对方已收到** —— 那只表示消息进了对方收件箱。
+> - 企业 managed 设置或**仓库级设置**可以把它收紧成 `hold`，且用户自己的 `accept` 压不过（"a repo may only tighten"）。
+>   managed 现在不存在，但要知道有这条约束。
+> - 与**监控面板的「发指令」是两套机制**：面板走 `claude --resume <id> -p`，**另起一个进程**，不受权限模式约束；
+>   `crossSessionInbound` 只管会话间消息通道那条路。
+> - 会话内可 `/color` 给输入栏上色、`/rename` 改名，多个会话一眼区分（官方推荐组合）。
+> - **2026-10-06 双向闭环已实测**：设了 `accept` 后，bypass 会话发给 prompting 会话、对方回信到 bypass 会话，**两向都免批准直接送达**；
+>   回信带 `from-mode="prompting"`（可据此看出对方的权限模式类别）。
+> - 走网关（`ANTHROPIC_BASE_URL` 指向中转）的会话启动时会弹一条 auto 模式分类器计费的提示框，**会挡住消息投递**；
+>   按 Enter 即写入 `~/.claude.json` 的 `autoModeClassifierBillingNoticeAcknowledgedAt`，之后不再弹。
+
 ## 边界与约定
 
-- **只读用户数据**：扫描/读取 JSONL 从不修改；唯一写入的是本 skill 自己的 `state/notes.json`。
+- **默认只读用户数据**：扫描/读取 JSONL 从不修改。skill 自身的写入只有两处 —— `state/notes.json`（备注/收藏），以及 `rename` 命令（按你明确要求往转录追加命名记录）。
 - **Codex 会话管理**（归档/删除）用官方命令：`codex archive <id>` / `codex delete <id>`，
   skill 不做绕过。
 

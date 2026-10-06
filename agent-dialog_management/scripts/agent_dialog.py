@@ -147,7 +147,7 @@ def scan_claude():
                         if not ai_title:
                             ai_title = d.get("aiTitle") or None
                     elif t == "custom-title":
-                        ai_title = d.get("title") or ai_title
+                        ai_title = d.get("customTitle") or ai_title
                     elif t == "user":
                         if cwd is None:
                             cwd = d.get("cwd")
@@ -583,7 +583,7 @@ def resume_command(rec):
     - 命令用 `-EncodedCommand`（base64 UTF-16LE）：**分号在 wt -Command 参数里
       会被拆开**导致 claude 不启动，编码后安全
     """
-    wt = r'C:\Users\chenlizhuo\AppData\Local\Microsoft\WindowsApps\wt.exe'
+    wt = str(Path(os.environ.get("LOCALAPPDATA", "")) / "Microsoft" / "WindowsApps" / "wt.exe")
     sid = rec["id"]
     cwd = rec.get("cwd") or "."
     if rec["agent"] == "claude":
@@ -739,6 +739,42 @@ def shutdown_claude(force=False):
     print("更新后可用以下命令逐个重新打开（新版本 resume，会话内容不丢）:")
     for i, s in enumerate(sessions, 1):
         print(f"  {i}. cd /d \"{s['cwd']}\" && claude --resume {s['sessionId']}")
+
+
+def rename_session(rec, new_name):
+    """给对话命名：写入 custom-title 与 agent-name。
+
+    实测结论(2026-10)：
+    - custom-title → /resume 选择器与 claude --resume <名字> 用它
+    - agent-name   → 会话自身的名字，重启时采用
+    - 运行中的会话会周期性重写自己的名字，部分会话重启后还会被自动命名覆盖，不保证永久生效
+    - 终端标签标题只有它自己改得动：在该会话里敲 /rename
+    - 想钉住标签标题：wt new-tab --title "<名字>" --suppressApplicationTitle
+    """
+    new_name = str(new_name).strip()
+    if not new_name:
+        print("名字不能为空", file=sys.stderr)
+        return
+    if rec.get("agent") != "claude":
+        print("Codex 会话暂不支持在 skill 内改名（用官方 codex 命令）", file=sys.stderr)
+        return
+    fp = Path(rec.get("_file", ""))
+    if not fp.is_file():
+        print("找不到转录文件: %s" % fp, file=sys.stderr)
+        return
+    sid = rec["id"]
+    with open(fp, "rb") as f:
+        f.seek(-1, 2)
+        need_nl = f.read(1) not in (bytes([10]),)
+    with open(fp, "a", encoding="utf-8") as f:
+        if need_nl:
+            f.write(chr(10))
+        for t, key in (("custom-title", "customTitle"), ("agent-name", "agentName")):
+            f.write(json.dumps({"type": t, key: new_name, "sessionId": sid}, ensure_ascii=False) + chr(10))
+    print("已命名 %s -> %s" % (sid[:8], new_name))
+    print("  · custom-title : /resume 选择器、claude --resume <名字>")
+    print("  · agent-name   : 会话自身的名字，重启后采用")
+    print("  ⚠ 正在运行的会话，标签标题要它自己才改得动（在那个窗口敲 /rename，或开标签时用 --title 钉住）")
 
 
 def tail_messages(rec, n=6):
@@ -1054,6 +1090,9 @@ def main():
 
     p = sub.add_parser("resume-cmd", help="输出恢复命令")
     p.add_argument("id")
+    p = sub.add_parser("rename", help="给对话命名（写入 /resume 名称与会话名）")
+    p.add_argument("id")
+    p.add_argument("name", nargs="+")
 
     p = sub.add_parser("hist", help="搜索早期输入历史（history.jsonl，2025-11至今）")
     p.add_argument("pattern")
@@ -1217,6 +1256,8 @@ def main():
         print(f"{'已收藏' if entry['starred'] else '已取消收藏'} {rec['id'][:8]}")
     elif args.cmd == "resume-cmd":
         print(resume_command(rec))
+    elif args.cmd == "rename":
+        rename_session(rec, " ".join(args.name))
 
 
 if __name__ == "__main__":
