@@ -55,6 +55,7 @@ DIALOG="$HOME/.claude/skills/agent-dialog_management/scripts/agent_dialog.py"
 | 启动监控面板 | `python <脚本> serve [--port 8765] [--no-browser]` |
 | 关闭所有 Claude 会话 | `python <脚本> shutdown [--yes]`（更新 claude 后重启用，输出恢复清单） |
 | 查看数据源 | `python <脚本> paths` |
+| 列出/关闭终端标签（含死标签） | `powershell -NoProfile -File <skill>/scripts/tabs.ps1 [-Escape] [-Close "<通配>"]` |
 
 **ID 支持前缀匹配**：`show 79b26d95` 或完整 UUID 均可。
 
@@ -180,6 +181,44 @@ Claude Code 自带会话间消息通道：先列本机其它会话，再点对�
 >   回信带 `from-mode="prompting"`（可据此看出对方的权限模式类别）。
 > - 走网关（`ANTHROPIC_BASE_URL` 指向中转）的会话启动时会弹一条 auto 模式分类器计费的提示框，**会挡住消息投递**；
 >   按 Enter 即写入 `~/.claude.json` 的 `autoModeClassifierBillingNoticeAcknowledgedAt`，之后不再弹。
+
+### 8. 会话与标签的「管理动作」（盘点 / 重启 / 清理）
+
+> 这一类是**管理**动作，不是分析：谁负责哪条线、叫什么名、开着没有、要交接什么。
+
+**看窗口里到底有哪些标签。** 注意：**死标签没有进程**，从进程侧根本看不到它们 ——
+必须用 UI 自动化：
+
+```powershell
+# 脚本在 skill 的 scripts/ 下；ASCII-only（含中文的 .ps1 在本机会被按 GBK 读而崩）
+powershell -NoProfile -File <skill>\scripts\tabs.ps1             # 列出所有 WT 窗口的标签
+powershell -NoProfile -File <skill>\scripts\tabs.ps1 -Escape     # 非 ASCII 转 \uXXXX，GBK 控制台下可读
+powershell -NoProfile -File <skill>\scripts\tabs.ps1 -Close "Deepseek*-B"   # 关掉标题匹配的标签
+powershell -NoProfile -File <skill>\scripts\tabs.ps1 -Close "Deepseek*-B" -Window 527458  # 限定窗口
+```
+
+匹配用的是 PowerShell 通配符，**保持 ASCII**：`*` 能盖住标题里的中文。
+
+**死标签是怎么来的。** 杀掉标签里的 shell 进程**不会**让标签消失 —— WT 默认
+`closeOnExit: graceful`，强杀是非零退出，标签会一直挂着「process exited」。
+这种标签**没有任何进程**，所以只能点它自己的关闭按钮：`tabs.ps1 -Close` 就是干这个的。
+
+**重启一个会话的正确顺序**（踩过坑，别跳步）：
+
+1. **先核对进程树**：取「当前会话的祖先集合」与「目标会话的祖先集合」，**交集必须为空**才动手。
+   我曾只看父子链就断定"我不在它那棵树里"，结果 `taskkill /F /T` 把当前会话一起杀了 ——
+   唯一线索是 Bash 退出码 **137**。
+2. `taskkill /F /T /PID <目标标签的 shell>` —— shell 是 claude 的**父进程**
+   （先从 `~/.claude/sessions/<pid>.json` 拿 pid，再取父进程）。
+3. 用 `resume-cmd` 那套重开（`wt new-tab` + `-EncodedCommand`）。
+4. 清掉留死的旧标签：`tabs.ps1 -Close "<旧标题>"`。
+
+**给标签钉标题的副作用**（值得知道）：用 `wt new-tab --title "X" --suppressApplicationTitle`
+开的标签，标题**是焊死的** —— 好处是不被自动改名覆盖，坏处是**改名后标签不跟着变**，
+而且在会话里敲 `/rename` 也改不动它，**只能重开**。重开时想让它跟会话名走，就去掉这两个参数。
+
+**交接给别的会话。** 推进某条线时，把任务和**已有产物的路径**一起发给负责那条线的会话
+（`SendMessage`，见第 7 节），别自己接着做 —— 结论散在你这边，那条线的上下文就丢了。
 
 ## 边界与约定
 
