@@ -1,0 +1,4 @@
+interface:
+  display_name: "Large Document AI Review"
+  short_description: "Review huge PDFs/Word docs with outline location, evidence chains, prompt contracts, verdict fallback, and process locks"
+  default_prompt: "Use $large-doc-ai-review to design or audit a large-document AI review pipeline: outline-based evidence location, prompt contracts, verdict tiers with human-review boundaries, confidence fallback, and async process locks."

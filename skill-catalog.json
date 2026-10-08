@@ -165,6 +165,14 @@
       "upstream": null
     },
     {
+      "name": "large-doc-ai-review",
+      "path": "large-doc-ai-review/",
+      "display_name": "Large Document AI Review",
+      "short_description": "Patterns for large-document AI review: outline-based evidence location, prompt contracts, verdict tiers with human-review boundaries, confidence fallback, process locks",
+      "ui_metadata": "agents/openai.yaml",
+      "upstream": null
+    },
+    {
       "name": "latex-paper-writing",
       "path": "latex-paper-writing/",
       "display_name": "LaTeX Paper Writing",
