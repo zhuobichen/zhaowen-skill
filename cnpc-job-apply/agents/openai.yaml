@@ -1,0 +1,4 @@
+interface:
+  display_name: "CNPC Job Application"
+  short_description: "Fill the CNPC campus recruitment application form, never submit"
+  default_prompt: "Use $cnpc-job-apply to fill my CNPC campus recruitment application step by step, save the signed commitment sheet, and stop before submitting."

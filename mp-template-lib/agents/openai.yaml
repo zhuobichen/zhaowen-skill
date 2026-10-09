@@ -1,0 +1,4 @@
+interface:
+  display_name: "WeChat Template Library"
+  short_description: "Reverse-engineer a published article into a reusable layout theme"
+  default_prompt: "Use $mp-template-lib to reverse-engineer this article's layout into a reusable theme with design tokens and a manual review checklist."

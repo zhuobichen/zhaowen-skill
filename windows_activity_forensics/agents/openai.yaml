@@ -1,0 +1,4 @@
+interface:
+  display_name: "Windows Activity Forensics"
+  short_description: "Check whether this PC was used, remotely accessed, or browsed through by someone else"
+  default_prompt: "Use $windows_activity_forensics to check whether this machine was used or remotely accessed during a given period, and report a plain-language verdict first."

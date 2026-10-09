@@ -133,6 +133,14 @@
       "upstream": null
     },
     {
+      "name": "cnpc-job-apply",
+      "path": "cnpc-job-apply/",
+      "display_name": "CNPC Job Application",
+      "short_description": "Fill the CNPC campus recruitment application form without submitting",
+      "ui_metadata": "agents/openai.yaml",
+      "upstream": null
+    },
+    {
       "name": "convert-image-to-jpg",
       "path": "convert-image-to-jpg/",
       "display_name": "Convert Image to JPG",
@@ -157,6 +165,14 @@
       "upstream": null
     },
     {
+      "name": "job-form-autofill",
+      "path": "job-form-autofill/",
+      "display_name": "Job Form Autofill",
+      "short_description": "Fill job application forms from a resume without submitting",
+      "ui_metadata": "agents/openai.yaml",
+      "upstream": null
+    },
+    {
       "name": "khazix-writer",
       "path": "khazix-writer/",
       "display_name": "Khazix Long-Form Writer",
@@ -173,6 +189,14 @@
       "upstream": null
     },
     {
+      "name": "layered-explainer",
+      "path": "layered-explainer/",
+      "display_name": "Layered Explainer",
+      "short_description": "Escalate reading cost to understand hard material, or learn it by teaching back",
+      "ui_metadata": "agents/openai.yaml",
+      "upstream": null
+    },
+    {
       "name": "latex-paper-writing",
       "path": "latex-paper-writing/",
       "display_name": "LaTeX Paper Writing",
@@ -185,6 +209,14 @@
       "path": "memory-organizer/",
       "display_name": "Memory Organizer",
       "short_description": "Organize MEMORY notes into linked knowledge",
+      "ui_metadata": "agents/openai.yaml",
+      "upstream": null
+    },
+    {
+      "name": "mp-template-lib",
+      "path": "mp-template-lib/",
+      "display_name": "WeChat Template Library",
+      "short_description": "Reverse-engineer a published WeChat article into a reusable layout theme",
       "ui_metadata": "agents/openai.yaml",
       "upstream": null
     },
@@ -241,6 +273,14 @@
       "path": "wechat-claude-code/",
       "display_name": "WeChat Claude Code Bridge",
       "short_description": "Chat with Claude Code through WeChat",
+      "ui_metadata": "agents/openai.yaml",
+      "upstream": null
+    },
+    {
+      "name": "windows_activity_forensics",
+      "path": "windows_activity_forensics/",
+      "display_name": "Windows Activity Forensics",
+      "short_description": "Check whether this PC was used, remotely accessed, or browsed through by someone else",
       "ui_metadata": "agents/openai.yaml",
       "upstream": null
     },

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Layered Explainer"
+  short_description: "Understand hard material by escalating reading cost, or learn by teaching back"
+  default_prompt: "Use $layered-explainer to help me actually understand this: pick the direction (escalate the reading difficulty, or learn it by teaching it back), then verify the artifact at every step."
