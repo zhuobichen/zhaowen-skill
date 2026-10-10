@@ -1,0 +1,181 @@
+{
+  "name": "orisynth2026",
+  "source": "https://mp.weixin.qq.com/s/pH2JKHj9Rno1JWuIq1cZWA",
+  "title": "最近GitHub最离谱的一批Skill，真的太好玩了",
+  "body_chars": 36308,
+  "tokens": {
+    "colors": [
+      {
+        "value": "rgb(47, 118, 195)",
+        "count": 6
+      },
+      {
+        "value": "rgb(250, 83, 89)",
+        "count": 5
+      },
+      {
+        "value": "rgb(51, 51, 51)",
+        "count": 3
+      },
+      {
+        "value": "rgb(178, 178, 178)",
+        "count": 2
+      },
+      {
+        "value": "rgb(64, 188, 191)",
+        "count": 1
+      }
+    ],
+    "font_families": [],
+    "font_sizes": [
+      {
+        "value": "17px",
+        "count": 8
+      },
+      {
+        "value": "18px",
+        "count": 6
+      },
+      {
+        "value": "36px",
+        "count": 5
+      }
+    ],
+    "line_heights": [
+      {
+        "value": "1.92em",
+        "count": 59
+      },
+      {
+        "value": "1.6em",
+        "count": 7
+      },
+      {
+        "value": "2.72em",
+        "count": 1
+      }
+    ],
+    "letter_spacing": [],
+    "border_radius": [],
+    "box_shadow": [],
+    "padding": [],
+    "margin": []
+  },
+  "components": {
+    "images": {
+      "label": "图片",
+      "count": 12
+    },
+    "mp_profile": {
+      "label": "公众号名片",
+      "count": 2
+    },
+    "mp_other": {
+      "label": "其他 <mp*>（多为无意义标记，如 mp-style-type）",
+      "count": 1,
+      "note": "原始 <mp*> 共 3 个，其中已识别的嵌入组件 2 个"
+    },
+    "blockquote": {
+      "label": "原生引用块 blockquote",
+      "count": 3,
+      "note": ""
+    },
+    "accent_text": {
+      "label": "强调色文字（strong/span 带彩色）",
+      "count": 12,
+      "note": "18 个 strong/span 带 color 声明，其中 6 个最终是黑/灰/透明被剔除"
+    }
+  },
+  "structure": {
+    "tags": {
+      "span": 218,
+      "p": 80,
+      "br": 42,
+      "section": 32,
+      "img": 12,
+      "b": 6,
+      "mp": 3,
+      "blockquote": 3,
+      "div": 1
+    },
+    "borders": [],
+    "border_sides": [],
+    "backgrounds": [],
+    "displays": [
+      {
+        "value": "none",
+        "count": 1
+      }
+    ],
+    "flex_direction": [],
+    "text_align": [
+      {
+        "value": "center",
+        "count": 19
+      },
+      {
+        "value": "justify",
+        "count": 3
+      }
+    ],
+    "small_elements": [
+      {
+        "value": "60px",
+        "count": 15
+      }
+    ]
+  },
+  "generator": [],
+  "fingerprint": {
+    "fonts": [],
+    "colors": [
+      "rgb(47,118,195)",
+      "rgb(250,83,89)",
+      "rgb(64,188,191)"
+    ]
+  },
+  "duplicate_of": null,
+  "generated_by": "mp-template-lib/extract_theme.py",
+  "note": "数值经实测抠取；结构必须靠 preview.png 人工复核，见 reference.md",
+  "review": {
+    "reviewed_at": "2026-10-08",
+    "method": "读 sample.html 原始标签定位（text-decoration:underline / font-size:36px / <img 逐个数）+ 对照 preview.png 整页图",
+    "verdict": "数值与组件计数属实；无 CSS 装饰（border/background/background-image/border-radius/box-shadow 声明全为 0）属实；但章节头的结构脚本未记录",
+    "key_component_not_captured": {
+      "name": "章节头（36px 红粗下划线序号 + 18px 英文项目名，居中）",
+      "count": 5,
+      "why_parser_missed": [
+        "序号靠 span 上的 text-decoration:underline，既不是 border 也不是背景色；accent_text 只按「span 带彩色」归类，不记 text-decoration，所以结构信息丢了",
+        "英文名是嵌套 span 的双层颜色（外层 rgb(178,178,178) 被内层 rgb(51,51,51) 覆盖），单看 color 计数看不出来",
+        "标题是 <p> 不是 h1~h4，按标签统计也漏"
+      ],
+      "markup": "<p style=\"margin-bottom:16px; text-align:center;\"><span style=\"font-size:36px;\"><span style=\"color:rgb(250,83,89); font-weight:bold; text-decoration:underline;\">01</span><span style=\"color:rgb(178,178,178); font-size:18px;\"><span style=\"color:rgb(51,51,51);\">Impeccable</span></span></span></p>"
+    },
+    "underline_uses": {
+      "total": 15,
+      "breakdown": {
+        "章节序号 01-05（红底粗体下划线）": 5,
+        "GitHub 项目链接（蓝 rgb(47,118,195)）": 5,
+        "「之前」「之后」对比标签（无颜色 + 粗体）": 2,
+        "「项目包含」（青 rgb(64,188,191) + 粗体）": 1,
+        "book-to-skill（02 的项目名，无颜色）": 1
+      },
+      "caveat": "同一个号内部也不统一：只有 02 的项目名带下划线，其余分区不带。逐处照抄，别归纳成规则。"
+    },
+    "images_checked": {
+      "count": 12,
+      "verified": "data-src 12 处全是 mmbiz 真链；src 有 10 处是懒加载的透明 SVG 占位、2 处已回填真实 src。6 张 60px（版头 logo + 每分区一个小图标）+ 6 张 677px（5 张项目截图 + 版尾品牌图），与截图逐张对得上。"
+    },
+    "blockquote": "3 个原生 blockquote，style 为空、无任何自定义样式，外观靠微信默认灰字缩进",
+    "checklist_answers": {
+      "卡片": "无（圆角/阴影/边框声明全为 0）",
+      "章节标题": "居中一行；色块里是数字（36px 红粗 + 下划线），不是左右两端布局",
+      "引用块": "无左侧竖线、无圆角，原生 blockquote 默认样式",
+      "标签/胶囊": "无",
+      "序号": "数字（36px 两位），不是圆点也不是方块",
+      "正文": "17px / line-height 1.92em；小标题居中、正文部分两端对齐",
+      "少见组件": "5 种下划线用法（见 underline_uses）"
+    },
+    "self_inflicted_pitfall": "用 \\bsrc= 抽图片属性时同时匹配到 data-src=，第一遍误判「12 张 src 全是真图」。判据应为 (^|\\s)src=。"
+  }
+}

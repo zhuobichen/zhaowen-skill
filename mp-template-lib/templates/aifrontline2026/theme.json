@@ -1,0 +1,409 @@
+{
+  "name": "aifrontline2026",
+  "source": "https://mp.weixin.qq.com/s/kL6IVZEwfI3dAtCg96didg",
+  "title": "刚刚，DeepSeek Harness负责人崔添翼评价Claude新功能Mods：与DSH殊途同归，但开放范围截然不同",
+  "body_chars": 131785,
+  "tokens": {
+    "colors": [
+      {
+        "value": "rgba(0, 0, 0, 0)",
+        "count": 242
+      },
+      {
+        "value": "rgb(74, 74, 74)",
+        "count": 77
+      },
+      {
+        "value": "rgb(136, 136, 136)",
+        "count": 20
+      },
+      {
+        "value": "rgb(63, 63, 63)",
+        "count": 8
+      },
+      {
+        "value": "rgb(0, 179, 139)",
+        "count": 8
+      },
+      {
+        "value": "rgb(66, 133, 244)",
+        "count": 7
+      },
+      {
+        "value": "rgb(145, 145, 145)",
+        "count": 2
+      },
+      {
+        "value": "rgb(0, 179, 138)",
+        "count": 2
+      },
+      {
+        "value": "#3f3f3f",
+        "count": 2
+      },
+      {
+        "value": "rgb(2, 30, 170)",
+        "count": 1
+      }
+    ],
+    "font_families": [
+      {
+        "value": "Avenir, -apple-system-font, 微软雅黑, sans-serif",
+        "count": 98
+      },
+      {
+        "value": "Avenir,-apple-system-font,微软雅黑,sans-serif",
+        "count": 2
+      }
+    ],
+    "font_sizes": [
+      {
+        "value": "16px",
+        "count": 84
+      },
+      {
+        "value": "14px",
+        "count": 9
+      },
+      {
+        "value": "20px",
+        "count": 8
+      },
+      {
+        "value": "32px",
+        "count": 4
+      },
+      {
+        "value": "17px",
+        "count": 1
+      },
+      {
+        "value": "12px",
+        "count": 1
+      },
+      {
+        "value": "18px",
+        "count": 1
+      }
+    ],
+    "line_heights": [
+      {
+        "value": "27px",
+        "count": 71
+      },
+      {
+        "value": "35px",
+        "count": 4
+      },
+      {
+        "value": "1.6em",
+        "count": 3
+      },
+      {
+        "value": "1em",
+        "count": 2
+      }
+    ],
+    "letter_spacing": [
+      {
+        "value": "0.544px",
+        "count": 29
+      }
+    ],
+    "border_radius": [],
+    "box_shadow": [],
+    "padding": [
+      {
+        "value": "0px",
+        "count": 172
+      },
+      {
+        "value": "23px 8px 0px",
+        "count": 72
+      },
+      {
+        "value": "0px 0px 0px 22px",
+        "count": 4
+      },
+      {
+        "value": "0px 0px 0px 14px",
+        "count": 2
+      }
+    ],
+    "margin": [
+      {
+        "value": "0px",
+        "count": 236
+      },
+      {
+        "value": "40px 8px 0px",
+        "count": 4
+      },
+      {
+        "value": "0px 0px 10px",
+        "count": 4
+      },
+      {
+        "value": "13px 0px 0px",
+        "count": 2
+      },
+      {
+        "value": "0px 0px 24px",
+        "count": 2
+      },
+      {
+        "value": "0",
+        "count": 2
+      },
+      {
+        "value": "30px 0px 0px 8px",
+        "count": 1
+      },
+      {
+        "value": "8px 0px",
+        "count": 1
+      }
+    ]
+  },
+  "components": {
+    "bgimg_rule": {
+      "label": "背景图横线（图被拉成细长条当分隔线）",
+      "count": 4,
+      "sample_style": "-webkit-tap-highlight-color:rgba(0, 0, 0, 0);margin:40px 8px 0px;padding:0px;outline:0px;max-width:100%;box-sizing:border-box;overflow-wrap:break-word !important;font-family:Avenir, -apple-system-font, 微软雅黑, sans-serif;font-style:normal;font-variant-ligatures:normal;font-variant-caps:normal;font-weight:400;letter-spacing:0.544px;orphans:2;text-indent:0px;text-transform:none;widows:2;word-spacing:0",
+      "variants": [
+        {
+          "style": "-webkit-tap-highlight-color:rgba(0, 0, 0, 0);margin:40px 8px 0px;padding:0px;outline:0px;max-width:100%;box-sizing:border-box;overflow-wrap:break-word !important;font-family:Avenir, -apple-system-font, 微软雅黑, sans-serif;font-style:normal;font-variant-ligatures:normal;font-variant-caps:normal;font-weight:400;letter-spacing:0.544px;orphans:2;text-indent:0px;text-transform:none;widows:2;word-spacing:0",
+          "n": 4
+        }
+      ]
+    },
+    "bgimg_any": {
+      "label": "挂了背景图的元素（原始事实，未判断用途）",
+      "count": 10,
+      "note": "其中被判为「横线」的 4 个，base64 data URI 0 个（多为空白占位图，不是构件）；其余多为正常配图或平台家具"
+    },
+    "svg_real": {
+      "label": "SVG（已滤掉空占位符与圆角补角料）",
+      "count": 0,
+      "note": "原始 <svg> 共 4 个，其中无装饰意义 4 个"
+    },
+    "images": {
+      "label": "图片",
+      "count": 11
+    },
+    "lists": {
+      "label": "原生列表 ul/ol（含 li）",
+      "count": 13,
+      "note": "ul=5 ol=0 li=13"
+    },
+    "strong": {
+      "label": "粗体引词 strong",
+      "count": 33
+    },
+    "code": {
+      "label": "行内代码 code",
+      "count": 4
+    },
+    "article_link": {
+      "label": "正文文章链接（纯文本站内链接）",
+      "count": 6,
+      "note": "class 含 mp_article_text_link；是文字链接，不是卡片"
+    },
+    "mp_other": {
+      "label": "其他 <mp*>（多为无意义标记，如 mp-style-type）",
+      "count": 1,
+      "note": "原始 <mp*> 共 1 个，其中已识别的嵌入组件 0 个"
+    },
+    "headings": {
+      "label": "标题元素 h1~h4",
+      "count": 2,
+      "note": "h3=2"
+    },
+    "accent_text": {
+      "label": "强调色文字（strong/span 带彩色）",
+      "count": 11,
+      "note": "36 个 strong/span 带 color 声明，其中 25 个最终是黑/灰/透明被剔除"
+    }
+  },
+  "structure": {
+    "tags": {
+      "span": 253,
+      "div": 125,
+      "p": 72,
+      "strong": 33,
+      "section": 29,
+      "i": 25,
+      "a": 19,
+      "button": 15,
+      "li": 13,
+      "img": 11,
+      "ul": 5,
+      "svg": 4,
+      "path": 4,
+      "code": 4,
+      "br": 3,
+      "h3": 2,
+      "ne": 1,
+      "input": 1
+    },
+    "borders": [],
+    "border_sides": [],
+    "backgrounds": [
+      {
+        "value": "rgb(255, 255, 255)",
+        "count": 28
+      },
+      {
+        "value": "url(&quot",
+        "count": 5
+      },
+      {
+        "value": "rgb(0, 0, 0)",
+        "count": 1
+      }
+    ],
+    "displays": [
+      {
+        "value": "none",
+        "count": 50
+      },
+      {
+        "value": "block",
+        "count": 10
+      },
+      {
+        "value": "inline",
+        "count": 3
+      },
+      {
+        "value": "inline-block",
+        "count": 2
+      },
+      {
+        "value": "flex",
+        "count": 1
+      }
+    ],
+    "flex_direction": [
+      {
+        "value": "row",
+        "count": 1
+      }
+    ],
+    "text_align": [
+      {
+        "value": "justify",
+        "count": 73
+      },
+      {
+        "value": "left",
+        "count": 10
+      },
+      {
+        "value": "center",
+        "count": 4
+      },
+      {
+        "value": "right",
+        "count": 1
+      }
+    ],
+    "small_elements": [
+      {
+        "value": "27px",
+        "count": 71
+      },
+      {
+        "value": "0px",
+        "count": 24
+      },
+      {
+        "value": "35px",
+        "count": 5
+      },
+      {
+        "value": "51px",
+        "count": 3
+      }
+    ]
+  },
+  "generator": [],
+  "fingerprint": {
+    "fonts": [
+      "avenir, -apple-system-font, 微软雅黑, sans-serif",
+      "avenir,-apple-system-font,微软雅黑,sans-serif"
+    ],
+    "colors": [
+      "rgb(0,179,139)",
+      "rgb(66,133,244)",
+      "rgb(0,179,138)"
+    ]
+  },
+  "duplicate_of": null,
+  "generated_by": "mp-template-lib/extract_theme.py",
+  "note": "数值经实测抠取；结构必须靠 preview.png 人工复核，见 reference.md",
+  "review": {
+    "reviewed_at": "2026-10-03",
+    "method": "读 sample.html 原始标签 + 扫 preview.png 绿色像素定位后逐处放大对照",
+    "verdict": "数值全部属实；漏 1 类主构件、误报 1 类",
+    "missing_component": {
+      "name": "章节标题（数字 + 青绿标题 + 背景图横线）",
+      "count": 4,
+      "why_parser_missed": [
+        "主题横线不是 CSS 边框或背景色，而是一张背景 PNG 被拉成 100% x 6px —— 任何 CSS 数值解析器都看不见它",
+        "标题不是 h1~h4，而是 <p> 包 <span>；因此 headings 只统计到 2 个 h3，与真实章节数 4 不符"
+      ],
+      "markup": "<p style=\"margin:40px 8px 0; font-size:20px; color:rgb(0,179,139); line-height:35px; background-image:url(<同一张 PNG，4 处相同>); background-repeat:no-repeat; background-position:left 28px; background-size:100% 6px;\"><span style=\"display:block; padding:0 0 0 22px; font-size:32px;\">1</span><section><span style=\"color:rgb(0,179,139); font-size:20px; font-weight:400; letter-spacing:0.544px;\">标题文字</span></section></p>",
+      "visual": "绿色粗短线 + 小绿方块 + 浅灰长线（一张图内的三件）；32px 数字骑在绿线上方；20px 青绿标题在下方",
+      "detector_suggestion": "background-size 为细长条（高 <= 8px）即视为「线」；再结合 font-size >= 18px 判为标题横线"
+    },
+    "false_positive": {
+      "name": "svg_real 报出的 4 个真 SVG",
+      "actual": "全部是 viewBox=\"0 0 2 2\" / width=height=4px / class 含 border_filler_* 的圆角补白，微信编辑器画边框的角料，非装饰",
+      "why": "svg_real 只滤掉了 width:0 的占位符，没滤掉小尺寸角料",
+      "detector_suggestion": "再加一条：viewBox 极小 且 宽高 <= 6px，或 class 含 border_filler -> 排除"
+    },
+    "real_components": {
+      "paragraph": {
+        "count": 72,
+        "style": "font-size:16px; line-height:27px; color:rgb(74,74,74); text-align:justify; letter-spacing:0.544px; padding:23px 8px 0; white-space:pre-line; font-family:Avenir, -apple-system-font, 微软雅黑, sans-serif"
+      },
+      "section_heading": {
+        "count": 4,
+        "style": "见 missing_component"
+      },
+      "list": {
+        "count": 5,
+        "style": "原生 <ul style=\"list-style-type: disc;\"> + <li><p>，p 的样式与正文段落完全相同",
+        "item_shape": "粗体引导词「……：」+ 说明文字（引导词用 <span style=\"font-weight:bold\"> 包，不是 <strong>）"
+      },
+      "accent_text": {
+        "count": 175,
+        "colors": [
+          "rgb(0, 179, 139) 青绿（DeepSeek 品牌绿，主强调色）",
+          "rgb(66, 133, 244) 谷歌蓝"
+        ]
+      },
+      "bold": {
+        "count": 33,
+        "style": "<strong> 纯粗体，无颜色、无底色"
+      },
+      "inline_code": {
+        "count": 4,
+        "style": "<code><span> —— 没有任何自定义样式，渲染为浏览器默认等宽"
+      },
+      "subheading_h5": {
+        "count": 1,
+        "style": "font-size:18px; font-weight:500; background:url(...) 背景图小标题（又一处图代替 CSS）"
+      },
+      "images": {
+        "count": 11,
+        "style": "普通 <img>，自带 CDN 链接"
+      }
+    },
+    "excluded_as_platform_furniture": [
+      "<span class=\"weui-wa-hotarea video_full-screen__account-avatar\"> 带背景图的 span x2 —— 微信视频卡片的头像，属于平台外壳",
+      "<mp-style-type> —— 无内容的样式标记"
+    ]
+  }
+}

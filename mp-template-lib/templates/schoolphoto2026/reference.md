@@ -40,8 +40,12 @@
 | **图片** | 112 | `` |
 | **粗体引词 strong** | 66 | `` |
 | **细横条（高<=4px + 纯色底）** | 49 | `background-color:rgba(163, 236, 66, 0.19);height:2px;box-sizing:border-box` |
+| **正文文章链接（纯文本站内链接）** | 10 | `` |
+| **挂了背景图的元素（原始事实，未判断用途）** | 5 | `` |
 | **卡片外层（圆角 + 阴影）** | 1 | `display:inline-block;width:95%;vertical-align:top;align-self:flex-start;flex:0 0 auto;height:auto;box-shadow:rgba(0, 0, 0, 0.23) 0px 0px 3px 0px;padding:20px;bo` |
 | **描边盒（1-3px 实线边框）** | 1 | `padding:5px;box-sizing:border-box;border:2px solid rgb(0, 0, 0);max-width:100%;text-align:justify` |
+| **其他 <mp*>（多为无意义标记，如 mp-style-type）** | 1 | `` |
+| **SVG（已滤掉空占位符与圆角补角料）** | 0 | `` |
 
 ## 四、结构事实（未预设组件签名）
 

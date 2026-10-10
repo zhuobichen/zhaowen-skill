@@ -204,10 +204,15 @@
     ]
   },
   "components": {
+    "bgimg_any": {
+      "label": "挂了背景图的元素（原始事实，未判断用途）",
+      "count": 19,
+      "note": "其中被判为「横线」的 0 个，base64 data URI 0 个（多为空白占位图，不是构件）；其余多为正常配图或平台家具"
+    },
     "svg_real": {
-      "label": "SVG（已滤掉 width:0 的编辑器占位符）",
+      "label": "SVG（已滤掉空占位符与圆角补角料）",
       "count": 13,
-      "note": "原始 <svg> 共 40 个，其中空占位符 27 个"
+      "note": "原始 <svg> 共 40 个，其中无装饰意义 27 个"
     },
     "images": {
       "label": "图片",
@@ -227,6 +232,16 @@
     "strong": {
       "label": "粗体引词 strong",
       "count": 27
+    },
+    "article_link": {
+      "label": "正文文章链接（纯文本站内链接）",
+      "count": 10,
+      "note": "class 含 mp_article_text_link；是文字链接，不是卡片"
+    },
+    "mp_other": {
+      "label": "其他 <mp*>（多为无意义标记，如 mp-style-type）",
+      "count": 1,
+      "note": "原始 <mp*> 共 1 个，其中已识别的嵌入组件 0 个"
     }
   },
   "structure": {
@@ -383,8 +398,7 @@
       }
     ]
   },
-  "generated_by": "mp-template-lib/extract_theme.py",
-  "note": "数值经实测抠取；结构必须靠 preview.png 人工复核，见 reference.md",
+  "generator": [],
   "fingerprint": {
     "fonts": [
       "pingfangsc-light"
@@ -395,5 +409,7 @@
       "#f6f6f6"
     ]
   },
-  "duplicate_of": null
+  "duplicate_of": null,
+  "generated_by": "mp-template-lib/extract_theme.py",
+  "note": "数值经实测抠取；结构必须靠 preview.png 人工复核，见 reference.md"
 }

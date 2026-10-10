@@ -44,8 +44,10 @@
 |---|---|---|
 | **行内高亮（span 上的下划线）** | 50 | `border-bottom:2px solid rgb(254, 202, 202);font-weight:600;visibility:visible` |
 | **圆形元素（序号/圆点）** | 36 | `display:inline-block;width:6px;height:6px;background:rgb(220, 38, 38);border-radius:50%;margin-right:5px;vertical-align:middle` |
+| **强调色文字（strong/span 带彩色）** | 27 | `` |
 | **胶囊标签（大圆角）** | 16 | `display:inline-block;font-size:14px;font-weight:700;color:rgb(153, 27, 27);background:rgb(254, 226, 226);padding:3px 10px;border-radius:999px` |
 | **章节标题条（挂在 section 上的底部实线）** | 14 | `display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;padding-bottom:14px;border-bottom:3px solid rgb(220, 38, 38)` |
+| **标题元素 h1~h4** | 14 | `` |
 | **分隔线（渐变）** | 13 | `height:1px;background:linear-gradient(to right, transparent, rgb(252, 165, 165), rgb(220, 38, 38), rgb(252, 165, 165), transparent);margin:0px` |
 | **描边盒（1-3px 实线边框）** | 11 | `flex:1 1 0%;background:rgb(254, 242, 242);border-radius:10px;padding:16px 12px;margin-right:8px;text-align:center;border:1px solid rgb(254, 226, 226)` |
 | **粗体引词 strong** | 10 | `` |

@@ -94,6 +94,11 @@
       "label": "原生引用块 blockquote",
       "count": 4,
       "note": "class 含 js_blockquote_wrap"
+    },
+    "accent_text": {
+      "label": "强调色文字（strong/span 带彩色）",
+      "count": 3,
+      "note": "25 个 strong/span 带 color 声明，其中 22 个最终是黑/灰/透明被剔除"
     }
   },
   "structure": {
@@ -135,8 +140,7 @@
     ],
     "small_elements": []
   },
-  "generated_by": "mp-template-lib/extract_theme.py",
-  "note": "数值经实测抠取；结构必须靠 preview.png 人工复核，见 reference.md",
+  "generator": [],
   "fingerprint": {
     "fonts": [
       "mp-quote, &quot"
@@ -145,5 +149,7 @@
       "rgb(2,30,170)"
     ]
   },
-  "duplicate_of": null
+  "duplicate_of": null,
+  "generated_by": "mp-template-lib/extract_theme.py",
+  "note": "数值经实测抠取；结构必须靠 preview.png 人工复核，见 reference.md"
 }

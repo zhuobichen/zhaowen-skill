@@ -463,6 +463,16 @@
       "label": "其他 <mp*>（多为无意义标记，如 mp-style-type）",
       "count": 1,
       "note": "原始 <mp*> 共 1 个，其中已识别的嵌入组件 0 个"
+    },
+    "headings": {
+      "label": "标题元素 h1~h4",
+      "count": 14,
+      "note": "h3=14"
+    },
+    "accent_text": {
+      "label": "强调色文字（strong/span 带彩色）",
+      "count": 27,
+      "note": "66 个 strong/span 带 color 声明，其中 39 个最终是黑/灰/透明被剔除"
     }
   },
   "structure": {
@@ -633,8 +643,7 @@
       }
     ]
   },
-  "generated_by": "mp-template-lib/extract_theme.py",
-  "note": "数值经实测抠取；结构必须靠 preview.png 人工复核，见 reference.md",
+  "generator": [],
   "fingerprint": {
     "fonts": [
       "-apple-system, blinkmacsystemfont, &quot",
@@ -646,5 +655,7 @@
       "rgb(254,202,202)"
     ]
   },
-  "duplicate_of": null
+  "duplicate_of": null,
+  "generated_by": "mp-template-lib/extract_theme.py",
+  "note": "数值经实测抠取；结构必须靠 preview.png 人工复核，见 reference.md"
 }

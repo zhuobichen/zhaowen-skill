@@ -1,4 +1,4 @@
-# 模板反推记录：_dup_test
+# 模板反推记录：graylist2026
 
 **来源**：https://mp.weixin.qq.com/s/zYxS8xsStShYVmdz7rcMJA
 **原文标题**：狂揽 57.9K+ Star！爆火开源多Agent 神器 ！解决长任务失忆跑偏难题
@@ -45,11 +45,14 @@
 | **底色式标题条/标签块（实色底 + 内边距 + 大字号或居中）** | 44 | `background:#222222;font-size:18px;color:#FFFFFF;line-height:28px;text-align:center;padding:0px 3px;height:auto;margin-top:-1px;margin-left:-1px;box-sizing:conte` |
 | **行内代码 code** | 32 | `` |
 | **图片** | 14 | `` |
+| **正文文章链接（纯文本站内链接）** | 14 | `` |
 | **引用块（左侧竖线）** | 11 | `border-left:6px solid #222222;padding:14px;background:rgba(239, 239, 239, 0.8);width:100%;box-sizing:border-box;max-width:100% !important` |
 | **公众号名片** | 4 | `` |
+| **挂了背景图的元素（原始事实，未判断用途）** | 3 | `` |
 | **表格** | 1 | `` |
 | **其他 <mp*>（多为无意义标记，如 mp-style-type）** | 1 | `` |
 | **原生引用块 blockquote** | 1 | `` |
+| **强调色文字（strong/span 带彩色）** | 1 | `` |
 
 ## 四、结构事实（未预设组件签名）
 

@@ -1,0 +1,217 @@
+{
+  "name": "damanguan2026",
+  "source": "https://mp.weixin.qq.com/s/T_jNlt0PtZppUCVTpe__Eg",
+  "title": "两位“00后”博士生与导师在“唯一游戏猜想”上取得重要突破；为防AI抢发，提前发布初版",
+  "body_chars": 97117,
+  "tokens": {
+    "colors": [
+      {
+        "value": "rgba(0, 0, 0, 0.9)",
+        "count": 135
+      },
+      {
+        "value": "rgb(15, 17, 21)",
+        "count": 1
+      }
+    ],
+    "font_families": [
+      {
+        "value": "mp-quote, &quot",
+        "count": 132
+      },
+      {
+        "value": "\\&quot",
+        "count": 3
+      },
+      {
+        "value": "quote-cjk-patch, Inter, system-ui, -apple-system, BlinkMacSystemFont, &quot",
+        "count": 1
+      }
+    ],
+    "font_sizes": [
+      {
+        "value": "17px",
+        "count": 135
+      },
+      {
+        "value": "15px",
+        "count": 8
+      },
+      {
+        "value": "16px",
+        "count": 1
+      }
+    ],
+    "line_heights": [
+      {
+        "value": "1.6",
+        "count": 132
+      }
+    ],
+    "letter_spacing": [
+      {
+        "value": "0.578px",
+        "count": 3
+      }
+    ],
+    "border_radius": [],
+    "box_shadow": [],
+    "padding": [],
+    "margin": []
+  },
+  "components": {
+    "images": {
+      "label": "图片",
+      "count": 7
+    },
+    "strong": {
+      "label": "粗体引词 strong",
+      "count": 40
+    },
+    "mp_cpc_ad": {
+      "label": "CPC 广告位（平台家具，display:none，不是模板构件）",
+      "count": 2
+    },
+    "article_link": {
+      "label": "正文文章链接（纯文本站内链接）",
+      "count": 3,
+      "note": "class 含 mp_article_text_link；是文字链接，不是卡片"
+    },
+    "mp_other": {
+      "label": "其他 <mp*>（多为无意义标记，如 mp-style-type）",
+      "count": 1,
+      "note": "原始 <mp*> 共 3 个，其中已识别的嵌入组件 2 个"
+    },
+    "accent_text": {
+      "label": "强调色文字（strong/span 带彩色）",
+      "count": 0,
+      "note": "有 133 个 strong/span 写了 color 声明，但最终全是黑/灰/透明 —— 这篇没有强调色文字"
+    }
+  },
+  "structure": {
+    "tags": {
+      "span": 346,
+      "strong": 40,
+      "section": 15,
+      "p": 13,
+      "img": 7,
+      "em": 3,
+      "a": 3,
+      "mpcpc": 2,
+      "div": 1,
+      "br": 1,
+      "mp": 1
+    },
+    "borders": [],
+    "border_sides": [],
+    "backgrounds": [
+      {
+        "value": "rgb(255, 255, 255)",
+        "count": 4
+      }
+    ],
+    "displays": [
+      {
+        "value": "inline",
+        "count": 4
+      },
+      {
+        "value": "none",
+        "count": 3
+      }
+    ],
+    "flex_direction": [],
+    "text_align": [
+      {
+        "value": "center",
+        "count": 7
+      },
+      {
+        "value": "justify",
+        "count": 3
+      },
+      {
+        "value": "start",
+        "count": 1
+      }
+    ],
+    "small_elements": [
+      {
+        "value": "0px",
+        "count": 4
+      }
+    ]
+  },
+  "generator": [],
+  "fingerprint": {
+    "fonts": [
+      "mp-quote, &quot",
+      "\\&quot"
+    ],
+    "colors": []
+  },
+  "duplicate_of": null,
+  "generated_by": "mp-template-lib/extract_theme.py",
+  "note": "数值经实测抠取；结构必须靠 preview.png 人工复核，见 reference.md",
+  "review": {
+    "reviewed_at": "2026-10-10",
+    "method": "读 sample.html 原始标签 + 对整页截图做像素统计（看高饱和像素的冷暖是否对称）+ 定点裁图放大到全分辨率人眼确认",
+    "verdict": "「无 CSS 装饰」属实（0 彩色、0 下划线、0 边框）；但 accent_text 与 mp_article 两项是误报",
+    "stylesheet_facts": {
+      "color_取值只有": {
+        "rgba(0, 0, 0, 0.9)": 135,
+        "rgb(255, 255, 255)": 4,
+        "initial": 4,
+        "rgb(15, 17, 21)": 1
+      },
+      "text_decoration_underline": 0,
+      "border_声明": 0,
+      "真正的强调机制": "strong 粗体 ×40（另有 em ×3，但 font-style: normal，无效）",
+      "正文": "17px / line-height 1.6 / letter-spacing 0.034em"
+    },
+    "false_positives": {
+      "accent_text": {
+        "reported": 133,
+        "actual": 0,
+        "evidence": "判据命中的 133 处里，132 处颜色是 rgba(0, 0, 0, 0.9) 纯黑，1 处是 rgb(15, 17, 21) 近黑",
+        "why": [
+          "判据 `r'<(?:strong|span)[^>]*color:\\s*(?:rgb|#)'` 的 `rgb` 分支会匹配上 `rgba(` 的开头，后面跟个 a，正则不设词边界所以照样命中",
+          "更根本：该判据只看有没有 `color: rgb…` 这个语法，**从不检验颜色是否彩色**，而它的 label 写的是「强调色文字（strong/span 带彩色）」"
+        ],
+        "impact": "库里所有模板的 accent_text 计数都可能被同样抬高，需逐个复核才能采信"
+      },
+      "mp_article": {
+        "reported": 2,
+        "actual_label_wrong": true,
+        "evidence": "<mpcpc> ×2 实测 class 含 js_cpc_area / cpc_iframe、style 含 display:none，是微信的 CPC 广告位（平台家具）",
+        "real_article_links": "真正的文章链接是 <a class=\"normal_text_link mp_article_text_link\"> ×3（文末「相关链接：」），检测器一条都没认出",
+        "impact": "名称（文章链接卡片）与实物（广告位）不符，且数量 2 也不是真链接数 3 —— 名字/含义/数量三样都错"
+      },
+      "font_families": {
+        "reported": [
+          "mp-quote, &quot",
+          "\\&quot"
+        ],
+        "actual": "mp-quote, \"PingFang SC\", system-ui, -apple-system, …",
+        "why": "SKILL.md 缺陷 #13：decl() 的 ([^;]+) 遇到 HTML 实体 &quot; 里的分号即截断。该缺陷一直挂账，注明「下次谁用 decl() 解析字体名就会踩」，本模板就是那一次",
+        "impact": "本模板的 font_families 不要采信"
+      }
+    },
+    "self_inflicted_pitfall": {
+      "claim_I_first_made": "正文有砖红 / 青绿两种下划线强调",
+      "truth": "是错的：正文纯黑，无彩色也无下划线",
+      "how_caught": "偏暖像素 24595 vs 偏冷像素 25385（近似相等），色值成对互补（(63,31,31)↔(31,31,63)、(183,111,31)↔(31,103,183)），档位是 31/63/111/159/191/231/255 —— 浏览器次像素抗锯齿(ClearType)的色边；缩图 LANCZOS 到 760px 又把它糊成了「下划线」",
+      "secondary_pitfall": "第一遍整图统计给出 4.86% 高饱和像素，全部来自图片区；统计必须先划定纯正文带再看，否则被配图污染"
+    },
+    "checklist_answers": {
+      "卡片": "无",
+      "章节标题": "没有章节标题构件，全文无分段标题",
+      "引用块": "无（无 blockquote，无引用样式）",
+      "标签/胶囊": "无",
+      "序号": "无",
+      "正文": "17px / 1.6；无下划线无彩色，强调只靠 strong 粗体",
+      "少见组件": "文末 3 条 mp_article_text_link 纯文本链接；另有 2 处误报的 mpcpc 广告位(display:none)"
+    },
+    "worth_keeping_note": "本模板几乎没有可复刻的样式（无颜色/无装饰/无构件，本质是微信默认正文 + 粗体）。价值在于给出「不做任何装饰」的基线，并一次性撞出上述三个检测器问题。"
+  }
+}

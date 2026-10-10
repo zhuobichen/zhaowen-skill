@@ -1,5 +1,5 @@
 {
-  "name": "_dup_test",
+  "name": "graylist2026",
   "source": "https://mp.weixin.qq.com/s/zYxS8xsStShYVmdz7rcMJA",
   "title": "狂揽 57.9K+ Star！爆火开源多Agent 神器 ！解决长任务失忆跑偏难题",
   "body_chars": 191925,
@@ -187,6 +187,11 @@
     ]
   },
   "components": {
+    "bgimg_any": {
+      "label": "挂了背景图的元素（原始事实，未判断用途）",
+      "count": 3,
+      "note": "其中被判为「横线」的 0 个，base64 data URI 0 个（多为空白占位图，不是构件）；其余多为正常配图或平台家具"
+    },
     "quote": {
       "label": "引用块（左侧竖线）",
       "count": 11,
@@ -276,6 +281,11 @@
       "label": "公众号名片",
       "count": 4
     },
+    "article_link": {
+      "label": "正文文章链接（纯文本站内链接）",
+      "count": 14,
+      "note": "class 含 mp_article_text_link；是文字链接，不是卡片"
+    },
     "mp_other": {
       "label": "其他 <mp*>（多为无意义标记，如 mp-style-type）",
       "count": 1,
@@ -285,6 +295,11 @@
       "label": "原生引用块 blockquote",
       "count": 1,
       "note": ""
+    },
+    "accent_text": {
+      "label": "强调色文字（strong/span 带彩色）",
+      "count": 1,
+      "note": "1 个 strong/span 带 color 声明，其中 0 个最终是黑/灰/透明被剔除"
     }
   },
   "structure": {
@@ -415,6 +430,9 @@
       }
     ]
   },
+  "generator": [
+    "135editor"
+  ],
   "fingerprint": {
     "fonts": [
       "optima-regular, pingfangtc-light",
@@ -426,7 +444,7 @@
       "#222222"
     ]
   },
-  "duplicate_of": "graylist2026",
+  "duplicate_of": null,
   "generated_by": "mp-template-lib/extract_theme.py",
   "note": "数值经实测抠取；结构必须靠 preview.png 人工复核，见 reference.md"
 }

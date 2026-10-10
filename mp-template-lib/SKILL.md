@@ -70,15 +70,20 @@ python scripts/extract_theme.py --html ./body.html --name xxx --preview ./shot.p
 | `schoolphoto2026` | **校园图片展** | `rgb(83,179,76)` 绿 | 图片主导（112 张）；顶部大图 banner；2px 柠檬绿细横条分隔（49 处）。5 类 |
 | `autumn2026` | **棕金中秋** | `rgba(155,104,41,*)` | 图片主导（63 张）；`PingFangSC-light`；**真 SVG 装饰 13 个**（圆形纹章）。4 类 |
 | `newsblue2026` | **新闻体** | `rgb(2,30,170)` 蓝 | 正文短（20K）；蓝色粗体**居中**小标题；原生 `blockquote` 4 个；**微信内置组件**：视频号卡片 1 + 公众号名片 1。5 类 |
+| `papertoday2026` | **学术网格**（mdnice 生成） | `rgb(145,109,213)` 紫 | 平铺网格背景 60 处；`Optima` + 微软雅黑；**内联 SVG 配图**（微信正文能带 SVG，实测有效）；figure/figcaption 图注 13 处；`<h2>` 带一大段冗余声明 —— **照抄样式的字符串，别自己重写**（逐条推理哪些生效又慢又易错） |
+| `aifrontline2026` | **青绿序号体**（AI前线） | `rgb(0,179,139)` 青绿（另有谷歌蓝 `rgb(66,133,244)`） | 无卡片 / 无圆角 / 无阴影；**章节标题 = 32px 大数字 + 20px 青绿标题 + 一条背景图横线**（那线是图，不是 CSS，见缺陷 10）；正文 `16px/27px` + `text-align:justify` + 字距 `0.544px`；列表条目 = **粗体引导词「……：」+ 说明**；强调色文字 **11** 处（2026-10-10 修正，旧判据误算成 175，见缺陷 14） |
+| `orisynth2026` | **红序号 + 深色项目图**（Orisynth AI） | `rgb(250,83,89)` 红 + `rgb(47,118,195)` 蓝 | **几乎零 CSS 装饰**（border/background/radius/shadow 声明全为 0）；章节头 = 居中 36px 红粗**下划线**序号 + 18px 英文项目名（双层颜色）；下划线 15 处 5 种用法；12 张图（6×60px 小图标 + 6×677px）；**不设 font-family** |
+| `damanguan2026` | **纯黑长文**（科技大满贯） | 无彩色 | 极简到没有可复刻的样式：`color:` 只有黑/白，**0 彩色、0 下划线、0 边框**；强调只靠 `<strong>` 粗体 ×40；17px / 行高 1.6；图 7 张；文末 3 条 `article_link` 纯文本链接。价值在于是「不做任何装饰」的基线，且一次撞出三个判据问题 |
 
-五个模板刻意选了**五种完全不同**的做法，用来压测提取器：
-红色重装饰 / 纯白描文字排版 / 图片展 / 季节主题 / 新闻体。
+九个模板刻意选了**九种不同**的做法，用来压测提取器：
+红色重装饰 / 纯白描文字排版 / 图片展 / 季节主题 / 新闻体 / 学术网格 / 青绿序号体 /
+红序号+深色图 / 纯黑长文。
 每收一个都撞出新缺陷（见下）——**那才是这个库真正的资产**。
 
 （`clz_docx_to_mp` 里的 `abaas2024` 是蓝色学术风，那个主题在**那个** skill 里，不在这里。
  两个 skill 各管各的，没有依赖。）
 
-## 已修的三个缺陷（都是实测撞出来的）
+## 已修的缺陷（每一条都是实测撞出来的）
 
 ### 1. 只在 `<section>` 里找组件 → 整类漏
 胶囊、圆形序号常挂在 `<span>` 上。已改为 `where='both'`。
@@ -181,6 +186,154 @@ python scripts/extract_theme.py --html ./body.html --name xxx --preview ./shot.p
 > 不是按文章变的。所以收模板应该**按号取样**，而不是按链接 ——
 > 同一个号收第二篇的边际价值，主要在于「样本更全」，不在于「又一个新样式」。
 
+### 10. 章节标题的横线是**背景图** → 只看 CSS 数值永远看不见 ⭐
+第六个模板（AI前线）的章节标题长这样：数字骑在一条线上，下面才是标题。
+
+```html
+<p style="font-size:20px; color:rgb(0,179,139);
+          background-image:url(同一张图，4 处相同);
+          background-position:left 28px; background-size:100% 6px">
+  <span style="display:block; padding-left:22px; font-size:32px">1</span>
+  <section><span style="color:rgb(0,179,139); font-size:20px">标题文字</span></section>
+</p>
+```
+
+那条「绿粗线 + 小绿方块 + 浅灰长线」**整张是一幅栅格图**，被拉成 `100% × 6px` 贴上去。
+它既不是 `border` 也不是 `background-color` —— 数值层面只是一句「一个 100%×6px 的
+background-image」，不看图永远不知道那画的是一条线。而且标题不是 `h1~h4` 而是 `<p>`，
+所以按标签统计也漏。
+
+**这条是人工复核抓到的，靠扫像素**：先扫 `preview.png` 里的绿色像素拿到精确 y 坐标，
+再按坐标裁图放大。比在缩略图上目测位置可靠得多 —— 我一开始目测切了两次都切偏了。
+
+已加两个东西：
+- `bgimg_rule`：`background-size` 是细长条（高 ≤ 8px）即视为「线」。判 size 不判
+  `background` 简写 —— 简写里的 `cover`（真配图）不该算进来。
+- `bgimg_any`：**兜底事实**，不判断用途，只数「有几个元素挂了背景图」。这是本文档
+  第 3 条「用事实枚举兜底模式识别」的又一次应用。
+
+### 11. `svg_real` 把 **4px 圆角补角料**当成装饰件
+`<svg viewBox="0 0 2 2" width="4px" height="4px" class="border_filler border_filler_lefttop">`
+—— 编辑器画边框时四角各塞一块。AI前线里报出「4 个真 SVG」看着像「用了 4 个图标」，
+**实际全是这个**。只滤 `width:0` 不够。
+
+已补判据：class 含 `border_filler`、或宽高 ≤ 6px、或 viewBox ≤ 4×4 → 排除。
+判据用**离散**特征（尺寸、视框），不用颜色粗细那类连续量。
+
+> 回归验证：autumn2026 的 `svg_real=13` **纹丝不动** —— 收紧过滤没误伤真 SVG。
+> 这是收紧过滤器时最该担心的事，光看新模板的结果是看不出来的。
+
+### 12. `count=0` 的项会被整条丢掉 → **过滤器的改动会静默** ⭐
+`detect_components` 收尾是 `return {k: v for k, v in comps.items() if v.get('count')}`。
+把 svg_real 从 4 滤成 0 之后，这一项**从产物里消失了** —— 读者分不清
+「滤光了」和「检测器根本没跑」。是**改动后跑前后对比**才发现的：两版 diff 里它显示为
+`4 -> (消失)`，而不是 `4 -> 0`。
+
+已改：`svg_real` 例外保留 0 值，且只在页面真有 `<svg>` 标签时才报这一项。
+
+> 教训：**过滤器和检测器要一起报。** 只报过滤后的数字，等于把「我滤掉了多少」
+> 藏起来。这也解释了为什么 2026-10-03 那次回归里 schoolphoto2026 的 `svg_real`
+> 从「不显示」变成了「显示 0」—— 那是**信息变多了**，不是数据变了。
+
+### 13. `decl()` 取不全**含 HTML 实体**的值 ⭐（既有缺陷，本次挂账未修）
+
+```python
+m = re.search(r'(?:^|;)\s*%s\s*:\s*([^;]+)' % prop, style)
+```
+
+`([^;]+)` 遇到第一个分号就停。而 HTML 实体 **`&quot;` 自带一个分号** —— 于是：
+
+```
+decl(s, 'background')           # s = 'background:url(&quot;http://a/b.png&quot;) center center'
+  -> 'url(&quot'                 # 就这 9 个字符，后面的全丢了
+```
+
+**凡是值里含 `&quot;` 的声明都取不全**，至少两类：
+- `background` / `background-image` 的 `url("…")`
+- `font-family: Optima, &quot;Microsoft YaHei&quot;, sans-serif`
+
+影响面：凡是用 `decl()` 判「值里有没有 / 值是什么」的地方都会被误导。
+已知 `bgimg_rule` 用的是 `background-size`（值 `100% 6px`，不含实体）所以没受影响；
+**下次谁再用 `decl()` 去解析 URL 或字体名就会踩。**
+
+**处置**：本次**没有动 `decl()` 本身**。它被 extract_theme 里多处使用，改它属于动地基，
+必须单独跑一轮全模板回归（见缺陷 8）。本次只在新写的 `_has_bgurl()` 里
+**绕开 decl、直接在原始 style 串上做正则**。**修 decl 这件事挂账。**
+
+> 教训 ——「我以为我在修一个新 bug，其实踩在一个更老的 bug 上」：
+> 第一版 `_has_bgurl` 写的是 `'url(' in decl(...)`，**恰好还能工作**
+> （截断成 `'url(&quot'` 之后仍然含 `url(`）。我把它「收紧」成要求完整匹配 `url(...)`，
+> 结果全军覆没、`bgimg_any` 整项消失。是**前后对比**把它暴露出来的 ——
+> 只看单个模板的结果，只会看到「这一项没了」，看不出为什么。
+
+### 14. `accent_text` 从不检验「是不是彩色」 → 全库虚高 ⭐（2026-10-10 已修）
+
+原判据是：
+
+```python
+n_acc = len(re.findall(r'<(?:strong|span)[^>]*color:\s*(?:rgb|#)[^;"]{3,30}', html, re.I))
+```
+
+它的 label 写着「强调色文字（strong/span 带**彩色**）」，但判据**只看有没有
+`color: rgb…` 这个语法，从头到尾没有检验过颜色本身**。而且分支里的 `rgb`
+还会匹配上 `rgba(` 的开头（`rgba` 以 `rgb` 起头，正则不设边界）。
+
+实测 `damanguan2026`：命中的 133 处里 **132 处是 `rgba(0, 0, 0, 0.9)` 纯黑**，
+报出来的却是「强调色文字 133 处」。全库都被抬高：
+
+| 模板 | 旧 | 新 |
+|---|---|---|
+| `aifrontline2026` | 175 | **11** |
+| `damanguan2026` | 133 | **0** |
+| `redcard2026` | 66 | **27** |
+| `graylist2026` | 46 | **1** |
+| `papertoday2026` | 27 | **22** |
+| `newsblue2026` | 25 | **3** |
+| `orisynth2026` | 18 | **12** |
+
+修法要**同时**满足四条，少一条就会在新数值里留下另一类错：
+
+1. 真去解析颜色，按通道差判彩色（`is_chromatic`，阈值 24）。
+2. 按每个元素**最后一条** `color` 声明算 —— 同一段 style 里后写的生效。
+   只取第一个会漏（`aifrontline` 有 4 个标签写着 `白 …; 青绿`，
+   渲染是青绿）也会误报（`papertoday` 有 21 个标签写着 `紫 …; rgba(0,0,0,0.4)`）。
+3. `color:` 前必须**不是 `-` 也不是字字符**（`(?<![-\w])`）。不加的话会匹配到
+   **别的属性的后缀**：`border-color:`（papertoday，而同一段 style 里 `border-style:none`，
+   边框根本不画）和几乎所有 span 都带的 `-webkit-tap-highlight-color:` 都会被算进来。
+4. 只在**真正的 `style` 属性**里找。`data-pm-slice` 这类属性里塞着编辑器元数据 JSON
+   （内含 `&quot;style&quot;:&quot;…color: rgb(66,133,244);&quot;`），扫整个标签会
+   把**编辑器存的样式副本**当成生效样式（aifrontline 就多算 1 个）。
+   注意 `data-original-style=` 里也含 `style="`，同样要用 `(?<![-\w])` 挡住。
+
+> 教训 ——「判据要匹配**语义上的那个东西**，而不是它的**字面形态**」。这一条在库里
+> 已经被犯过很多次（#6 数标签、#7 数前缀、#11 数 viewBox），这次连续犯了四层：
+> 语法 ≠ 颜色、第一个声明 ≠ 生效声明、属性后缀 ≠ 属性、属性里的文本 ≠ 生效样式。
+>
+> 另一条：**大降幅必须独立复核**。改完第一版时 aifrontline 报 6、papertoday 报 22，
+> 我另写一套（把 style 按 `;` 切开、按属性名精确取 `color`）才对出来 11 / 22 ——
+> **第一版是错的**（漏 5 个 blue 的 `!important` 写法）。只看被测实现自己的数字，
+> 一路上四个错版本看起来都「挺合理」。
+
+### 15. `<mpcpc>` 被当成「文章链接卡片」 → 名字、含义、数量三样都错（2026-10-10 已修）
+
+```html
+<mpcpc class="js_cpc_area res_iframe cpc_iframe" ... src="/cgi-bin/readtemplate?t=tmpl/cpc_tmpl#..." style="display: none;">
+```
+
+`<mpcpc>` 是**微信的 CPC 广告位**，属于平台家具（且 `display:none`），
+却被登记成 `('mp_article', '文章链接卡片')`。
+而这篇**真正的**文章链接是 `<a class="normal_text_link mp_article_text_link">` ×3，
+**检测器一个都没认出来**。于是 `mp_article: 2`：名字不是文章链接、实物是广告位、
+数量也不是真链接数。已改为 `mp_cpc_ad` + 新增 `article_link`。
+
+**顺手拆掉的一个更隐的坑**：`mp_known` 原本写成
+`sum(v['count'] for k,v in comps.items() if k.startswith('mp_'))`
+—— **靠键名前缀猜「这是不是 `<mp*>` 组件」**。新加的 `article_link` 若命名成
+`mp_article_link`，就会被算成已知 `<mp*>`，把 `mp_other` 的计数吃掉甚至算成负数，
+真实的 `<mp-style-type>` 就不报了。已改成**按标签精确累加**，与键名叫什么无关。
+
+> 教训：**前缀/命名不能承担语义**。判据要绑在被数的那批东西本身。
+
 ## 依赖
 
 - **browser-act CLI**：`uv tool install browser-act-cli --python 3.12`
@@ -197,3 +350,38 @@ python scripts/extract_theme.py --html ./body.html --name xxx --preview ./shot.p
   目前没内建；用 browser-act 截一张传进来即可。
 - 微信会剥 `<style>` 和 `class`，所以**所有样式必须内联** —— 这是
   `clz_docx_to_mp` 那条流水线的硬约束，本库的产物要喂给它，同样受约束。
+
+- **`tokens.colors` 会把编辑器元数据里的颜色也算进去**（2026-10-10 发现，**未修**）。
+  `parse_tokens` 是拿 `COLOR_RE` 扫**整个 HTML**，而 `data-pm-slice` 这类属性里塞着
+  编辑器元数据 JSON（内含原样式的副本），其中的颜色会被计入调色板 ——
+  和缺陷 14 的第 4 条是同一个坑，但那次只修了 `accent_text`。
+  `tokens.colors` 影响**每个模板的「配色」表**，要不要一起改得单独跑一轮全模板回归再定。
+
+- **`--out` 指向不存在的目录会崩**（2026-10-10 发现）。`main()` 里 `find_duplicate()`
+  在 `os.makedirs(outdir)` **之前**就 `os.listdir(out_dir)`，于是报
+  `FileNotFoundError: 系统找不到指定的路径`。先手工建好目录即可绕过。
+
+- **背景图构件只分类了一半**（2026-10-03 记录，并实测过一轮）。
+  `bgimg_any` 只数得出「有几个元素挂了背景图」，`bgimg_rule` 只认得「被拉成细长条
+  当线」的那一种。剩下的分不出「拿图当构件」和「普通配图」。
+
+  量过一轮候选判据「**同一张图被反复使用**」（7 个模板，看 `sample.html`）：
+
+  | 模板 | 带背景图的 style | 去重后 | 重复使用的图 |
+  |---|---|---|---|
+  | `aifrontline2026` | 10 | 6 | **x4 章节横线**（真构件）+ x2 视频卡片头像（平台家具） |
+  | `autumn2026` | 19 | 12 | x4 + 四组 x2，都是 `background-size:100% 100%` 的容器 |
+  | `graylist2026` | 3 | 2 | x2 一张 base64 data URI |
+  | `schoolphoto2026` | 5 | 2 | x4 **同一张 base64 data URI** |
+  | `newsblue` / `papertoday` / `redcard` | 0 | 0 | — |
+
+  **结论：复用是真信号，但单独用不够。** schoolphoto 的 x4 与 graylist 的 x2 是
+  **同一张 base64 空白占位图**（1x1 间隔图），根本不是构件 —— 只看复用次数会把它
+  误判成构件。真正稳的判据是**几何形状**（`bgimg_rule` 那样看 `background-size`），
+  这与本文档反复出现的那条一致：**判据要选语义上必然不同的维度，别用会重叠的连续量。**
+
+  > 顺带：`bgimg_any` 的 note 现在会把 base64 data URI 单列出来 ——
+  > 实测那类多是空白占位图，混进总数会让人以为「这个模板用了 N 张背景图」。
+
+  **下次收模板优先撞这个**：还需要一两个「用背景图做构件」的样本，才能定
+  `background-size: 100% 100%` 的容器（autumn 那五组）到底算构件还是算配图。

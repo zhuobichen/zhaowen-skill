@@ -1,0 +1,336 @@
+{
+  "name": "papertoday2026",
+  "source": "https://mp.weixin.qq.com/s/iC0AHv8vFtGnvdgx605KcA",
+  "title": "学术版腾讯WorkBuddy开源，起飞了",
+  "body_chars": 75298,
+  "tokens": {
+    "colors": [
+      {
+        "value": "rgba(0, 0, 0, 0.4)",
+        "count": 135
+      },
+      {
+        "value": "rgba(0, 0, 0, 0)",
+        "count": 49
+      },
+      {
+        "value": "rgb(89, 89, 89)",
+        "count": 36
+      },
+      {
+        "value": "rgb(145, 109, 213)",
+        "count": 21
+      },
+      {
+        "value": "rgb(136, 136, 136)",
+        "count": 10
+      },
+      {
+        "value": "rgb(222, 198, 251)",
+        "count": 5
+      },
+      {
+        "value": "rgba(50, 0, 0, 0.05)",
+        "count": 2
+      },
+      {
+        "value": "rgba(249, 247, 252, 0)",
+        "count": 1
+      },
+      {
+        "value": "rgb(246, 238, 255)",
+        "count": 1
+      },
+      {
+        "value": "rgba(0, 0, 0, 0.55)",
+        "count": 1
+      },
+      {
+        "value": "#abb2bf",
+        "count": 1
+      },
+      {
+        "value": "#282c34",
+        "count": 1
+      },
+      {
+        "value": "#c678dd",
+        "count": 1
+      }
+    ],
+    "font_families": [
+      {
+        "value": "Optima, &quot",
+        "count": 1
+      },
+      {
+        "value": "Consolas, Monaco, Menlo, monospace",
+        "count": 1
+      }
+    ],
+    "font_sizes": [
+      {
+        "value": "14px",
+        "count": 30
+      },
+      {
+        "value": "13px",
+        "count": 10
+      },
+      {
+        "value": "18px",
+        "count": 5
+      },
+      {
+        "value": "16px",
+        "count": 1
+      },
+      {
+        "value": "12px",
+        "count": 1
+      }
+    ],
+    "line_heights": [
+      {
+        "value": "1.8em",
+        "count": 35
+      },
+      {
+        "value": "1.5em",
+        "count": 16
+      },
+      {
+        "value": "26px",
+        "count": 1
+      }
+    ],
+    "letter_spacing": [],
+    "border_radius": [
+      {
+        "value": "8px",
+        "count": 13
+      },
+      {
+        "value": "0px",
+        "count": 6
+      },
+      {
+        "value": "5px",
+        "count": 2
+      }
+    ],
+    "box_shadow": [
+      {
+        "value": "rgba(0, 0, 0, 0) 0px 0px 0px 0px",
+        "count": 26
+      },
+      {
+        "value": "rgba(0, 0, 0, 0.55) 0px 2px 10px",
+        "count": 1
+      }
+    ],
+    "padding": [
+      {
+        "value": "0px",
+        "count": 7
+      },
+      {
+        "value": "8px 0px",
+        "count": 5
+      },
+      {
+        "value": "0px 10px",
+        "count": 1
+      },
+      {
+        "value": "16px",
+        "count": 1
+      }
+    ],
+    "margin": [
+      {
+        "value": "0px auto",
+        "count": 14
+      },
+      {
+        "value": "0px",
+        "count": 12
+      },
+      {
+        "value": "10px 0px",
+        "count": 1
+      }
+    ]
+  },
+  "components": {
+    "highlight": {
+      "label": "行内高亮（span 上的下划线）",
+      "count": 5,
+      "sample_style": "font-size:18px;color:rgb(89, 89, 89);line-height:1.8em;letter-spacing:0em;padding-top:0px;padding-bottom:0px;padding-left:10px;padding-right:0px;border-top-style:none;border-bottom-style:none;border-left-style:solid;border-right-style:none;border-top-width:1px;border-bottom-width:1px;border-left-width:5px;border-right-width:1px;border-top-color:rgb(0, 0, 0);border-bottom-color:rgb(0, 0, 0);border-",
+      "variants": [
+        {
+          "style": "font-size:18px;color:rgb(89, 89, 89);line-height:1.8em;letter-spacing:0em;padding-top:0px;padding-bottom:0px;padding-left:10px;padding-right:0px;border-top-style:none;border-bottom-style:none;border-left-style:solid;border-right-style:none;border-top-width:1px;border-bottom-width:1px;border-left-width:5px;border-right-width:1px;border-top-color:rgb(0, 0, 0);border-bottom-color:rgb(0, 0, 0);border-",
+          "n": 5
+        }
+      ]
+    },
+    "images": {
+      "label": "图片",
+      "count": 14
+    },
+    "lists": {
+      "label": "原生列表 ul/ol（含 li）",
+      "count": 9,
+      "note": "ul=4 ol=0 li=9"
+    },
+    "strong": {
+      "label": "粗体引词 strong",
+      "count": 21
+    },
+    "code": {
+      "label": "行内代码 code",
+      "count": 1
+    },
+    "mp_other": {
+      "label": "其他 <mp*>（多为无意义标记，如 mp-style-type）",
+      "count": 1,
+      "note": "原始 <mp*> 共 1 个，其中已识别的嵌入组件 0 个"
+    },
+    "figure_caption": {
+      "label": "图 + 图注 figure/figcaption",
+      "count": 13,
+      "note": "figure=13 figcaption=10"
+    },
+    "headings": {
+      "label": "标题元素 h1~h4",
+      "count": 5,
+      "note": "h2=5"
+    },
+    "tiled_bg": {
+      "label": "平铺网格/纹理背景（小尺寸 repeat）",
+      "count": 60
+    },
+    "accent_text": {
+      "label": "强调色文字（strong/span 带彩色）",
+      "count": 22,
+      "note": "27 个 strong/span 带 color 声明，其中 5 个最终是黑/灰/透明被剔除"
+    }
+  },
+  "structure": {
+    "tags": {
+      "span": 103,
+      "p": 22,
+      "strong": 21,
+      "img": 14,
+      "figure": 13,
+      "section": 10,
+      "figcaption": 10,
+      "li": 9,
+      "h2": 5,
+      "ul": 4,
+      "br": 2,
+      "div": 1,
+      "em": 1,
+      "pre": 1,
+      "code": 1,
+      "mp": 1
+    },
+    "borders": [],
+    "border_sides": [],
+    "backgrounds": [
+      {
+        "value": "rgba(0, 0, 0, 0)",
+        "count": 16
+      },
+      {
+        "value": "unset",
+        "count": 10
+      },
+      {
+        "value": "none left top / auto no-repeat scroll paddin",
+        "count": 6
+      },
+      {
+        "value": "linear-gradient(90deg, rgba(50, 0, 0, 0.05) ",
+        "count": 1
+      },
+      {
+        "value": "#282c34",
+        "count": 1
+      }
+    ],
+    "displays": [
+      {
+        "value": "block",
+        "count": 38
+      },
+      {
+        "value": "flex",
+        "count": 13
+      },
+      {
+        "value": "-webkit-box",
+        "count": 1
+      },
+      {
+        "value": "none",
+        "count": 1
+      }
+    ],
+    "flex_direction": [
+      {
+        "value": "column",
+        "count": 13
+      },
+      {
+        "value": "unset",
+        "count": 10
+      }
+    ],
+    "text_align": [
+      {
+        "value": "left",
+        "count": 42
+      },
+      {
+        "value": "center",
+        "count": 10
+      }
+    ],
+    "small_elements": [
+      {
+        "value": "3px",
+        "count": 135
+      },
+      {
+        "value": "1px",
+        "count": 35
+      },
+      {
+        "value": "5px",
+        "count": 5
+      },
+      {
+        "value": "26px",
+        "count": 1
+      }
+    ]
+  },
+  "generator": [
+    "mdnice编辑器"
+  ],
+  "fingerprint": {
+    "fonts": [
+      "optima, &quot",
+      "consolas, monaco, menlo, monospace"
+    ],
+    "colors": [
+      "rgb(145,109,213)",
+      "rgb(222,198,251)",
+      "rgba(50,0,0,0.05)"
+    ]
+  },
+  "duplicate_of": null,
+  "generated_by": "mp-template-lib/extract_theme.py",
+  "note": "数值经实测抠取；结构必须靠 preview.png 人工复核，见 reference.md"
+}
