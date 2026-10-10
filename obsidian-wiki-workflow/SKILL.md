@@ -16,10 +16,10 @@ triggers:
   - "知识库维护"
   - "MEMORY 同步"
 config:
-  vault_path: ""
+  vault_path: "E:\\CodeProject\\ZhaoWen_KnowledgeBase\\OUTPUT"
   default_category: "General"
-  memory_path: "E:\\CodeProject\\MEMORY"
-  output_path: "E:\\CodeProject\\MEMORY\\OUTPUT"
+  memory_path: "E:\\CodeProject\\ZhaoWen_KnowledgeBase"
+  output_path: "E:\\CodeProject\\ZhaoWen_KnowledgeBase\\OUTPUT"
 version: 1.1.0
 ---
 
@@ -63,7 +63,8 @@ Vault/
 │   ├── PM25/
 │   ├── Agent工作流/
 │   ├── 前端/
-│   └── 健康效益/
+│   ├── 健康效益/
+│   └── 概念卡片/         # AI 对话问答沉淀的原子卡片（一概念一卡）
 ├── Categories/           # 顶层分类索引
 │   ├── Evergreen.md      # 方法论说明
 │   ├── PM25研究.md
@@ -158,13 +159,13 @@ MEMORY（原始资料） → OUTPUT（Evergreen Wiki）
 
 ```bash
 # 查看 MEMORY 的 git 状态
-git -C "E:/CodeProject/MEMORY" status
+git -C "E:/CodeProject/ZhaoWen_KnowledgeBase" status
 
 # 查看 MEMORY 的最近提交
-git -C "E:/CodeProject/MEMORY" log --oneline -10
+git -C "E:/CodeProject/ZhaoWen_KnowledgeBase" log --oneline -10
 
 # 查看 MEMORY 与上一次同步的差异
-git -C "E:/CodeProject/MEMORY" diff HEAD~1
+git -C "E:/CodeProject/ZhaoWen_KnowledgeBase" diff HEAD~1
 
 # 查看 OUTPUT 的最后同步时间（从 log.md）
 ```
@@ -221,8 +222,8 @@ source: "[[MEMORY/xxx.md]]"
 "/e/软件/Obsidian/Obsidian.exe" folders        # 列出所有文件夹
 
 # MEMORY 同步
-git -C "E:/CodeProject/MEMORY" log --oneline -10
-git -C "E:/CodeProject/MEMORY" diff HEAD~1
+git -C "E:/CodeProject/ZhaoWen_KnowledgeBase" log --oneline -10
+git -C "E:/CodeProject/ZhaoWen_KnowledgeBase" diff HEAD~1
 ```
 
 ---
@@ -295,7 +296,7 @@ cmd //c "obsidian deadends"     # 检查无出链页面
 **验证方法**：
 ```bash
 # 检查文件是否实际存在
-ls "/e/CodeProject/MEMORY/待办-已办提示词工作流/"
+ls "/e/CodeProject/ZhaoWen_KnowledgeBase/待办-已办提示词工作流/"
 
 # 检查git中实际跟踪的文件
 git ls-files "待办-已办提示词工作流/"

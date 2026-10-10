@@ -24,7 +24,7 @@ triggers:
 ### Bottom-up 笔记法
 
 ```
-MEMORY (原始文档) → OUTPUT/Daily (每日记录) → OUTPUT/Notes (精炼) → OUTPUT/Categories (分类)
+MEMORY (原始文档) → OUTPUT/Daily (每日记录) → OUTPUT/Evergreen (精炼) → OUTPUT/Categories (分类)
 ```
 
 **核心原则：**
@@ -49,9 +49,11 @@ OUTPUT/                          # 精炼知识库（新创建）
 │   ├── Evergreen.md            # 常青笔记方法论
 │   ├── PM25研究.md              # PM2.5研究分类
 │   ├── 健康效益.md              # 健康效益分类
-│   └── Agent工作流.md           # Agent工作流分类
+│   ├── Agent工作流.md           # Agent工作流分类
+│   ├── 前端架构.md              # 前端架构分类
+│   └── 概念卡片.md              # AI 对话问答沉淀的原子卡片（kb-capture 写入）
 │
-├── Notes/                      # 精炼后的原子笔记
+├── Evergreen/                  # 精炼后的原子笔记（旧称 Notes/）
 │   ├── PM25_融合方法分解组合策略.md
 │   ├── Claude_三角色闭环.md
 │   └── ...
@@ -73,7 +75,7 @@ OUTPUT/                          # 精炼知识库（新创建）
 
 ```bash
 # 1. 检查 Git 状态
-cd /e/CodeProject/MEMORY
+cd /e/CodeProject/ZhaoWen_KnowledgeBase
 git status
 git log --oneline -3
 
@@ -472,16 +474,16 @@ git push
 
 ```bash
 # 列出 MEMORY 中的 MD 文件
-ls /e/CodeProject/MEMORY/*.md
+ls /e/CodeProject/ZhaoWen_KnowledgeBase/*.md
 
 # 列出 OUTPUT 笔记
-ls /e/CodeProject/MEMORY/OUTPUT/Notes/
+ls /e/CodeProject/ZhaoWen_KnowledgeBase/OUTPUT/Evergreen/
 
 # 列出 OUTPUT 分类
-ls /e/CodeProject/MEMORY/OUTPUT/Categories/
+ls /e/CodeProject/ZhaoWen_KnowledgeBase/OUTPUT/Categories/
 
 # 搜索文件内容
-grep -r "关键词" /e/CodeProject/MEMORY/OUTPUT/
+grep -r "关键词" /e/CodeProject/ZhaoWen_KnowledgeBase/OUTPUT/
 ```
 
 ---
@@ -514,7 +516,7 @@ cmd //c "obsidian move file=文件名.md to=Trash/"
 
 ```bash
 # 1. 搜索死链来源
-grep -r "死链关键词" /e/CodeProject/MEMORY/OUTPUT/
+grep -r "死链关键词" /e/CodeProject/ZhaoWen_KnowledgeBase/OUTPUT/
 
 # 2. 确定是 wikilink 还是 status 字段
 # 如果是 status 字段，移除 [[]]
