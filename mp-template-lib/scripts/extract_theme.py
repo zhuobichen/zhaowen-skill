@@ -74,6 +74,17 @@ CHROMA_MIN = 24
 # 两种写法都要覆盖：命名实体 `&quot;` 和数字实体 `&#39;` / `&#x27;`。
 _ENTITY = r'&(?:[a-zA-Z][a-zA-Z0-9]*|#[0-9]+|#[xX][0-9a-fA-F]+);'
 
+
+def _val(minlen, maxlen):
+    """构造「取一个声明值」的正则片段：**允许值里含 HTML 实体**，长度界限照旧。
+
+    原来各处直接写 `([^;"]{1,44})` —— 撞到 `&quot;` 里那个分号就断，
+    实测 `structure.backgrounds` 里因此出现 `'url(&quot'` 这种残渣
+    （aifrontline2026 ×5、graylist2026 ×3，2026-10-11 发现，是缺陷 13 的第三处副本）。
+    统一走这里，就不会有一个地方修了、另一个地方还漏着。
+    """
+    return r'((?:%s|[^;"]){%d,%d})' % (_ENTITY, minlen, maxlen)
+
 # 微信编辑器会在标签上留**样式副本**：`data-pm-slice`（一段 JSON，里面记着当时的 style）
 # 和 `data-original-style`（该元素保存时的样式）。它们**不是生效样式** ——
 # 生效的是 `style` 属性本身。扫全 HTML 的统计（配色、结构事实、bgimg_rule 的 all 池）
@@ -260,10 +271,10 @@ def parse_tokens(html):
         # 的真实字距是 `0.034em`，而 line_heights 早就认了 em，这里漏了）
         'letter_spacing': _top(
             re.findall(r'letter-spacing:\s*([\d.]+(?:px|em|rem)?)', html), 6),
-        'border_radius': _top(re.findall(r'border-radius:\s*([^;"]{1,40})', html), 10),
-        'box_shadow': _top(re.findall(r'box-shadow:\s*([^;"]{6,90})', html), 6),
-        'padding': _top(re.findall(r'padding:\s*([^;"]{1,30})', html), 8),
-        'margin': _top(re.findall(r'margin:\s*([^;"]{1,30})', html), 8),
+        'border_radius': _top(re.findall(r'border-radius:\s*' + _val(1, 40), html), 10),
+        'box_shadow': _top(re.findall(r'box-shadow:\s*' + _val(6, 90), html), 6),
+        'padding': _top(re.findall(r'padding:\s*' + _val(1, 30), html), 8),
+        'margin': _top(re.findall(r'margin:\s*' + _val(1, 30), html), 8),
     }
 
 
@@ -286,9 +297,9 @@ def analyze_structure(html):
     return {
         'tags': dict(collections.Counter(
             re.findall(r'<([a-zA-Z][a-zA-Z0-9]*)\b', html)).most_common(18)),
-        'borders': _top(re.findall(r'borders?:\s*([^;"]{1,44})', html), 12),
-        'border_sides': _top(re.findall(r'border-(?:left|right|top|bottom):\s*([^;"]{1,44})', html), 12),
-        'backgrounds': _top(re.findall(r'background(?:-color)?:\s*([^;"]{2,44})', html), 12),
+        'borders': _top(re.findall(r'borders?:\s*' + _val(1, 44), html), 12),
+        'border_sides': _top(re.findall(r'border-(?:left|right|top|bottom):\s*' + _val(1, 44), html), 12),
+        'backgrounds': _top(re.findall(r'background(?:-color)?:\s*' + _val(2, 44), html), 12),
         'displays': _top(re.findall(r'display:\s*([a-z-]+)', html), 8),
         'flex_direction': _top(re.findall(r'flex-direction:\s*([a-z-]+)', html), 4),
         'text_align': _top(re.findall(r'text-align:\s*([a-z-]+)', html), 6),

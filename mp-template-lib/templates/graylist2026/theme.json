@@ -369,8 +369,12 @@
         "count": 4
       },
       {
-        "value": "url(&quot",
-        "count": 3
+        "value": "url(&quot;data:image/gif",
+        "count": 2
+      },
+      {
+        "value": "url(&quot;https://mmbiz.qpic.cn/mmbiz_png/icOiaaU",
+        "count": 1
       },
       {
         "value": "rgb(34, 34, 34)",

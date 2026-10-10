@@ -54,7 +54,7 @@
 
 **标签普查**：`span`×253 · `div`×125 · `p`×72 · `strong`×33 · `section`×29 · `i`×25 · `a`×19 · `button`×15 · `li`×13 · `img`×11 · `ul`×5 · `svg`×4 · `path`×4 · `code`×4
 
-- **背景**：`rgb(255, 255, 255)`×28 · `url(&quot`×5 · `rgb(0, 0, 0)`×1
+- **背景**：`rgb(255, 255, 255)`×28 · `url(&quot;https://mmbiz.qpic.cn/mm`×3 · `url(&quot;http://mmbiz.qpic.cn/mmb`×2 · `rgb(0, 0, 0)`×1
 - **display**：`none`×50 · `block`×10 · `inline`×3 · `inline-block`×1 · `flex`×1
 - **对齐**：`justify`×73 · `left`×9 · `center`×3 · `right`×1
 - **小尺寸(<=24px)**：`27px`×71 · `0px`×24 · `35px`×5 · `51px`×3
