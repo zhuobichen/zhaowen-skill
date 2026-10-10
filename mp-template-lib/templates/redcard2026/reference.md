@@ -29,7 +29,7 @@
 
 ## 二、排版
 
-- **字体**：`-apple-system, BlinkMacSystemFont, &quot`×31 · `&quot`×2 · `Consolas, Monaco, monospace`×1
+- **字体**：`-apple-system, BlinkMacSystemFont, &quot;PingFang SC&quot;, `×31 · `&quot;SF Mono&quot;, Consolas, Monaco, monospace`×2 · `Consolas, Monaco, monospace`×1
 - **字号**：`15px`×84 · `14px`×34 · `12px`×32 · `18px`×28 · `10px`×14 · `16px`×7
 - **行高**：`1.8`×84 · `1.3`×14 · `1.7`×13 · `0`×3 · `1`×2 · `1.6`×2
 - **字距**：`0.5px`×45 · `3px`×15 · `1px`×6

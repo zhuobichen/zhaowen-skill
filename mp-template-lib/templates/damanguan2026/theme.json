@@ -7,7 +7,7 @@
     "colors": [
       {
         "value": "rgba(0, 0, 0, 0.9)",
-        "count": 135
+        "count": 132
       },
       {
         "value": "rgb(15, 17, 21)",
@@ -16,22 +16,18 @@
     ],
     "font_families": [
       {
-        "value": "mp-quote, &quot",
+        "value": "mp-quote, &quot;PingFang SC&quot;, system-ui, -apple-system, BlinkMacSystemFont, &quot;Helvetica Neue&quot;, &quot;Hiragino Sans GB&quot;, &quot;Microsoft YaHei UI&quot;, &quot;Microsoft YaHei&quot;, Arial, sans-serif",
         "count": 132
       },
       {
-        "value": "\\&quot",
-        "count": 3
-      },
-      {
-        "value": "quote-cjk-patch, Inter, system-ui, -apple-system, BlinkMacSystemFont, &quot",
+        "value": "quote-cjk-patch, Inter, system-ui, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, Roboto, Oxygen, Ubuntu, Cantarell, &quot;Open Sans&quot;, &quot;Helvetica Neue&quot;, sans-serif",
         "count": 1
       }
     ],
     "font_sizes": [
       {
         "value": "17px",
-        "count": 135
+        "count": 132
       },
       {
         "value": "15px",
@@ -50,8 +46,8 @@
     ],
     "letter_spacing": [
       {
-        "value": "0.578px",
-        "count": 3
+        "value": "0.034em",
+        "count": 132
       }
     ],
     "border_radius": [],
@@ -107,17 +103,17 @@
     "backgrounds": [
       {
         "value": "rgb(255, 255, 255)",
-        "count": 4
+        "count": 1
       }
     ],
     "displays": [
       {
-        "value": "inline",
-        "count": 4
-      },
-      {
         "value": "none",
         "count": 3
+      },
+      {
+        "value": "inline",
+        "count": 1
       }
     ],
     "flex_direction": [],
@@ -127,10 +123,6 @@
         "count": 7
       },
       {
-        "value": "justify",
-        "count": 3
-      },
-      {
         "value": "start",
         "count": 1
       }
@@ -138,15 +130,15 @@
     "small_elements": [
       {
         "value": "0px",
-        "count": 4
+        "count": 1
       }
     ]
   },
   "generator": [],
   "fingerprint": {
     "fonts": [
-      "mp-quote, &quot",
-      "\\&quot"
+      "mp-quote, &quot;pingfang sc&quot;, system-ui, -apple-system, blinkmacsystemfont, &quot;helvetica neue&quot;, &quot;hiragino sans gb&quot;, &quot;microsoft yahei ui&quot;, &quot;microsoft yahei&quot;, arial, sans-serif",
+      "quote-cjk-patch, inter, system-ui, -apple-system, blinkmacsystemfont, &quot;segoe ui&quot;, roboto, oxygen, ubuntu, cantarell, &quot;open sans&quot;, &quot;helvetica neue&quot;, sans-serif"
     ],
     "colors": []
   },

@@ -67,6 +67,31 @@ SECTION_RE = re.compile(r'<section\b[^>]*style="([^"]*)"[^>]*>', re.I)
 # 通道差都在 160 以上；而黑/近黑 rgb(15,17,21) 差 6、纯灰差 0。
 # 阈值取 24 两边都不会误判（详见 2026-10-10 那次复核）。
 CHROMA_MIN = 24
+
+# 声明的值里可能含 HTML 实体，而**实体自带分号**（`&quot;`、`&#39;` …）。
+# 用 `[^;]+` 取值会在实体的那个分号处断掉 —— 实测 `font-family: Optima, &quot;Microsoft YaHei&quot;, …`
+# 被取成 `Optima, &quot`（缺陷 13）。所以取值时必须**先整体吃掉实体，再找真正的分号**。
+# 两种写法都要覆盖：命名实体 `&quot;` 和数字实体 `&#39;` / `&#x27;`。
+_ENTITY = r'&(?:[a-zA-Z][a-zA-Z0-9]*|#[0-9]+|#[xX][0-9a-fA-F]+);'
+
+# 微信编辑器会在标签上留**样式副本**：`data-pm-slice`（一段 JSON，里面记着当时的 style）
+# 和 `data-original-style`（该元素保存时的样式）。它们**不是生效样式** ——
+# 生效的是 `style` 属性本身。扫全 HTML 的统计（配色、结构事实、bgimg_rule 的 all 池）
+# 必须先去掉这两个属性的**值**，否则会把副本里的颜色/边框/尺寸算成模板的一部分。
+# 实测：aifrontline 因此多出 `#3f3f3f` 这个假主色；papertoday 的 `rgba(0,0,0,0.4)`
+# 计数被抬到 135（真实 83）；`data-original-style="width: 60px"` 还会让
+# `style="` 的正则**匹配到副本**而不是真样式。
+META_STYLE_ATTR_RE = re.compile(r'\sdata-(?:pm-slice|original-style)\s*=\s*"[^"]*"', re.I)
+
+
+def strip_meta(html):
+    """去掉编辑器留下的样式副本属性。**幂等**，重复调用无副作用。
+
+    下沉到各个统计函数的入口，而不是只在 main() 里做一次 ——
+    否则将来谁直接调 `parse_tokens(html)` / `analyze_structure(html)`，
+    就会静默拿到被元数据污染的结果（这个库已经因为「判据静默错」栽过很多次）。
+    """
+    return META_STYLE_ATTR_RE.sub('', html)
 # 强调色文字的元素级判据：先把整个标签取出来，再取它里面的 color 声明。
 # ⚠️ 必须按「最后一个 color 声明」算：一个 style 里写了多次同属性时，**后写的生效**。
 # 实测 aifrontline2026 有 4 个标签写的是 `color: rgb(255,255,255); … color: rgb(0,179,139)`
@@ -124,8 +149,13 @@ def norm(s):
 
 
 def decl(style, prop):
-    """从 style 串里取某个属性的值（大小写不敏感，容忍空格）。"""
-    m = re.search(r'(?:^|;)\s*%s\s*:\s*([^;]+)' % re.escape(prop), style, re.I)
+    """从 style 串里取某个属性的值（大小写不敏感，容忍空格）。
+
+    值允许含 HTML 实体（见 `_ENTITY`）—— 否则 `url(&quot;…&quot;)` 和
+    `font-family: A, &quot;B&quot;, sans-serif` 都会在实体的分号处被截断（缺陷 13）。
+    """
+    m = re.search(r'(?:^|;)\s*%s\s*:\s*((?:%s|[^;])+)' % (re.escape(prop), _ENTITY),
+                  style, re.I)
     return m.group(1).strip() if m else None
 
 
@@ -214,16 +244,22 @@ def fetch_body_via_browser(url, timeout=240):
 
 def parse_tokens(html):
     """设计令牌：配色、字体、字号、圆角、阴影、字距。"""
+    html = strip_meta(html)
     colors = collections.Counter(COLOR_RE.findall(html))
     ranked = [(c, n) for c, n in colors.most_common()
               if c.replace(' ', '').lower() not in
               {x.replace(' ', '').lower() for x in WECHAT_CHROME_COLORS}]
     return {
         'colors': [{'value': c, 'count': n} for c, n in ranked[:20]],
-        'font_families': _top(re.findall(r'font-family:\s*([^;"\']{4,90})', html), 5),
+        # 上界从 90 提到 200：整条字体栈（含若干 &quot;引号名&quot;）本来就长过 90 字符
+        'font_families': _top(
+            re.findall(r'font-family:\s*((?:%s|[^;"\']){4,200})' % _ENTITY, html), 5),
         'font_sizes': _top(re.findall(r'font-size:\s*([\d.]+px)', html), 12),
         'line_heights': _top(re.findall(r'line-height:\s*([\d.]+(?:px|em)?)', html), 8),
-        'letter_spacing': _top(re.findall(r'letter-spacing:\s*([\d.]+px)', html), 6),
+        # 认 px / em / rem：只写 `([\d.]+px)` 会漏掉 em 写的字距（实测 damanguan2026
+        # 的真实字距是 `0.034em`，而 line_heights 早就认了 em，这里漏了）
+        'letter_spacing': _top(
+            re.findall(r'letter-spacing:\s*([\d.]+(?:px|em|rem)?)', html), 6),
         'border_radius': _top(re.findall(r'border-radius:\s*([^;"]{1,40})', html), 10),
         'box_shadow': _top(re.findall(r'box-shadow:\s*([^;"]{6,90})', html), 6),
         'padding': _top(re.findall(r'padding:\s*([^;"]{1,30})', html), 8),
@@ -246,6 +282,7 @@ def analyze_structure(html):
     所以这里只**陈述事实**（有哪些标签、哪些边框、哪些背景、哪些 display），
     把「这算什么组件」的判断留给人 —— 事实不会因为我没猜到而漏。
     """
+    html = strip_meta(html)
     return {
         'tags': dict(collections.Counter(
             re.findall(r'<([a-zA-Z][a-zA-Z0-9]*)\b', html)).most_common(18)),
@@ -263,6 +300,7 @@ def analyze_structure(html):
 
 def detect_components(html):
     """组件形态识别 —— 靠 style 签名，不靠 class（微信会剥 class）。"""
+    html = strip_meta(html)
     sections = [norm(s) for s in SECTION_RE.findall(html)]
     spans = [norm(s) for s in re.findall(r'<span\b[^>]*style="([^"]*)"', html, re.I)]
     # 任何带 style 的标签。有些构件既不是 <section> 也不是 <span> —— 第六个模板
@@ -768,10 +806,16 @@ def main():
         title = a.title
         print('读入本地 HTML：%d 字符' % len(html))
 
-    tokens = parse_tokens(html)
-    comps = detect_components(html)
-    structure = analyze_structure(html)
-    generator = detect_generator(html)
+    # 统计一律跑在**去掉编辑器样式副本**的 HTML 上（见 META_STYLE_ATTR_RE）。
+    # 写进 sample.html 的仍是原始 html —— 那份要留作对照，不能动。
+    analysis_html = META_STYLE_ATTR_RE.sub('', html)
+    if len(analysis_html) != len(html):
+        print('  剔除编辑器元数据 %d 字符' % (len(html) - len(analysis_html)))
+
+    tokens = parse_tokens(analysis_html)
+    comps = detect_components(analysis_html)
+    structure = analyze_structure(analysis_html)
+    generator = detect_generator(html)      # 这个判的是「哪个编辑器生成的」，用原始 html
 
     # 查重：同一个号反复用同一个模板，不查的话库里会堆重复项
     fp = fingerprint({'tokens': tokens})

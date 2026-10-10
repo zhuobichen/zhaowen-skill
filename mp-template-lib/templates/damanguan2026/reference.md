@@ -10,17 +10,17 @@
 
 | 色值 | 出现次数 |
 |---|---|
-| `rgba(0, 0, 0, 0.9)` | 135 |
+| `rgba(0, 0, 0, 0.9)` | 132 |
 | `rgb(15, 17, 21)` | 1 |
 
 （微信外壳自带的颜色已剔除：微信绿 `#07C160`、链接蓝 `#576B95` 等）
 
 ## 二、排版
 
-- **字体**：`mp-quote, &quot`×132 · `\&quot`×3 · `quote-cjk-patch, Inter, system-ui, -apple-system, BlinkMacSy`×1
-- **字号**：`17px`×135 · `15px`×8 · `16px`×1
+- **字体**：`mp-quote, &quot;PingFang SC&quot;, system-ui, -apple-system,`×132 · `quote-cjk-patch, Inter, system-ui, -apple-system, BlinkMacSy`×1
+- **字号**：`17px`×132 · `15px`×8 · `16px`×1
 - **行高**：`1.6`×132
-- **字距**：`0.578px`×3
+- **字距**：`0.034em`×132
 
 ## 三、组件形态
 
@@ -40,10 +40,10 @@
 
 **标签普查**：`span`×346 · `strong`×40 · `section`×15 · `p`×13 · `img`×7 · `em`×3 · `a`×3 · `mpcpc`×2 · `div`×1 · `br`×1 · `mp`×1
 
-- **背景**：`rgb(255, 255, 255)`×4
-- **display**：`inline`×4 · `none`×3
-- **对齐**：`center`×7 · `justify`×3 · `start`×1
-- **小尺寸(<=24px)**：`0px`×4
+- **背景**：`rgb(255, 255, 255)`×1
+- **display**：`none`×3 · `inline`×1
+- **对齐**：`center`×7 · `start`×1
+- **小尺寸(<=24px)**：`0px`×1
 
 ## ⚠️ 人工复核清单（**必做**）
 
@@ -179,4 +179,9 @@ SKILL.md 缺陷 #13 一直挂账，注释写着「下次谁再用 `decl()` 去�
 > `mp_article: 2` 拆成 `mp_cpc_ad: 2`（广告位，已改名）+ `article_link: 3`（文末真链接，新认出来的）。
 > 修的过程与回归见 SKILL.md 缺陷 14 / 15。
 > 本节以上文字是**修复前**的记录，保留原样以便追溯。
-> 结论四（缺陷 #13，`decl()` 被 `&quot;` 截断）**仍未修**，`font_families` 依旧不可采信。
+> 结论四（缺陷 #13，`decl()` 被 `&quot;` 截断）**已于 2026-10-11 修好** ——
+> 本模板的 `font_families` 现在记的是完整字体栈
+> `mp-quote, &quot;PingFang SC&quot;, system-ui, -apple-system, …`（不再是 `mp-quote, &quot`）。
+> 同一轮还修掉了「编辑器样式副本被当成生效样式」（缺陷 16）和
+> 「`letter_spacing` 只认 px」（缺陷 17，本模板的真实字距 `0.034em`×132 这才被记下来）。
+> 这一节的「结论四」正文是**修复前**的状态描述，保留原样以便追溯。

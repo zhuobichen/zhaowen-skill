@@ -20,11 +20,11 @@
     ],
     "font_families": [
       {
-        "value": "&quot",
+        "value": "&quot;PingFang SC&quot;, system-ui, -apple-system, BlinkMacSystemFont, &quot;Helvetica Neue&quot;, &quot;Hiragino Sans GB&quot;, &quot;Microsoft YaHei UI&quot;, &quot;Microsoft YaHei&quot;, Arial, sans-serif",
         "count": 1
       },
       {
-        "value": "mp-quote, &quot",
+        "value": "mp-quote, &quot;PingFang SC&quot;, system-ui, -apple-system, BlinkMacSystemFont, &quot;Helvetica Neue&quot;, &quot;Hiragino Sans GB&quot;, &quot;Microsoft YaHei UI&quot;, &quot;Microsoft YaHei&quot;, Arial, sans-serif",
         "count": 1
       }
     ],
@@ -55,6 +55,10 @@
       },
       {
         "value": "0.544px",
+        "count": 1
+      },
+      {
+        "value": "0.034em",
         "count": 1
       }
     ],
@@ -143,7 +147,7 @@
   "generator": [],
   "fingerprint": {
     "fonts": [
-      "mp-quote, &quot"
+      "mp-quote, &quot;pingfang sc&quot;, system-ui, -apple-system, blinkmacsystemfont, &quot;helvetica neue&quot;, &quot;hiragino sans gb&quot;, &quot;microsoft yahei ui&quot;, &quot;microsoft yahei&quot;, arial, sans-serif"
     ],
     "colors": [
       "rgb(2,30,170)"

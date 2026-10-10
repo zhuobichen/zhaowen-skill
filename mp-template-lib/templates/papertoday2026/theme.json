@@ -7,11 +7,11 @@
     "colors": [
       {
         "value": "rgba(0, 0, 0, 0.4)",
-        "count": 135
+        "count": 83
       },
       {
         "value": "rgba(0, 0, 0, 0)",
-        "count": 49
+        "count": 36
       },
       {
         "value": "rgb(89, 89, 89)",
@@ -60,7 +60,7 @@
     ],
     "font_families": [
       {
-        "value": "Optima, &quot",
+        "value": "Optima, &quot;Microsoft YaHei&quot;, PingFangSC-regular, serif",
         "count": 1
       },
       {
@@ -104,7 +104,16 @@
         "count": 1
       }
     ],
-    "letter_spacing": [],
+    "letter_spacing": [
+      {
+        "value": "0em",
+        "count": 25
+      },
+      {
+        "value": "0.02em",
+        "count": 21
+      }
+    ],
     "border_radius": [
       {
         "value": "8px",
@@ -122,7 +131,7 @@
     "box_shadow": [
       {
         "value": "rgba(0, 0, 0, 0) 0px 0px 0px 0px",
-        "count": 26
+        "count": 13
       },
       {
         "value": "rgba(0, 0, 0, 0.55) 0px 2px 10px",
@@ -262,7 +271,7 @@
     "displays": [
       {
         "value": "block",
-        "count": 38
+        "count": 24
       },
       {
         "value": "flex",
@@ -300,7 +309,7 @@
     "small_elements": [
       {
         "value": "3px",
-        "count": 135
+        "count": 83
       },
       {
         "value": "1px",
@@ -321,7 +330,7 @@
   ],
   "fingerprint": {
     "fonts": [
-      "optima, &quot",
+      "optima, &quot;microsoft yahei&quot;, pingfangsc-regular, serif",
       "consolas, monaco, menlo, monospace"
     ],
     "colors": [

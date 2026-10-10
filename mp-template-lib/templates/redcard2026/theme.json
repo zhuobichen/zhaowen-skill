@@ -88,11 +88,11 @@
     ],
     "font_families": [
       {
-        "value": "-apple-system, BlinkMacSystemFont, &quot",
+        "value": "-apple-system, BlinkMacSystemFont, &quot;PingFang SC&quot;, &quot;Hiragino Sans GB&quot;, &quot;Microsoft YaHei&quot;, sans-serif",
         "count": 31
       },
       {
-        "value": "&quot",
+        "value": "&quot;SF Mono&quot;, Consolas, Monaco, monospace",
         "count": 2
       },
       {
@@ -646,7 +646,7 @@
   "generator": [],
   "fingerprint": {
     "fonts": [
-      "-apple-system, blinkmacsystemfont, &quot",
+      "-apple-system, blinkmacsystemfont, &quot;pingfang sc&quot;, &quot;hiragino sans gb&quot;, &quot;microsoft yahei&quot;, sans-serif",
       "consolas, monaco, monospace"
     ],
     "colors": [

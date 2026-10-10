@@ -111,7 +111,7 @@
     "text_align": [
       {
         "value": "center",
-        "count": 19
+        "count": 18
       },
       {
         "value": "justify",
@@ -121,7 +121,7 @@
     "small_elements": [
       {
         "value": "60px",
-        "count": 15
+        "count": 5
       }
     ]
   },

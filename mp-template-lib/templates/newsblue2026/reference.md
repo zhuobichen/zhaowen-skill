@@ -18,10 +18,10 @@
 
 ## 二、排版
 
-- **字体**：`&quot`×1 · `mp-quote, &quot`×1
+- **字体**：`&quot;PingFang SC&quot;, system-ui, -apple-system, BlinkMacS`×1 · `mp-quote, &quot;PingFang SC&quot;, system-ui, -apple-system,`×1
 - **字号**：`15px`×9 · `12px`×3 · `16px`×1
 - **行高**：`1.75em`×24
-- **字距**：`0.578px`×10 · `0.544px`×1
+- **字距**：`0.578px`×10 · `0.544px`×1 · `0.034em`×1
 - **外边距**：`0px 8px 16px`×10 · `16px 8px 0px`×3
 
 ## 三、组件形态

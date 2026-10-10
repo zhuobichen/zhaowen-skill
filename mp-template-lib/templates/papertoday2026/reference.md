@@ -10,8 +10,8 @@
 
 | 色值 | 出现次数 |
 |---|---|
-| `rgba(0, 0, 0, 0.4)` | 135 |
-| `rgba(0, 0, 0, 0)` | 49 |
+| `rgba(0, 0, 0, 0.4)` | 83 |
+| `rgba(0, 0, 0, 0)` | 36 |
 | `rgb(89, 89, 89)` | 36 |
 | `rgb(145, 109, 213)` | 21 |
 | `rgb(136, 136, 136)` | 10 |
@@ -28,11 +28,12 @@
 
 ## 二、排版
 
-- **字体**：`Optima, &quot`×1 · `Consolas, Monaco, Menlo, monospace`×1
+- **字体**：`Optima, &quot;Microsoft YaHei&quot;, PingFangSC-regular, ser`×1 · `Consolas, Monaco, Menlo, monospace`×1
 - **字号**：`14px`×30 · `13px`×10 · `18px`×5 · `16px`×1 · `12px`×1
 - **行高**：`1.8em`×35 · `1.5em`×16 · `26px`×1
+- **字距**：`0em`×25 · `0.02em`×21
 - **圆角**：`8px`×13 · `0px`×6 · `5px`×2
-- **阴影**：`rgba(0, 0, 0, 0) 0px 0px 0px 0px`×26 · `rgba(0, 0, 0, 0.55) 0px 2px 10px`×1
+- **阴影**：`rgba(0, 0, 0, 0) 0px 0px 0px 0px`×13 · `rgba(0, 0, 0, 0.55) 0px 2px 10px`×1
 - **内边距**：`0px`×7 · `8px 0px`×5 · `0px 10px`×1 · `16px`×1
 - **外边距**：`0px auto`×14 · `0px`×12 · `10px 0px`×1
 
@@ -59,9 +60,9 @@
 **标签普查**：`span`×103 · `p`×22 · `strong`×21 · `img`×14 · `figure`×13 · `section`×10 · `figcaption`×10 · `li`×9 · `h2`×5 · `ul`×4 · `br`×2 · `div`×1 · `em`×1 · `pre`×1
 
 - **背景**：`rgba(0, 0, 0, 0)`×16 · `unset`×10 · `none left top / auto no-repeat scr`×6 · `linear-gradient(90deg, rgba(50, 0,`×1 · `#282c34`×1
-- **display**：`block`×38 · `flex`×13 · `-webkit-box`×1 · `none`×1
+- **display**：`block`×24 · `flex`×13 · `-webkit-box`×1 · `none`×1
 - **对齐**：`left`×42 · `center`×10
-- **小尺寸(<=24px)**：`3px`×135 · `1px`×35 · `5px`×5 · `26px`×1
+- **小尺寸(<=24px)**：`3px`×83 · `1px`×35 · `5px`×5 · `26px`×1
 
 ## ⚠️ 人工复核清单（**必做**）
 

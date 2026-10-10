@@ -92,10 +92,6 @@
         "count": 16
       },
       {
-        "value": "1.5em",
-        "count": 15
-      },
-      {
         "value": "24px",
         "count": 11
       },
@@ -190,7 +186,7 @@
     "bgimg_any": {
       "label": "挂了背景图的元素（原始事实，未判断用途）",
       "count": 3,
-      "note": "其中被判为「横线」的 0 个，base64 data URI 0 个（多为空白占位图，不是构件）；其余多为正常配图或平台家具"
+      "note": "其中被判为「横线」的 0 个，base64 data URI 2 个（多为空白占位图，不是构件）；其余多为正常配图或平台家具"
     },
     "quote": {
       "label": "引用块（左侧竖线）",
@@ -365,12 +361,12 @@
         "count": 9
       },
       {
-        "value": "transparent",
-        "count": 8
-      },
-      {
         "value": "#f2f2f2",
         "count": 5
+      },
+      {
+        "value": "transparent",
+        "count": 4
       },
       {
         "value": "url(&quot",

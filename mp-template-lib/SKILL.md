@@ -65,8 +65,8 @@ python scripts/extract_theme.py --html ./body.html --name xxx --preview ./shot.p
 
 | 名字 | 风格 | 主色 | 特征 |
 |---|---|---|---|
-| `redcard2026` | **红色卡片** | `rgb(220,38,38)` | 卡片 12px 圆角 + 淡红阴影；章节条 = 红方块 + 英文小字 + 中文标题；红渐变分隔线；引用块 4px 左竖线；胶囊内嵌 6px 红点。**12 类组件** |
-| `graylist2026` | **灰调极简** | `#333` / `#252525` | 无卡片无阴影；`Optima-Regular, PingFangTC-light`；**双圆点列表项**（实心 9px + 描边 9px 叠放）；原生 `<ul>/<li>` 78 处；**底色式**标题条；`code` 32 处。**12 类**（样本已换成同号更全的一篇） |
+| `redcard2026` | **红色卡片** | `rgb(220,38,38)` | 卡片 12px 圆角 + 淡红阴影；章节条 = 红方块 + 英文小字 + 中文标题；红渐变分隔线；引用块 4px 左竖线；胶囊内嵌 6px 红点。**15 类组件** |
+| `graylist2026` | **灰调极简** | `#333` / `#252525` | 无卡片无阴影；`Optima-Regular, PingFangTC-light`；**双圆点列表项**（实心 9px + 描边 9px 叠放）；原生 `<ul>/<li>` 78 处；**底色式**标题条；`code` 32 处。**15 类**（样本已换成同号更全的一篇） |
 | `schoolphoto2026` | **校园图片展** | `rgb(83,179,76)` 绿 | 图片主导（112 张）；顶部大图 banner；2px 柠檬绿细横条分隔（49 处）。5 类 |
 | `autumn2026` | **棕金中秋** | `rgba(155,104,41,*)` | 图片主导（63 张）；`PingFangSC-light`；**真 SVG 装饰 13 个**（圆形纹章）。4 类 |
 | `newsblue2026` | **新闻体** | `rgb(2,30,170)` 蓝 | 正文短（20K）；蓝色粗体**居中**小标题；原生 `blockquote` 4 个；**微信内置组件**：视频号卡片 1 + 公众号名片 1。5 类 |
@@ -235,7 +235,7 @@ background-image」，不看图永远不知道那画的是一条线。而且标�
 > 藏起来。这也解释了为什么 2026-10-03 那次回归里 schoolphoto2026 的 `svg_real`
 > 从「不显示」变成了「显示 0」—— 那是**信息变多了**，不是数据变了。
 
-### 13. `decl()` 取不全**含 HTML 实体**的值 ⭐（既有缺陷，本次挂账未修）
+### 13. `decl()` 取不全**含 HTML 实体**的值 ⭐（2026-10-11 已修）
 
 ```python
 m = re.search(r'(?:^|;)\s*%s\s*:\s*([^;]+)' % prop, style)
@@ -256,15 +256,46 @@ decl(s, 'background')           # s = 'background:url(&quot;http://a/b.png&quot;
 已知 `bgimg_rule` 用的是 `background-size`（值 `100% 6px`，不含实体）所以没受影响；
 **下次谁再用 `decl()` 去解析 URL 或字体名就会踩。**
 
-**处置**：本次**没有动 `decl()` 本身**。它被 extract_theme 里多处使用，改它属于动地基，
-必须单独跑一轮全模板回归（见缺陷 8）。本次只在新写的 `_has_bgurl()` 里
-**绕开 decl、直接在原始 style 串上做正则**。**修 decl 这件事挂账。**
+**处置**（2026-10-10 挂账，2026-10-11 修）：取值时**先整体吃掉实体再找真正的分号**。
+
+```python
+_ENTITY = r'&(?:[a-zA-Z][a-zA-Z0-9]*|#[0-9]+|#[xX][0-9a-fA-F]+);'
+# decl(): ([^;]+)  →  ((?:%s|[^;])+)  % _ENTITY
+```
+
+命名实体（`&quot;`）和数字实体（`&#39;` / `&#x27;`）两种写法都覆盖。
+
+**同一个 bug 在 `parse_tokens` 里还有一份独立的**：`font-family:\s*([^;"\']{4,90})`
+也是撞到实体的分号就停 —— 它**不走 `decl()`**，所以只修 `decl` 修不好它。
+两处都改了，顺带把 90 字符的上界提到 200（完整字体栈本来就长过 90）。
+
+修复效果（4/9 个模板的 `font_families` 之前是残渣）：
+
+| 模板 | 修复前 | 修复后 |
+|---|---|---|
+| `damanguan2026` | `mp-quote, &quot` ×132 | `mp-quote, &quot;PingFang SC&quot;, system-ui, …` |
+| `redcard2026` | `-apple-system, BlinkMacSystemFont, &quot` ×31 | `-apple-system, BlinkMacSystemFont, &quot;PingFang SC&quot;, …` |
+| `newsblue2026` | `&quot` ×1 | `&quot;PingFang SC&quot;, system-ui, …` |
+| `papertoday2026` | `Optima, &quot` ×1 | `Optima, &quot;Microsoft YaHei&quot;, PingFangSC-regular, serif` |
+
+> **注意：值里的 `&quot;` 不做解码**，保留原样。这是有意的 —— 库里写着「照抄样式的
+> 字符串，别自己重写」，而 `&quot;` 正是把它贴回 style 属性时**必须**的写法。
+> 解码成裸引号反而会让这个值不能直接用。
+
+**实测影响面**：对 9 个样本逐个对拍，这个修复**只改了 `font_families`**，
+组件、其它令牌、结构事实**一处没动** —— 说明 `decl()` 的截断从没影响过任何检测器
+在这批样本上的判断，它污染的是令牌。（但 `_bg_du` 那条「background 里有没有 `data:`」
+是真的会因此漏判的，只是这批样本没撞上。）
 
 > 教训 ——「我以为我在修一个新 bug，其实踩在一个更老的 bug 上」：
 > 第一版 `_has_bgurl` 写的是 `'url(' in decl(...)`，**恰好还能工作**
 > （截断成 `'url(&quot'` 之后仍然含 `url(`）。我把它「收紧」成要求完整匹配 `url(...)`，
 > 结果全军覆没、`bgimg_any` 整项消失。是**前后对比**把它暴露出来的 ——
 > 只看单个模板的结果，只会看到「这一项没了」，看不出为什么。
+>
+> 补一条：**同一个形态的 bug 会有多个副本**。这次修的时候顺手搜了一遍
+> `[^;]` / `[^;"]` 的写法，才发现 `parse_tokens` 里那份独立存在。
+> 修一个「既有缺陷」时，先问「同样的写法还在别处出现过吗」。
 
 ### 14. `accent_text` 从不检验「是不是彩色」 → 全库虚高 ⭐（2026-10-10 已修）
 
@@ -334,6 +365,59 @@ n_acc = len(re.findall(r'<(?:strong|span)[^>]*color:\s*(?:rgb|#)[^;"]{3,30}', ht
 
 > 教训：**前缀/命名不能承担语义**。判据要绑在被数的那批东西本身。
 
+### 16. 编辑器留下的**样式副本**被当成生效样式统计 ⭐（2026-10-11 已修）
+
+微信编辑器会在标签上留两个属性：
+
+| 属性 | 是什么 |
+|---|---|
+| `data-pm-slice` | 一段 JSON，里面 `&quot;style&quot;:&quot;…&quot;` 记着**当时的**样式 |
+| `data-original-style` | 该元素**保存时**的样式 |
+
+它们**都不是生效样式** —— 生效的是 `style` 属性本身。但 `parse_tokens` /
+`analyze_structure` / `detect_components` 都是拿正则**扫整个 HTML**，
+于是副本里的颜色、边框、尺寸、对齐全被算成了模板的一部分：
+
+| 模板 | 症状 |
+|---|---|
+| `aifrontline2026` | 多出一个**假主色** `#3f3f3f`（×2，只存在于元数据） |
+| `papertoday2026` | `rgba(0, 0, 0, 0.4)` 记 135，真实 83；`box-shadow` 26 → 13；`displays block` 38 → 24 |
+| `damanguan2026` | `rgba(0, 0, 0, 0.9)` 135 → 132；结构 `text-align:justify` 3 → **0** |
+| `graylist2026` | `line_heights` 的 `1.5em`×15 整项消失（只在元数据里） |
+
+还有一层副作用：`data-original-style="width: 60px"` 里**也含 `style="`**，
+所以找 `style="` 的正则（`detect_components` 的 `allstyles` 池）会**匹配到副本**
+而不是真样式。
+
+**修法**：加 `strip_meta(html)` 去掉这两个属性，并让它**在每个统计函数的入口调用**
+（幂等），而不是只在 `main()` 里做一次 —— 否则将来谁直接调 `parse_tokens(html)`
+就会静默拿到污染结果。`sample.html` 里存的仍是**原始 html**，只有统计走干净版。
+
+> 实测效果里有一条值得记：修完之后 `aifrontline2026` 的 `margin` 里**冒出了新值**
+> （`8px 0px 24px`、`8px 0px 0px`）。那不是「多算了」，而是原本被虚高项挤掉的真值
+> **终于进了 top-N** —— 污染不只会造假，还会**把真数据挤到看不见**。
+
+> 教训：**「HTML 里出现的样式」≠「生效的样式」**。同一个元素上可能有好几份样式文本，
+> 只有一份是真的。同缺陷 14 的第 4 条是一条根上的。
+
+### 17. `letter_spacing` 只认 `px`，认不出 `em`（2026-10-11 已修）
+
+```python
+'letter_spacing': _top(re.findall(r'letter-spacing:\s*([\d.]+px)', html), 6),
+```
+
+旁边的 `line_heights` 写的是 `([\d.]+(?:px|em)?)` —— 同一个函数里，一个认 em 一个不认。
+于是 `damanguan2026` 的真实字距 `0.034em`（×132）**从来没被记下来过**：
+它的 `letter_spacing` 里原本那项 `0.578px` 反而是元数据里的假值（见缺陷 16），
+两个 bug 叠在一起，正好掩盖了彼此。
+
+已改成 `([\d.]+(?:px|em|rem)?)`，补回三处真值：
+`damanguan2026` `0.034em`×132、`newsblue2026` `0.034em`×1、
+`papertoday2026` `0em`×25 + `0.02em`×21。
+
+> 教训：**同一个函数里并排的两个判据要互相看齐**。`parse_tokens` 里 9 个令牌
+> 各写了各的正则，其中一个的写法比邻居窄 —— 这种不一致不会报错，只会静默少记。
+
 ## 依赖
 
 - **browser-act CLI**：`uv tool install browser-act-cli --python 3.12`
@@ -351,13 +435,7 @@ n_acc = len(re.findall(r'<(?:strong|span)[^>]*color:\s*(?:rgb|#)[^;"]{3,30}', ht
 - 微信会剥 `<style>` 和 `class`，所以**所有样式必须内联** —— 这是
   `clz_docx_to_mp` 那条流水线的硬约束，本库的产物要喂给它，同样受约束。
 
-- **`tokens.colors` 会把编辑器元数据里的颜色也算进去**（2026-10-10 发现，**未修**）。
-  `parse_tokens` 是拿 `COLOR_RE` 扫**整个 HTML**，而 `data-pm-slice` 这类属性里塞着
-  编辑器元数据 JSON（内含原样式的副本），其中的颜色会被计入调色板 ——
-  和缺陷 14 的第 4 条是同一个坑，但那次只修了 `accent_text`。
-  `tokens.colors` 影响**每个模板的「配色」表**，要不要一起改得单独跑一轮全模板回归再定。
-
-- **`--out` 指向不存在的目录会崩**（2026-10-10 发现）。`main()` 里 `find_duplicate()`
+- **`--out` 指向不存在的目录会崩**（2026-10-10 发现，未修）。`main()` 里 `find_duplicate()`
   在 `os.makedirs(outdir)` **之前**就 `os.listdir(out_dir)`，于是报
   `FileNotFoundError: 系统找不到指定的路径`。先手工建好目录即可绕过。
 
