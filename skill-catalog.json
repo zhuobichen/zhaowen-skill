@@ -173,6 +173,14 @@
       "upstream": null
     },
     {
+      "name": "kb-capture",
+      "path": "kb-capture/",
+      "display_name": "Knowledge Base Capture",
+      "short_description": "Turn concept Q&A from a chat into knowledge-base cards",
+      "ui_metadata": "agents/openai.yaml",
+      "upstream": null
+    },
+    {
       "name": "khazix-writer",
       "path": "khazix-writer/",
       "display_name": "Khazix Long-Form Writer",

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Knowledge Base Capture"
+  short_description: "Turn concept Q&A from a chat into knowledge-base cards"
+  default_prompt: "Use $kb-capture to save this concept Q&A into my knowledge base."
