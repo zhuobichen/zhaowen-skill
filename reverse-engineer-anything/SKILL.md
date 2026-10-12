@@ -222,6 +222,9 @@ as complete while required questions remain open.
   [references/runtime-observation.md](references/runtime-observation.md)
 - Evidence paging, comparisons, residual unknowns, and verification:
   [references/evidence-workflows.md](references/evidence-workflows.md)
+- Worked examples on real targets, including recovering structure without a
+  decompiler and fixing a heap-bound JS analysis:
+  [references/case-studies/](references/case-studies/)
 
 ## Finish the task
 
