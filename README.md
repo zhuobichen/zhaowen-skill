@@ -6,7 +6,6 @@
 
 | Skill | 目录 | 用途 |
 |-------|------|------|
-| Automate the user's  | [`browser-skill/`](browser-skill/) | Automate the user's logged-in Chromium browser: read pages,  |
 | docx 转公众号（clz） | [`clz_docx_to_mp/`](clz_docx_to_mp/) | 把 docx 转成公众号图文并推送草稿箱：解析 → 渲染微信兼容 HTML → 推送。内容忠实保留只做样式；含横滑相册、GIF 动效、平台硬限制实测记录 |
 | 科研文献证据工程（ylx） | [`ylx_research_evidence_synthesis/`](ylx_research_evidence_synthesis/) | ylx·科研文献证据工程与 Related Work 写作：Claim-first（证据矩阵 + 逻辑树 + 综述），含输出样例 |
 | one-hub 用量监测（ylx） | [`ylx_onehub_usage_monitor/`](ylx_onehub_usage_monitor/) | 监测 one-hub API 用量与费用：总额度/已用/剩余、每日每月记账、各模型单价对比 |
@@ -64,6 +63,20 @@
 | Convert Image To JPG | [`convert-image-to-jpg/`](convert-image-to-jpg/) | 将常见栅格图片批量转换为指定 DPI 的 JPG |
 | Remove Similar Image | [`remove-similar-image/`](remove-similar-image/) | 检测近似重复和模糊图片，并在确认后清理 |
 | Reverse Engineer Anything | [`reverse-engineer-anything/`](reverse-engineer-anything/) | 用 REA 逆向成品而非源码：原生二进制、Electron/ASAR、APK、.NET/固件、浏览器端；给出「这个包/这个 App 到底做了什么」的证据化结论。装的是方法说明，REA MCP 与分析引擎需另行接入 |
+
+## 借鉴自腾讯 BrowserSkill
+
+[`Tencent/BrowserSkill`](https://github.com/Tencent/BrowserSkill)（MIT）由 `bsk` CLI 分发到本机
+`~/.claude/skills/browser-skill`，此处为发布快照，便于查阅与参考。
+
+| Skill | 目录 | 用途 |
+|-------|------|------|
+| Browser Skill | [`browser-skill/`](browser-skill/) | 在独立 Agent Window 里驱动你**已登录的** Chrome/Edge：读页面、填表、抓数据、调试网站；借用用户已打开的标签页需显式确认，验证码/OTP/支付等关键节点可交还人工。由 `bsk` CLI + 本地 daemon + 浏览器扩展三段组成，支持 Claude Code / Codex / Cursor / OpenClaw 等调用 Shell 的智能体 |
+
+> ⚠️ 本目录**不是权威副本**。权威来源是本机 `~/.claude/skills/browser-skill`，由 `bsk install-skill`
+> 安装并自管版本。上游更新时：`bsk update` → `bsk install-skill` 刷新本机 → 与本目录 `git diff`
+> 对比 → 按需重新发布。目录内 `.bsk-source` 是内容哈希清单（可用于判断上游是否变过），
+> `.bsk.lock` 是运行时锁文件。
 
 ## 使用方式
 

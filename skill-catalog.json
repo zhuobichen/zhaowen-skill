@@ -37,6 +37,14 @@
       "upstream": null
     },
     {
+      "name": "browser-skill",
+      "path": "browser-skill/",
+      "display_name": "Browser Skill",
+      "short_description": "Drive the user's logged-in Chrome/Edge from an isolated Agent Window",
+      "ui_metadata": null,
+      "upstream": "Tencent/BrowserSkill (via bsk bundled snapshot; see UPSTREAM_SOURCES.md)"
+    },
+    {
       "name": "claude-code-message",
       "path": "claude-code-message/",
       "display_name": "Claude Code Message",
