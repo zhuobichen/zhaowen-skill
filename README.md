@@ -60,6 +60,7 @@
 | Document Granular Decompose | [`document-granular-decompose/`](document-granular-decompose/) | 调用 TianGong Unstructure 对本地文档做细粒度全文解析 |
 | Convert Image To JPG | [`convert-image-to-jpg/`](convert-image-to-jpg/) | 将常见栅格图片批量转换为指定 DPI 的 JPG |
 | Remove Similar Image | [`remove-similar-image/`](remove-similar-image/) | 检测近似重复和模糊图片，并在确认后清理 |
+| Reverse Engineer Anything | [`reverse-engineer-anything/`](reverse-engineer-anything/) | 用 REA 逆向成品而非源码：原生二进制、Electron/ASAR、APK、.NET/固件、浏览器端；给出「这个包/这个 App 到底做了什么」的证据化结论。装的是方法说明，REA MCP 与分析引擎需另行接入 |
 
 ## 使用方式
 

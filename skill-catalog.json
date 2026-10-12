@@ -277,6 +277,14 @@
       "upstream": "tiangong-ai/agent-skills@5e692461708a4e02c1012086a59d2bd75da99673"
     },
     {
+      "name": "reverse-engineer-anything",
+      "path": "reverse-engineer-anything/",
+      "display_name": "Reverse Engineer Anything",
+      "short_description": "Reverse engineer binaries, Electron apps, APKs and firmware with REA",
+      "ui_metadata": "agents/openai.yaml",
+      "upstream": "morluto/rea@b8fab74"
+    },
+    {
       "name": "wechat-claude-code",
       "path": "wechat-claude-code/",
       "display_name": "WeChat Claude Code Bridge",

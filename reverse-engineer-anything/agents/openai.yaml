@@ -1,0 +1,4 @@
+interface:
+  display_name: "Reverse Engineer Anything"
+  short_description: "Reverse engineer binaries, Electron apps, APKs and firmware with REA"
+  default_prompt: "Use $reverse-engineer-anything to reverse engineer the shipped binary, package or application I give you with REA, and report what its features and code actually do."
