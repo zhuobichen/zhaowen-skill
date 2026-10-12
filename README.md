@@ -36,7 +36,7 @@
 | 智能体对话管理 | [`agent-dialog_management/`](agent-dialog_management/) | Claude Code + Codex 对话统一列表/搜索/恢复/导出 |
 | 横纵分析法 | [`hv-analysis/`](hv-analysis/) | 系统性深度研究（产品/公司/概念/人物） |
 | 真正搞懂（分层解释法） | [`layered-explainer/`](layered-explainer/) | 两个方向：**A 读**——把看不下去的长输出按理解成本逐级升级（受控语言 ASD-STE100 → 一张图 → 单文件交互 HTML → Manim 视频）；**B 讲**——反过来让你输出、AI 评判（学习阶梯 → 只学最重要的 20% → 当考官一次只问一问 → 一页速查表 → 筛资源 → 费曼法）。每一步都配了失败模式与检查项，含「AI 说你做对了」不算通过 |
-| 公众号长文写作 | [`khazix-writer/`](khazix-writer/) | 数字生命卡兹克公众号长文（四层自检） |
+| 数字生命卡兹克（Khazix）的公众号长 | [`khazix-writer/`](khazix-writer/) | 数字生命卡兹克（Khazix）的公众号长文写作skill。当用户需要撰写公众号文章、写稿子、续写文章、根据素材产出长文时 |
 | LaTeX 论文写作 | [`latex-paper-writing/`](latex-paper-writing/) | LaTeX 论文写作 / 编译 PDF |
 | MEMORY 整理 | [`memory-organizer/`](memory-organizer/) | MEMORY 笔记整理工作流 |
 | Obsidian 知识库工作流 | [`obsidian-wiki-workflow/`](obsidian-wiki-workflow/) | LLM Wiki 知识库构建 / MEMORY→OUTPUT 同步 |
