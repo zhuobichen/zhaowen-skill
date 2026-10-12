@@ -185,6 +185,63 @@ f.style.cssText = 'display:block;opacity:1;position:fixed;top:0;left:0;width:200
 ```
 然后 `browser-act state` 找 `type=file` 的 index，`browser-act upload <index> <本地图片路径>`。上传后新图插入到当前光标处，再用上面的 dispatch 把它移到目标位置并删旧图。
 
+## 5.5 批量灌入一篇新文章（从零建稿，最快路径）★ 2026-10-12 实测
+
+不想走 docx 那条线、只想把一份现成文章推进草稿箱时，这是最短路径：
+
+1. 导航到**新建草稿** URL（`appmsg_edit_v2 ... isNew=1`），等编辑器就绪
+2. 取正文 EditorView，直接 `view.pasteHTML(html)`（空正文用它最顺，比 dispatch 替换简单）
+3. 设标题，**必须**走「focus + 全选 + `execCommand('insertText')`」（见第 6 节，空草稿改 textarea 不落库）
+4. 点「保存为草稿」
+5. **重载**编辑页读回标题与 `bodyLen` 验证落库
+
+实测数据（一篇 3600 字、64 段的文章）：`doc.content.size` 从 4 涨到 **3742**；
+保存后 URL 出现 `appmsgid=100001997`；重载后标题与正文都在。
+
+### ⚠️ 三个必踩的坑
+
+**① HTML 里的反引号会把注入用的 JS 模板字面量提前闭合。**
+把 HTML 拼进 JS 时如果用反引号包字符串，而 HTML 里含 markdown 残留的行内反引号
+（`` `--min-degree` `` 这种），JS 会报
+`SyntaxError: Invalid left-hand side expression in postfix operation`
+—— 报错信息完全指不到真正的原因。**转化时就把行内反引号转成 `<code>`，
+并断言 HTML 里零反引号残留。**
+
+**② 中文内容的「字节数」和 PowerShell 读回的「字符数」不是一回事。**
+18063 字节的文件 `Get-Content -Raw` 读回来是 12425 字符，**这是对的**（中文 3 字节/字），
+不是被截断。拿两个数直接比会误判成「内容丢了」。
+
+**③ 列表页必须真导航。** 草稿箱/发表记录的卡片是前端渲染的，`fetch` 列表 URL
+只拿到空壳（没有卡片、没有 appmsgid）。要用 `div[data-appid]` 上的属性读，
+或按第 2 节的 Vue 路由取。
+
+## 5.6 删除草稿（原文档没写，2026-10-12 现摸的）
+
+草稿卡片的删除入口是**悬停才出现**的垃圾桶图标，藏在浮层里，`state` 里不好找。
+直接在卡片作用域内定位更稳：
+
+```js
+// 每张卡片：<div class="weui-desktop-card" data-appid="100001970"> ...
+const card = document.querySelector('div[data-appid="<ID>"]');
+// 卡片里有 5 个 a.weui-desktop-icon-btn，靠同级 tooltip 文案认出哪个是删除
+const trash = [...card.querySelectorAll('a.weui-desktop-icon-btn')].find(a => {
+  const wrp = a.closest('.weui-desktop-tooltip__wrp') || a.parentElement;
+  const tip = wrp && wrp.querySelector('.weui-desktop-tooltip');
+  return tip && tip.textContent.trim() === '删除';
+});
+trash.click();                                   // 弹出确认浮层
+// 浮层文案：确定删除？删除该内容不会删除已发表的内容
+const del = [...card.querySelectorAll('.weui-desktop-popover button')]
+              .find(b => b.textContent.trim() === '删除');
+del.click();                                     // 真正删除
+```
+
+- 删除**不可撤销**。而草稿往往是从未发表的**唯一副本** —— 动手前先把正文和图片 URL
+  抓下来存本地（`data-src || src`，滤掉 `data:` 开头的占位），让删除可回滚。
+- 页面上存在一个无关的通用弹窗（按钮是「退出登录 / 我知道了」），**别当成删除确认去点**。
+  只点浮层里那个文案正好是「删除」的按钮。
+- 删完会从列表 DOM 移除；判据用**重载列表后卡片数为 0**，不要只看当次 DOM。
+
 ## 6. 修改标题
 
 - `window.__mpTitleEditor.getContent()` 可读；`setContent()` **不生效**（勿用）
