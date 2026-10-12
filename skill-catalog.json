@@ -21,6 +21,14 @@
       "upstream": "tiangong-ai/agent-skills@5e692461708a4e02c1012086a59d2bd75da99673"
     },
     {
+      "name": "academic-plotting",
+      "path": "academic-plotting/",
+      "display_name": "Academic Plotting",
+      "short_description": "Publication-quality ML paper figures: architecture diagrams and data-driven charts",
+      "ui_metadata": null,
+      "upstream": null
+    },
+    {
       "name": "agent-dialog_management",
       "path": "agent-dialog_management/",
       "display_name": "Agent Dialog Management",
@@ -226,6 +234,14 @@
       "display_name": "WeChat Template Library",
       "short_description": "Reverse-engineer a published WeChat article into a reusable layout theme",
       "ui_metadata": "agents/openai.yaml",
+      "upstream": null
+    },
+    {
+      "name": "nature-figure",
+      "path": "nature-figure/",
+      "display_name": "Nature Figure",
+      "short_description": "Submission-grade scientific figures for Nature-family venues in Python or R",
+      "ui_metadata": null,
       "upstream": null
     },
     {

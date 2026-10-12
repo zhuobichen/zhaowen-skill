@@ -6,8 +6,6 @@
 
 | Skill | 目录 | 用途 |
 |-------|------|------|
-| Generates publicatio | [`academic-plotting/`](academic-plotting/) | Generates publication-quality figures for ML papers from res |
-| Create, revise, audi | [`nature-figure/`](nature-figure/) | Create, revise, audit, and export submission-grade scientifi |
 | docx 转公众号（clz） | [`clz_docx_to_mp/`](clz_docx_to_mp/) | 把 docx 转成公众号图文并推送草稿箱：解析 → 渲染微信兼容 HTML → 推送。内容忠实保留只做样式；含横滑相册、GIF 动效、平台硬限制实测记录 |
 | 科研文献证据工程（ylx） | [`ylx_research_evidence_synthesis/`](ylx_research_evidence_synthesis/) | ylx·科研文献证据工程与 Related Work 写作：Claim-first（证据矩阵 + 逻辑树 + 综述），含输出样例 |
 | one-hub 用量监测（ylx） | [`ylx_onehub_usage_monitor/`](ylx_onehub_usage_monitor/) | 监测 one-hub API 用量与费用：总额度/已用/剩余、每日每月记账、各模型单价对比 |
@@ -17,6 +15,8 @@
 
 | Skill | 目录 | 用途 |
 |-------|------|------|
+| 科研论文绘图（Nature 投稿级） | [`nature-figure/`](nature-figure/) | 投 Nature 系及高影响期刊的科研配图：Python（matplotlib/seaborn）或 R（ggplot2）多面板图，出图前先定结论、证据逻辑、数据完整性与审稿风险，导出 SVG/PDF/TIFF；另含 AI 生成的机制示意图/图形摘要通道 |
+| ML 论文绘图 | [`academic-plotting/`](academic-plotting/) | 从论文上下文提取系统组件与关系生成架构图；从实验数据自动选图型并用 matplotlib/seaborn 生成数据图 |
 | 概念问答沉淀 | [`kb-capture/`](kb-capture/) | 说一句「存知识库」即把当前对话里的概念性问答沉淀成知识库原子卡片并 push：先 `search` 判重，命中则读全文后合并、未命中则新建；卡片与索引同步放在同一次提交，写盘前做敏感与卡片规范校验 |
 | 微信公众号模板库 —— 把「看到一个好排 | [`mp-template-lib/`](mp-template-lib/) | 微信公众号模板库 —— 把「看到一个好排版」变成「能吃进来的可复用主题」。
 当用户要求：反推公众号模板、套用某篇文章的排 |
