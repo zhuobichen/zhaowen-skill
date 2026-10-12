@@ -287,6 +287,31 @@ ad.app_cover_auto = 0;          // 显式封面，别让它自动抓首图
 我曾因此误判「上传失败」。**判定素材归属要按内容**（长宽比 + 缩到 48x20 灰度的平均绝对差），
 不按名字，否则可能删掉用户的文件。
 
+### 删除素材（2026-10-12 实测）
+
+素材库页 `/cgi-bin/filepage?type=2&begin=0&count=12&token=…`。
+每个条目的删除入口是**悬停才出现的操作组**，而且**就在条目自己的 `<li>` 内部**
+（实测 `item.querySelector('.weui-desktop-operation-group')` 命中，且该 li 里恰好只有一组）：
+
+```js
+const it = [...document.querySelectorAll('.weui-desktop-img-picker__item')]
+             .find(e => e.innerText.includes('要删的那条的名字'));
+const del = [...it.querySelectorAll('a,li,span,button')]
+             .find(e => e.textContent.trim() === '删除');
+(del.closest('a,button,li') || del).click();   // 点完还要过一次确认弹层
+```
+
+**动手前必须两道守卫**（我实测时就是这么防的）：
+
+1. **按内容证明这条是自己的**（长宽比 + 缩略图平均差），不按名字
+2. **确认「不能删的那条」还在** —— 比如草稿封面指向的那张。删错会让封面直接坏掉
+
+删完用**条目总数 + 名单**验证（实测 8 → 7，自己的那张没了、用户的 6 张一个没动），
+再去草稿箱看卡片的 `background-image` 是否仍然解析得出来，确认封面没被牵连。
+
+> 注：`Runtime.evaluate failed` 这种报错**不代表操作没生效** —— 实测点击已成功、
+> 报错发生在后续步骤。**先查状态再重试**，别盲目重放（会多删一条）。
+
 ### 附：这些路子都试过，都不行（别再浪费时间）
 
 | 做法 | 结果 |
