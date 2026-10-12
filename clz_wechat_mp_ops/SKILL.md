@@ -29,6 +29,15 @@ description: >
     `browser-act browser list` 只剩 3 个 `chrome_local_*`（`mp-publish` / `job-apply` /
     `guangxi-gongkao-research`）。照旧文档去开那两个 ID 会直接失败。
   - `mp-publish` 是**发稿专用**的另一个实例，别拿它跑这里的操作（会和发稿流程抢同一个 profile）。
+- ⚠️⚠️ **本机 browser-act 只有一个共享 workbench 内核**（2026-10-13 实测，血泪）：
+  所有 `chrome_local_*` 浏览器都跑在同一个内核上，**同一时刻只容得下一个 agent**。
+  两个会话同时用会互相踢：
+  - `230322 Target browser is already running` = **别人在占** → **不要重试同一句**，等它释放
+  - `230305 / 230301`（会话在两次 CLI 调用之间消失）= **我刚被抢走** → 重新 open，且先确认没人在跑
+  - **判据不要看 `browser list` 的 `state`**，它显示 `idle` 时别人可能正占着。
+    权威位置是 `%APPDATA%\BrowserAct\runtime\workbench\runtime_record.json`：
+    **文件不存在 = 真的没人占**（实测就是靠它判断出可以动手的窗口）
+  - 多 agent 场景**先协调再用**；抢的结果是两边都不稳
 - **配合 skill**：`browser-act`
 
 ## 1. 登录与 token
@@ -197,6 +206,22 @@ f.style.cssText = 'display:block;opacity:1;position:fixed;top:0;left:0;width:200
 
 实测数据（一篇 3600 字、64 段的文章）：`doc.content.size` 从 4 涨到 **3742**；
 保存后 URL 出现 `appmsgid=100001997`；重载后标题与正文都在。
+
+### 替换整篇正文（改版式/换模板时用）
+
+`pasteHTML` 的语义是**替换选区**，文档非空时会**追加到光标处**，不会覆盖整篇。
+要先清空再灌（2026-10-13 实测，二次改版就是这么做成功的）：
+
+```js
+view.dispatch(view.state.tr.delete(0, view.state.doc.content.size));  // 先清空
+out.afterDelete = view.state.doc.content.size;                        // 应变成 4
+view.pasteHTML(html);                                                 // 再灌新的
+// 保存后重载，用 getComputedStyle 抽查关键样式有没有被微信洗掉
+```
+
+**验证必须落到计算样式**，不能只看文字在不在：实测章节条的
+`border-bottom: 3px` 会被微信缩成 `2.42px`、引用块 `4px` 缩成 `3.64px`
+（原模板文章里同样如此，属正常），只看「文字还在」会漏掉样式整段被丢的情况。
 
 ### ⚠️ 三个必踩的坑
 
