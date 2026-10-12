@@ -1,3 +1,9 @@
 __pycache__/
 *.pyc
 .DS_Store
+
+# nature-figure 的示例预览图：54 张 png + 3 个 pdf 共约 33MB，
+# 多为已发表论文的成图，仅本地保留、不入库（多为第三方版权图）。
+# 可复用的绘图脚本（assets 下的 *.py）仍在库内，不受此规则影响。
+nature-figure/assets/**/*.png
+nature-figure/assets/**/*.pdf

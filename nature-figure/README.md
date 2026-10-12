@@ -33,11 +33,14 @@
 
 ## 示例预览
 
+> 本仓库只收录可复用的绘图脚本（`assets/` 下的 `*.py`）。预览图（png/pdf）体积约 33MB
+> 且多为已发表论文的成图，仅保留在本地，未入库 —— 因此下表改为链接到上游与脚本位置。
+
 | 方向 | 预览 | 可借鉴模式 |
 |------|------|------------|
-| 多面板论文图 | <a href="assets/gallery/fig1-material-mechanism-rich.png"><img src="assets/gallery/fig1-material-mechanism-rich.png" width="220" alt="Material design and physical validation"></a> | 机制示意、图像面板、定量结果和相关性放在同一证据链中 |
-| 图表类型 atlas | <a href="assets/chart-atlas/atlas-03-heatmaps.png"><img src="assets/chart-atlas/atlas-03-heatmaps.png" width="220" alt="Heatmap atlas"></a> | 热图、注释矩阵、聚类块和发散色标的组合模式 |
-| figures4papers demo | <a href="assets/figures4papers/figure_VIGIL/figures/comparison_radar.png"><img src="assets/figures4papers/figure_VIGIL/figures/comparison_radar.png" width="220" alt="VIGIL comparison radar"></a> | 从真实论文脚本中抽取 layout、legend 和多指标比较语法 |
+| 多面板论文图 | 本地预览图；模式说明见 `references/demos.md` | 机制示意、图像面板、定量结果和相关性放在同一证据链中 |
+| 图表类型 atlas | 本地预览图；模式说明见 `references/demos.md` | 热图、注释矩阵、聚类块和发散色标的组合模式 |
+| figures4papers demo | [上游仓库](https://github.com/ChenLiu-1996/figures4papers) 预览；本仓库脚本见 `assets/figures4papers/figure_VIGIL/plot_comparison_radar.py` | 从真实论文脚本中抽取 layout、legend 和多指标比较语法 |
 
 ## 你需要提供
 

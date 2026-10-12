@@ -8,6 +8,13 @@ The bundled examples live under `../assets/figures4papers/`. They are reference
 materials for the Python track only. Keep the normal `nature-figure` contract first:
 define the scientific claim, pick Python or R, and only then adapt a demo pattern.
 
+Only the demo **scripts** (`*.py`) are bundled in this repository. The rendered
+preview images (`*.png` / `*.pdf`) are kept locally and deliberately not committed —
+they are ~33MB and mostly reproduce figures from published papers. For the rendered
+examples, see the upstream project:
+<https://github.com/ChenLiu-1996/figures4papers>. Every script listed below is
+self-contained, so the patterns remain usable without the preview images.
+
 ## How to use the demos
 
 1. Select the closest chart family from the table below.
