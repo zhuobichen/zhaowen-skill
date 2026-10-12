@@ -20,7 +20,15 @@ description: >
 ## 前置环境
 
 - **browser-act CLI**（浏览器自动化，必读其 `get-skills core`）
-- **浏览器选择**：优先 `chrome-direct`（`n8n-direct`，ID `direct_local_112182917546901584`，直接控制本地 Chrome，继承微信登录态）；若调试端口故障（打开超时/`9222` 返回 404），改用 stealth `acs-stealth2`（ID `103206233488452404`）扫码登录
+- **浏览器选择**（2026-10-12 更正）：
+  - 现在用 **`ai-mp`**，ID **`chrome_local_123319979180294204`**（`type=chrome`，独立 profile）。
+    公众号登录态已建立，操作会话名用 `aimp`：
+    `browser-act --session aimp browser open --headed chrome_local_123319979180294204 <url>`
+  - ⚠️ 文档原先写的首选/备用实例 **`chrome-direct`（`direct_local_112182917546901584`）与
+    stealth `acs-stealth2`（`103206233488452404`）在本机已不存在** ——
+    `browser-act browser list` 只剩 3 个 `chrome_local_*`（`mp-publish` / `job-apply` /
+    `guangxi-gongkao-research`）。照旧文档去开那两个 ID 会直接失败。
+  - `mp-publish` 是**发稿专用**的另一个实例，别拿它跑这里的操作（会和发稿流程抢同一个 profile）。
 - **配合 skill**：`browser-act`
 
 ## 1. 登录与 token
@@ -30,6 +38,20 @@ description: >
 - 后台任意页面 URL 都带 `token=<数字>`，**token 会过期**（"请重新登录"/"登录超时"即 token 失效）
 - 获取**当前有效 token**：登录后导航到 `https://mp.weixin.qq.com/`，页面自动跳转到 `.../cgi-bin/home?...&token=XXXX`，取该 token
 - 用户给的旧 URL 里的 token 常已过期，需用当前 token 替换后重试
+
+**取当前 token 的省事办法（2026-10-12 实测，别重载用户的页面）**：在**任意已登录的后台页面**上跑
+
+```js
+const r = await fetch('https://mp.weixin.qq.com/', { credentials: 'include', redirect: 'follow' });
+r.url.match(/token=(\d+)/)[1]   // 当前有效 token
+```
+
+`fetch` 会跟着 302 走到 `.../cgi-bin/home?...&token=XXXX`，从 `r.url` 就能读出 token ——
+不用 `navigate` 去刷用户的屏幕。同时它也是**登录态探针**：拿不到 token 就是掉登录了。
+
+**列表页必须真导航，fetch 拿不到数据**：草稿箱 / 发表记录的卡片是**前端 JS 渲染**的，
+直接 `fetch` 列表 URL 只会得到带编辑器图标的空壳（DOM 里没有卡片、也没有 `appmsgid`）。
+数清楚有几篇、要 appmsgid，就得 `navigate` 过去读渲染后的 DOM。
 
 ## 2. 关键 URL（token 用当前有效值）
 
