@@ -4,9 +4,9 @@
 Usage:
     python scaffold.py <output.md> [--force]
 
-Writes a UTF-8 Markdown skeleton with the fixed sections.
-Body is the BASICS (each fundamental explained from zero); verification is optional.
-Refuses to overwrite an existing file unless --force is given.
+Writes a UTF-8 Markdown skeleton, organized BY FEATURE (one feature per chapter,
+each with: what it is / how it's done / the principles behind it).
+Verification is optional. Refuses to overwrite unless --force.
 
 Notes for this machine:
   * File is written UTF-8 explicitly (Windows default would be GBK).
@@ -21,7 +21,7 @@ from datetime import date
 TEMPLATE = """# 原理拆解:{name}
 
 > 拆解日期:{today}　|　产物位置:{where}　|　一句话是什么:
-> 主体是**知识**(它用到的每一门基本功,从零讲),不是"怎么验证"。
+> **按项目功能分章**(不是按技术门类);每条原理讲透(是什么 / 怎么运作 / 例子 / 常见坑)。
 > 标注约定:每行注明来源 —— [实测] / [我推的] / [黑箱]。
 
 ## 0. 产物与它的「声称」
@@ -31,24 +31,29 @@ TEMPLATE = """# 原理拆解:{name}
 - 我实际读懂了多少(%):
 - 只拆承重的 20%:这次锁哪一块?
 
-## 1. 它用到的每一门基本功(清单,按承重排)
-| 基本功 | 出现在项目的哪一块 | 承重吗 | 我现在懂多少 |
-|---|---|---|---|
-|  |  |  |  |
+## 1. 功能 ↔ 原理 对照(地图)
+| # | 功能(它替你做什么) | 底下靠的原理 |
+|---|---|---|
+| 1 |  |  |
 
-## 2. 每门从零讲(主体,占全篇一半以上)
+## 2. 一个功能一章(主体,占全篇一半以上)
 
-### 2.1 <基本功 A>
-- **是什么**(一句话,不假设认识任何术语):
-- **标准手段有哪些**(2–4 种,各自适用什么):
-- **我这项目用的是哪一种**(落到哪块):
-- **最小例子**(一条命令 / 一段最小代码 / 一张手画关系):
+### 2.1 <功能 A>
+- **① 这个功能是什么**(产品视角一句话):
+- **② 它怎么实现**(数据流 / 落到代码哪一块):
+- **③ 背后的原理**:
+  - **原理 A ｜<名字>**
+    - 是什么:
+    - 怎么运作:
+    - 例子:
+    - 常见坑:
+  - **原理 B ｜<名字>**
+    - 是什么 / 怎么运作 / 例子 / 常见坑:
 
-### 2.2 <基本功 B>
-- **是什么**:
-- **标准手段有哪些**:
-- **我这项目用的是哪一种**:
-- **最小例子**:
+### 2.2 <功能 B>
+- **① 是什么**:
+- **② 怎么实现**:
+- **③ 背后的原理**:（同样"是什么 / 怎么运作 / 例子 / 常见坑"）
 
 ## 3. 可靠边界(可选:想判它"靠不靠得住"时再做)
 （信号地图 / 失效模式 / oracle 实测 / 黑箱层。不做也行。）
