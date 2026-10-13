@@ -6,6 +6,7 @@
 
 | Skill | 目录 | 用途 |
 |-------|------|------|
+| Directly operate Zot | [`zotero-db/`](zotero-db/) | Directly operate Zotero local SQLite database for PDF import |
 | Use Zotero for bibli | [`zotero/`](zotero/) | Use Zotero for bibliography management, PDF reading, referen |
 | docx 转公众号（clz） | [`clz_docx_to_mp/`](clz_docx_to_mp/) | 把 docx 转成公众号图文并推送草稿箱：解析 → 渲染微信兼容 HTML → 推送。内容忠实保留只做样式；含横滑相册、GIF 动效、平台硬限制实测记录 |
 | 科研文献证据工程（ylx） | [`ylx_research_evidence_synthesis/`](ylx_research_evidence_synthesis/) | ylx·科研文献证据工程与 Related Work 写作：Claim-first（证据矩阵 + 逻辑树 + 综述），含输出样例 |
