@@ -6,7 +6,6 @@
 
 | Skill | 目录 | 用途 |
 |-------|------|------|
-| 把你自己刚做完的产物(代码/系统/流程/ | [`principle-dissection/`](principle-dissection/) | 把你自己刚做完的产物(代码/系统/流程/AI 帮你搭的东西)拆成「它用到的每一门基本功」,并从零讲清——**主体是知识, |
 | 英雄联盟「海克斯大乱斗」(海斗/ARAM | [`aram-mayhem-assistant/`](aram-mayhem-assistant/) | 英雄联盟「海克斯大乱斗」(海斗/ARAM) 分析助手：数对局、复盘单局、查符文与英雄、看趋势/画像/出装/对位/队友、跨 |
 | docx 转公众号（clz） | [`clz_docx_to_mp/`](clz_docx_to_mp/) | 把 docx 转成公众号图文并推送草稿箱：解析 → 渲染微信兼容 HTML → 推送。内容忠实保留只做样式；含横滑相册、GIF 动效、平台硬限制实测记录 |
 | 科研文献证据工程（ylx） | [`ylx_research_evidence_synthesis/`](ylx_research_evidence_synthesis/) | ylx·科研文献证据工程与 Related Work 写作：Claim-first（证据矩阵 + 逻辑树 + 综述），含输出样例 |
@@ -37,6 +36,7 @@
 | CNKI 结果解析 | [`cnki-parse-results/`](cnki-parse-results/) | 解析搜索结果列表为结构化数据 |
 | 智能体对话管理 | [`agent-dialog_management/`](agent-dialog_management/) | Claude Code + Codex 对话统一列表/搜索/恢复/导出 |
 | 横纵分析法 | [`hv-analysis/`](hv-analysis/) | 系统性深度研究（产品/公司/概念/人物） |
+| 拆解原理（从零讲基本功） | [`principle-dissection/`](principle-dissection/) | 把你自己刚做完的产物（代码/系统/流程/AI 帮你搭的）拆成「它用到的每一门基本功」并从零讲清：是什么 → 这个领域的标准手段 → 我这项目用的是哪一种（术语先定义、配最小例子）。主体是知识不是「验收」，「能不能判错」只作可选验收。动手前先读学习者基线、跳过已会的。不要用于学别人的材料（用 layered-explainer）/ 拆别人成品（用 reverse-engineer-anything） |
 | 真正搞懂（分层解释法） | [`layered-explainer/`](layered-explainer/) | 两个方向：**A 读**——把看不下去的长输出按理解成本逐级升级（受控语言 ASD-STE100 → 一张图 → 单文件交互 HTML → Manim 视频）；**B 讲**——反过来让你输出、AI 评判（学习阶梯 → 只学最重要的 20% → 当考官一次只问一问 → 一页速查表 → 筛资源 → 费曼法）。每一步都配了失败模式与检查项，含「AI 说你做对了」不算通过 |
 | 公众号长文写作 | [`khazix-writer/`](khazix-writer/) | 数字生命卡兹克（Khazix）风格的公众号长文写作（四层自检体系）。触发：写文章、写稿子、续写、扩写、按我的风格写，或丢来 PDF/brief/链接/语音转写说「帮我写篇文章」。不用于小红书/推特等短内容 |
 | LaTeX 论文写作 | [`latex-paper-writing/`](latex-paper-writing/) | LaTeX 论文写作 / 编译 PDF |
