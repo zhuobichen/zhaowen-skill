@@ -6,8 +6,6 @@
 
 | Skill | 目录 | 用途 |
 |-------|------|------|
-| Directly operate Zot | [`zotero-db/`](zotero-db/) | Directly operate Zotero local SQLite database for PDF import |
-| Use Zotero for bibli | [`zotero/`](zotero/) | Use Zotero for bibliography management, PDF reading, referen |
 | docx 转公众号（clz） | [`clz_docx_to_mp/`](clz_docx_to_mp/) | 把 docx 转成公众号图文并推送草稿箱：解析 → 渲染微信兼容 HTML → 推送。内容忠实保留只做样式；含横滑相册、GIF 动效、平台硬限制实测记录 |
 | 科研文献证据工程（ylx） | [`ylx_research_evidence_synthesis/`](ylx_research_evidence_synthesis/) | ylx·科研文献证据工程与 Related Work 写作：Claim-first（证据矩阵 + 逻辑树 + 综述），含输出样例 |
 | one-hub 用量监测（ylx） | [`ylx_onehub_usage_monitor/`](ylx_onehub_usage_monitor/) | 监测 one-hub API 用量与费用：总额度/已用/剩余、每日每月记账、各模型单价对比 |
@@ -38,7 +36,7 @@
 | 智能体对话管理 | [`agent-dialog_management/`](agent-dialog_management/) | Claude Code + Codex 对话统一列表/搜索/恢复/导出 |
 | 横纵分析法 | [`hv-analysis/`](hv-analysis/) | 系统性深度研究（产品/公司/概念/人物） |
 | 真正搞懂（分层解释法） | [`layered-explainer/`](layered-explainer/) | 两个方向：**A 读**——把看不下去的长输出按理解成本逐级升级（受控语言 ASD-STE100 → 一张图 → 单文件交互 HTML → Manim 视频）；**B 讲**——反过来让你输出、AI 评判（学习阶梯 → 只学最重要的 20% → 当考官一次只问一问 → 一页速查表 → 筛资源 → 费曼法）。每一步都配了失败模式与检查项，含「AI 说你做对了」不算通过 |
-| 数字生命卡兹克（Khazix）的公众号长 | [`khazix-writer/`](khazix-writer/) | 数字生命卡兹克（Khazix）的公众号长文写作skill。当用户需要撰写公众号文章、写稿子、续写文章、根据素材产出长文时 |
+| 公众号长文写作 | [`khazix-writer/`](khazix-writer/) | 数字生命卡兹克（Khazix）风格的公众号长文写作（四层自检体系）。触发：写文章、写稿子、续写、扩写、按我的风格写，或丢来 PDF/brief/链接/语音转写说「帮我写篇文章」。不用于小红书/推特等短内容 |
 | LaTeX 论文写作 | [`latex-paper-writing/`](latex-paper-writing/) | LaTeX 论文写作 / 编译 PDF |
 | MEMORY 整理 | [`memory-organizer/`](memory-organizer/) | MEMORY 笔记整理工作流 |
 | Obsidian 知识库工作流 | [`obsidian-wiki-workflow/`](obsidian-wiki-workflow/) | LLM Wiki 知识库构建 / MEMORY→OUTPUT 同步 |
@@ -49,6 +47,8 @@
 | 本机活动痕迹检查 | [`windows_activity_forensics/`](windows_activity_forensics/) | 某段时间本机有没有被人用过 / 远程连进来 / 翻过浏览历史 / 登录过谁的小号 / 用你的登录态上过网站 / 翻过你和 AI 的聊天 / 拷过东西 / 痕迹被抹过；29 项三态检查，报告开头先给一句白话结论 |
 | 大文件 AI 审核范式 | [`large-doc-ai-review/`](large-doc-ai-review/) | 几十到几百页 PDF/Word 的 AI 审核工程套路：目录树定位证据窗口、Prompt 契约（`.md` + `_spec.json` 双文件）、五档结论与人工复核边界、置信度降级兜底、进程锁与心跳；附 `check_verdict_order.py` 强制"结论字段写在证据字段之后"（已对 227 个真实 prompt/spec 零误报验证） |
 | Zotero Word 活字段引用 | [`zotero-word-citations/`](zotero-word-citations/) | 把 Word 手稿里的 author-year **文字引用**变成 Zotero 活字段，并生成「引用 ↔ 参考文献可点击跳转」的定稿版。适用：要在 Word 里用 Zotero 管引用而不想手工插文献；拿到一份引用是死文字的稿子；抱怨「点引用跳不到参考文献」 |
+| Zotero 文献管理 | [`zotero/`](zotero/) | 用 Zotero 做文献管理、PDF 阅读、引用生成与论文写作：按主题/作者检索条目、读全文与批注、导出引用、配 LaTeX 出参考文献 |
+| Zotero 数据库直连 | [`zotero-db/`](zotero-db/) | 直接操作 Zotero 本地 SQLite：批量导入 PDF、生成 citation key、建全文索引、清理孤儿条目；Zotero API 不可用时的兜底通道 |
 
 ## 借鉴自 Tiangong AI Skills
 
