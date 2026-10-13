@@ -6,7 +6,6 @@
 
 | Skill | 目录 | 用途 |
 |-------|------|------|
-| 把 Word 手稿里的 author-y | [`zotero-word-citations/`](zotero-word-citations/) | 把 Word 手稿里的 author-year 文字引用变成 Zotero 活字段，并生成「引用 ↔ 参考文献可点击跳转 |
 | docx 转公众号（clz） | [`clz_docx_to_mp/`](clz_docx_to_mp/) | 把 docx 转成公众号图文并推送草稿箱：解析 → 渲染微信兼容 HTML → 推送。内容忠实保留只做样式；含横滑相册、GIF 动效、平台硬限制实测记录 |
 | 科研文献证据工程（ylx） | [`ylx_research_evidence_synthesis/`](ylx_research_evidence_synthesis/) | ylx·科研文献证据工程与 Related Work 写作：Claim-first（证据矩阵 + 逻辑树 + 综述），含输出样例 |
 | one-hub 用量监测（ylx） | [`ylx_onehub_usage_monitor/`](ylx_onehub_usage_monitor/) | 监测 one-hub API 用量与费用：总额度/已用/剩余、每日每月记账、各模型单价对比 |
@@ -47,6 +46,7 @@
 | 微信消息桥接 | [`wechat-claude-code/`](wechat-claude-code/) | 微信中与 Claude Code 聊天 |
 | 本机活动痕迹检查 | [`windows_activity_forensics/`](windows_activity_forensics/) | 某段时间本机有没有被人用过 / 远程连进来 / 翻过浏览历史 / 登录过谁的小号 / 用你的登录态上过网站 / 翻过你和 AI 的聊天 / 拷过东西 / 痕迹被抹过；29 项三态检查，报告开头先给一句白话结论 |
 | 大文件 AI 审核范式 | [`large-doc-ai-review/`](large-doc-ai-review/) | 几十到几百页 PDF/Word 的 AI 审核工程套路：目录树定位证据窗口、Prompt 契约（`.md` + `_spec.json` 双文件）、五档结论与人工复核边界、置信度降级兜底、进程锁与心跳；附 `check_verdict_order.py` 强制"结论字段写在证据字段之后"（已对 227 个真实 prompt/spec 零误报验证） |
+| Zotero Word 活字段引用 | [`zotero-word-citations/`](zotero-word-citations/) | 把 Word 手稿里的 author-year **文字引用**变成 Zotero 活字段，并生成「引用 ↔ 参考文献可点击跳转」的定稿版。适用：要在 Word 里用 Zotero 管引用而不想手工插文献；拿到一份引用是死文字的稿子；抱怨「点引用跳不到参考文献」 |
 
 ## 借鉴自 Tiangong AI Skills
 
@@ -79,6 +79,6 @@
 
 每个 skill 目录内含 `SKILL.md`，为完整执行说明；`scripts/`（如有）为可复用脚本，`examples/`（如有）为产出样例。
 
-机器可读清单见 [`skill-catalog.json`](skill-catalog.json)，其中包含 UI 元数据路径和 Tiangong 上游来源标记。新增或迁移 Skill 后应同步更新清单，并运行 `skill-creator/scripts/quick_validate.py`。
+机器可读清单见 [`skill-catalog.json`](skill-catalog.json)，其中包含 `display_name`、UI 元数据路径与上游来源标记（`publish_skill` 会读这里的 `display_name` 作为 README 的 Skill 列）。新增或迁移 Skill 后应同步更新清单，并用 skill-manager MCP 的 `validate_skill` 做结构校验（校验 MCP 服务用 `validate_mcp`）。
 
 > 注：`abacas-cloud-ops` 与 `n8n-web-ops` 中的账号密码、内网 IP、webhook ID、认证服务器地址均已替换为 `<占位符>`，迁移到自己的环境时需对应填写。
