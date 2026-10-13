@@ -1,0 +1,4 @@
+interface:
+  display_name: "ARAM Mayhem Assistant"
+  short_description: "Count, review and compare League ARAM Mayhem games"
+  default_prompt: "Use $aram-mayhem-assistant to count or review League ARAM Mayhem games — it routes to the right aram-mayhem MCP tool and says what the numbers can and cannot support."

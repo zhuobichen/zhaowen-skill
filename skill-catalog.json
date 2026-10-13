@@ -37,6 +37,14 @@
       "upstream": null
     },
     {
+      "name": "aram-mayhem-assistant",
+      "path": "aram-mayhem-assistant/",
+      "display_name": "ARAM Mayhem Assistant",
+      "short_description": "Count, review and compare League ARAM Mayhem games via the aram-mayhem MCP",
+      "ui_metadata": "agents/openai.yaml",
+      "upstream": null
+    },
+    {
       "name": "browser-skill",
       "path": "browser-skill/",
       "display_name": "Browser Skill",
