@@ -37,6 +37,14 @@
       "upstream": null
     },
     {
+      "name": "android-phone-ops",
+      "path": "android-phone-ops/",
+      "display_name": "Android Phone Ops",
+      "short_description": "Drive the Android emulator/phone through the android MCP",
+      "ui_metadata": "agents/openai.yaml",
+      "upstream": null
+    },
+    {
       "name": "aram-mayhem-assistant",
       "path": "aram-mayhem-assistant/",
       "display_name": "ARAM Mayhem Assistant",

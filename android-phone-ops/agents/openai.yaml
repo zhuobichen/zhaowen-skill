@@ -1,0 +1,4 @@
+interface:
+  display_name: "Android Phone Ops"
+  short_description: "Drive the Android emulator/phone through the android MCP"
+  default_prompt: "Use $android-phone-ops to operate the Android device — it runs status, then prepare, then wait_idle instead of sleeping, reads the UI dump before tapping by text, and reports which channel Chinese input actually took."
