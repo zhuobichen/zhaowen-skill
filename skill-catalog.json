@@ -61,6 +61,14 @@
       "upstream": null
     },
     {
+      "name": "claude-usage-billing",
+      "path": "claude-usage-billing/",
+      "display_name": "Claude Usage & Billing",
+      "short_description": "Break down Claude Code tokens and cost by task and subagent into an expandable HTML report",
+      "ui_metadata": "agents/openai.yaml",
+      "upstream": null
+    },
+    {
       "name": "clz_docx_to_mp",
       "path": "clz_docx_to_mp/",
       "display_name": "DOCX to WeChat Draft",

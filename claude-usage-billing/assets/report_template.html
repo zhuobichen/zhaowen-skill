@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>Claude Code 用量分析 __DAY__</title>
+<style>
+:root{--bg:#0e1116;--panel:#161b22;--panel2:#1c2230;--line:#2a3140;--fg:#e6edf3;--dim:#8b949e;--acc:#58a6ff;--good:#3fb950;--warn:#d29922;--bad:#f85149;--chip:#21262d}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font-family:-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,"Microsoft YaHei",sans-serif;font-size:14px;line-height:1.6}
+.wrap{max-width:1180px;margin:0 auto;padding:28px 20px 80px}
+h1{font-size:24px;margin:0 0 4px}
+h2{font-size:18px;margin:34px 0 12px;padding-bottom:8px;border-bottom:1px solid var(--line)}
+h3{font-size:15px;margin:18px 0 8px;color:var(--acc)}
+.sub{color:var(--dim);font-size:13px}
+.cards{display:flex;flex-wrap:wrap;gap:12px;margin:18px 0}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px 18px;min-width:150px;flex:1}
+.card .k{color:var(--dim);font-size:12px}
+.card .v{font-size:24px;font-weight:600;margin-top:2px}
+.card.big .v{color:var(--acc)}
+.note{background:var(--panel2);border:1px solid var(--line);border-left:3px solid var(--warn);border-radius:6px;padding:10px 14px;color:var(--dim);font-size:13px;margin:14px 0}
+table{border-collapse:collapse;width:100%;background:var(--panel);border:1px solid var(--line);border-radius:8px;overflow:hidden;font-size:13px}
+th,td{padding:7px 10px;text-align:left;border-bottom:1px solid var(--line);vertical-align:top}
+th{background:var(--panel2);color:var(--dim);font-weight:600;white-space:nowrap}
+tr:last-child td{border-bottom:none}
+td.num,th.num{text-align:right;white-space:nowrap}
+details.task{background:var(--panel);border:1px solid var(--line);border-radius:10px;margin:12px 0;overflow:hidden}
+details.task>summary{cursor:pointer;padding:12px 16px;display:flex;gap:14px;align-items:center;flex-wrap:wrap;list-style:none}
+details.task>summary::-webkit-details-marker{display:none}
+details.task>summary::before{content:"\25B8";color:var(--dim)}
+details.task .body{padding:0 16px 16px;border-top:1px solid var(--line)}
+.rk{font-size:16px;font-weight:700;color:var(--acc);min-width:24px}
+.ttl{flex:1;min-width:220px;color:var(--fg)}
+.cny{font-weight:600;color:var(--warn)}
+.pct{color:var(--dim);font-size:12px}
+details.sub{background:var(--panel2);border:1px solid var(--line);border-radius:8px;margin:8px 0}
+details.sub>summary{cursor:pointer;padding:8px 12px;display:flex;gap:10px;align-items:center;flex-wrap:wrap;list-style:none;font-size:13px}
+details.sub>summary::-webkit-details-marker{display:none}
+details.sub .sbody{padding:4px 12px 12px;font-size:13px}
+.mono{font-family:Consolas,"Cascadia Mono",monospace;font-size:12px;color:var(--dim)}
+.kv{display:flex;gap:16px;flex-wrap:wrap;margin:6px 0;color:var(--dim);font-size:12px}
+.kv b{color:var(--fg);font-weight:600}
+.chip{display:inline-block;background:var(--chip);border:1px solid var(--line);border-radius:20px;padding:1px 9px;font-size:11px;color:var(--dim);margin:1px}
+pre.pre{background:#0b0f14;border:1px solid var(--line);border-radius:6px;padding:10px 12px;white-space:pre-wrap;word-break:break-word;max-height:420px;overflow:auto;font-size:12.5px;color:var(--fg);margin:6px 0}
+.lbl{color:var(--acc);font-weight:600;font-size:12px}
+details.turn{background:var(--panel2);border:1px solid var(--line);border-radius:6px;margin:6px 0}
+details.turn>summary{cursor:pointer;padding:6px 12px;display:flex;gap:10px;align-items:baseline;flex-wrap:wrap;list-style:none;font-size:13px}
+details.turn>summary::-webkit-details-marker{display:none}
+.badge{font-size:10px;border-radius:4px;padding:1px 6px;border:1px solid var(--line)}
+.badge.you{color:var(--good);border-color:var(--good)}
+.badge.sys{color:var(--dim)}
+.muted{color:var(--dim)}
+.foot{margin-top:40px;color:var(--dim);font-size:12px;text-align:center}
+</style>
+</head>
+<body>
+<div class="wrap">
+<h1>Claude Code 用量分析 · __DAY__</h1>
+<div class="sub">数据源：<code>~/.claude/projects</code> 全部 main + subagent 会话日志 + one-hub 账单 CSV。子 Agent 的任务指令与最终产出均可展开查看。</div>
+
+<div class="cards">__SUMMARY__</div>
+
+<div class="note">
+  <b>口径说明：</b>日志侧 token 与账单侧存在差异（cache-hit 多记、output 少记），
+  因此每个会话同时给出「日志口径」与按账单总额等比缩放的「折算」金额。
+  排名与占比以折算列为准（合计精确等于账单 __BILL__ 元）。
+</div>
+
+<h2>一、按项目</h2>
+<table><thead><tr><th>项目目录</th><th class="num">折算 CNY</th><th class="num">占比</th><th>占比条</th></tr></thead>
+<tbody>__PROJ__</tbody></table>
+
+<h2>二、按任务（main + 其子 Agent 合并）</h2>
+<div class="sub">点开每行可看：主会话逐轮对话（时间 / 你说了什么 / 花了多少 / 工具调用），以及每个子 Agent 的任务指令与最终产出。</div>
+__TASKS__
+
+<div class="foot">由 ds-manager/html_report.py 生成 · 数据截至 __DAY__ 23:59（Asia/Shanghai）</div>
+</div>
+</body>
+</html>

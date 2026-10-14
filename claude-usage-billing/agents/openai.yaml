@@ -1,0 +1,4 @@
+interface:
+  display_name: "Claude Usage & Billing"
+  short_description: "按任务/子Agent 拆解 Claude Code token 与费用，出可展开的 HTML 报告"
+  default_prompt: "Use $claude-usage-billing to analyze my Claude Code spending for a given day and show which sessions and subagents cost the most."

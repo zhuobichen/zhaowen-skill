@@ -35,6 +35,7 @@
 | CNKI 论文详情 | [`cnki-paper-detail/`](cnki-paper-detail/) | 标题/作者/单位/摘要/关键词/基金提取 |
 | CNKI 结果解析 | [`cnki-parse-results/`](cnki-parse-results/) | 解析搜索结果列表为结构化数据 |
 | 智能体对话管理 | [`agent-dialog_management/`](agent-dialog_management/) | Claude Code + Codex 对话统一列表/搜索/恢复/导出 |
+| Claude 用量与费用分析 | [`claude-usage-billing/`](claude-usage-billing/) | 把 one-hub 账单 CSV + `~/.claude/projects` 日志出成 HTML：主会话与其subagent 合并成"任务"，定位当天最烧钱的会话/子Agent，可展开每个子Agent 的任务指令与最终产出；附子Agent 轨迹持久化结论（关机不丢，真丢只因 30 天清理） |
 | 横纵分析法 | [`hv-analysis/`](hv-analysis/) | 系统性深度研究（产品/公司/概念/人物） |
 | 拆解原理（从零讲基本功） | [`principle-dissection/`](principle-dissection/) | 把你自己刚做完的产物（代码/系统/流程/AI 帮你搭的）拆成「它用到的每一门基本功」并从零讲清：是什么 → 这个领域的标准手段 → 我这项目用的是哪一种（术语先定义、配最小例子）。主体是知识不是「验收」，「能不能判错」只作可选验收。动手前先读学习者基线、跳过已会的。不要用于学别人的材料（用 layered-explainer）/ 拆别人成品（用 reverse-engineer-anything） |
 | 真正搞懂（分层解释法） | [`layered-explainer/`](layered-explainer/) | 两个方向：**A 读**——把看不下去的长输出按理解成本逐级升级（受控语言 ASD-STE100 → 一张图 → 单文件交互 HTML → Manim 视频）；**B 讲**——反过来让你输出、AI 评判（学习阶梯 → 只学最重要的 20% → 当考官一次只问一问 → 一页速查表 → 筛资源 → 费曼法）。每一步都配了失败模式与检查项，含「AI 说你做对了」不算通过 |
