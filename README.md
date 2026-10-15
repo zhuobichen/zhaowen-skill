@@ -16,6 +16,7 @@
 
 | Skill | 目录 | 用途 |
 |-------|------|------|
+| dsh_messaging | [`dsh_messaging/`](dsh_messaging/) | 用官方 CLI 从外部给 DeepSeek Harness (DSH) 发消息、续接既有会话、拿结构化输出与 token 用量。 |
 | 用 AI 操作手机 | [`android-phone-ops/`](android-phone-ops/) | 配套 `android` MCP 操作模拟器/真机：构建装包、点界面、读层级、截图、**输入中文**、看日志，也包括"帮我在手机上干件事"这类委托。写的是流程与纪律（开工先 `status`+`prepare`、用 `wait_idle` 替 sleep、能按文字就别按坐标、发送/登录类动作先确认），工具清单不重复 MCP 的 README；**禁区**（如 QQ/微信的「空间」）在工具层强制拦截，命中就停手交回给用户 |
 | 科研论文绘图（Nature 投稿级） | [`nature-figure/`](nature-figure/) | 投 Nature 系及高影响期刊的科研配图：Python（matplotlib/seaborn）或 R（ggplot2）多面板图，出图前先定结论、证据逻辑、数据完整性与审稿风险，导出 SVG/PDF/TIFF；另含 AI 生成的机制示意图/图形摘要通道 |
 | ML 论文绘图 | [`academic-plotting/`](academic-plotting/) | 从论文上下文提取系统组件与关系生成架构图；从实验数据自动选图型并用 matplotlib/seaborn 生成数据图 |
