@@ -1,5 +1,5 @@
 ---
-name: clz_wechat_mp_ops
+name: wechat_mp_ops
 description: >
   操作微信公众号后台（mp.weixin.qq.com）：登录、查看草稿箱/发表记录、读取图文草稿内容、编辑修改草稿文字（标题/正文）。
   当用户要求：修改微信公众号文章/草稿、把某篇草稿从旧版更新到新版、对比公众号文章与文档差异、
@@ -74,7 +74,7 @@ r.url.match(/token=(\d+)/)[1]   // 当前有效 token
 - 草稿 `type=77`，`appmsgid` 是草稿 ID
 - **新建草稿**：`isNew=1` 直达全新空编辑器；保存后 URL 自动变为 `...appmsgid=N`。
   空正文可用 `view.pasteHTML(html)` 灌入（比 dispatch 替换更适合从零建稿）。
-  完整流程见配套 skill `clz_docx_to_mp`（docx → 公众号图文，含 43 图批量推送实测）
+  完整流程见配套 skill `docx_to_mp`（docx → 公众号图文，含 43 图批量推送实测）
 - 发表记录列表里，文章标题是 `<a class=weui-desktop-mass-appmsg__title>`，点击进入的是预览页；编辑草稿要进草稿箱点标题卡（`<a class=weui-desktop-publish__cover__title>`）
 
 ### 获取草稿 appmsgid（卡片 href 是 javascript:void，data 属性里也没有）

@@ -77,16 +77,16 @@
       "upstream": null
     },
     {
-      "name": "clz_docx_to_mp",
-      "path": "clz_docx_to_mp/",
+      "name": "docx_to_mp",
+      "path": "docx_to_mp/",
       "display_name": "DOCX to WeChat Draft",
       "short_description": "Convert DOCX files into WeChat draft articles",
       "ui_metadata": "agents/openai.yaml",
       "upstream": null
     },
     {
-      "name": "clz_wechat_mp_ops",
-      "path": "clz_wechat_mp_ops/",
+      "name": "wechat_mp_ops",
+      "path": "wechat_mp_ops/",
       "display_name": "WeChat Official Account Ops",
       "short_description": "Edit and validate WeChat Official Account drafts",
       "ui_metadata": "agents/openai.yaml",
@@ -349,16 +349,16 @@
       "upstream": null
     },
     {
-      "name": "ylx_onehub_usage_monitor",
-      "path": "ylx_onehub_usage_monitor/",
+      "name": "onehub_usage_monitor",
+      "path": "onehub_usage_monitor/",
       "display_name": "One-Hub Usage Monitor",
       "short_description": "Monitor one-hub API usage, costs, and history",
       "ui_metadata": "agents/openai.yaml",
       "upstream": null
     },
     {
-      "name": "ylx_research_evidence_synthesis",
-      "path": "ylx_research_evidence_synthesis/",
+      "name": "research_evidence_synthesis",
+      "path": "research_evidence_synthesis/",
       "display_name": "Research Evidence Synthesis",
       "short_description": "Synthesize research evidence with claim tracking",
       "ui_metadata": "agents/openai.yaml",

@@ -1,5 +1,5 @@
 ---
-name: clz_docx_to_mp
+name: docx_to_mp
 description: |
   把 docx / Word 文档转成微信公众号图文并推送草稿箱。当用户要求：文档发公众号、docx 转公众号文章、
   给 Word 稿排版、公众号样式美化、会议通稿/新闻稿上公众号、批量图文推草稿箱 时使用。
@@ -7,7 +7,7 @@ description: |
   三步流水线：解析 docx → 渲染微信兼容 HTML → 推送草稿箱。内容按原文忠实保留，只做样式。
   涵盖：新建草稿 URL、pasteHTML 注入、base64 图片自动上传 CDN、图片压缩、内联样式硬约束、
   figure/figcaption 实测结论、题注归属规则、分批推送、推送后校验。
-  配套 skill：clz_wechat_mp_ops（改已有草稿 / 发布侧）。
+  配套 skill：wechat_mp_ops（改已有草稿 / 发布侧）。
   不要用于：Markdown 转公众号（用 md2wechat 系工具）、纯文章写作（用 khazix-writer）。
 ---
 
@@ -25,12 +25,12 @@ description: |
 - **browser-act CLI**：`C:\Users\Administrator\.local\bin\browser-act.exe`（**不在 PATH**，脚本里用绝对路径）
 - **python-docx** + **Pillow**：已安装
 - 微信公众平台需**管理员扫码登录**，token 几小时后过期
-- 配套 skill：`clz_wechat_mp_ops`（ProseMirror / token / 校验的通用经验）
+- 配套 skill：`wechat_mp_ops`（ProseMirror / token / 校验的通用经验）
 
 ## 三步流水线
 
 ```bash
-SKILL=~/.claude/skills/clz_docx_to_mp/scripts
+SKILL=~/.claude/skills/docx_to_mp/scripts
 
 # ① 解析 docx → content.json + images/
 python $SKILL/parse_docx.py <input.docx> <build_dir>
@@ -161,7 +161,7 @@ im.save(dst, 'JPEG', quality=95, subsampling=0,   # 0 = 4:4:4，关闭子采样
 
 ## 关键机制
 
-### 1. 新建草稿（`clz_wechat_mp_ops` 里没有的能力）
+### 1. 新建草稿（`wechat_mp_ops` 里没有的能力）
 
 直接导航到下面的 URL 即可打开**全新空编辑器**（`isNew=1` 是关键）：
 
@@ -204,7 +204,7 @@ JS 字符串先用 `json.dumps(html)`（`ensure_ascii=True`）编码成纯 ASCII
 
 ### 5. 保存
 
-点击 `span#js_submit` 里的 `button`（同 `clz_wechat_mp_ops` §7）。保存后读 URL 拿 `appmsgid`。
+点击 `span#js_submit` 里的 `button`（同 `wechat_mp_ops` §7）。保存后读 URL 拿 `appmsgid`。
 
 ### 6. 设置标题（有坑）
 
@@ -692,5 +692,5 @@ CROP_BIAS_BY_FILE = {
 
 ## 相关
 
-- `clz_wechat_mp_ops`：微信后台通用操作（ProseMirror dispatch 改字、配图生成、四层校验、批量替换草稿配图）
+- `wechat_mp_ops`：微信后台通用操作（ProseMirror dispatch 改字、配图生成、四层校验、批量替换草稿配图）
 - 样式参考：`doocs/md`（**WTFPL**，可自由借鉴）；`lyricat/wechat-format` **无 LICENSE 不可抄**

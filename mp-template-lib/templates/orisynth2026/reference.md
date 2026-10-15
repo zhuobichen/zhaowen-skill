@@ -126,7 +126,7 @@
 
 ## 其余
 
-- **不设 `font-family`**（`tokens.font_families` 为空）→ 正好符合 `clz_docx_to_mp` 那条
+- **不设 `font-family`**（`tokens.font_families` 为空）→ 正好符合 `docx_to_mp` 那条
   「带字体设置会导致样式被丢弃」的硬约束，可直接喂渲染流水线
 - 正文 `line-height: 1.92em`（59 处）；字号只用到 36 / 18 / 17px；
   对齐 `center` 19 处、`justify` 3 处

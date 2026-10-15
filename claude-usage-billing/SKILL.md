@@ -81,4 +81,4 @@ Windows 上脚本已强制 UTF-8 输出，CJK 不会乱码。
 ## 相关 Skill
 
 - [`agent-dialog_management`](../agent-dialog_management/)——按主题查找/查看/恢复具体某个会话
-- [`ylx_onehub_usage_monitor`](../ylx_onehub_usage_monitor/)——one-hub 实时额度与余额监测（不做回溯账单分析）
+- [`onehub_usage_monitor`](../onehub_usage_monitor/)——one-hub 实时额度与余额监测（不做回溯账单分析）

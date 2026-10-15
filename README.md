@@ -7,10 +7,10 @@
 | Skill | 目录 | 用途 |
 |-------|------|------|
 | 英雄联盟「海克斯大乱斗」(海斗/ARAM | [`aram-mayhem-assistant/`](aram-mayhem-assistant/) | 英雄联盟「海克斯大乱斗」(海斗/ARAM) 分析助手：数对局、复盘单局、查符文与英雄、看趋势/画像/出装/对位/队友、跨 |
-| docx 转公众号（clz） | [`clz_docx_to_mp/`](clz_docx_to_mp/) | 把 docx 转成公众号图文并推送草稿箱：解析 → 渲染微信兼容 HTML → 推送。内容忠实保留只做样式；含横滑相册、GIF 动效、平台硬限制实测记录 |
-| 科研文献证据工程（ylx） | [`ylx_research_evidence_synthesis/`](ylx_research_evidence_synthesis/) | ylx·科研文献证据工程与 Related Work 写作：Claim-first（证据矩阵 + 逻辑树 + 综述），含输出样例 |
-| one-hub 用量监测（ylx） | [`ylx_onehub_usage_monitor/`](ylx_onehub_usage_monitor/) | 监测 one-hub API 用量与费用：总额度/已用/剩余、每日每月记账、各模型单价对比 |
-| 操作微信公众号后台（clz） | [`clz_wechat_mp_ops/`](clz_wechat_mp_ops/) | 操作微信公众号后台（mp.weixin.qq.com）：登录与扫码（stealth/chrome-direct）、草稿箱/发表记录、读取与编辑图文草稿（标题/正文）、上传图片、获取草稿 appmsgid。含 ProseMirror 编辑器**唯一可靠的正文改法**（dispatch + 点「保存为草稿」）、token 过期与自动保存陷阱、配套的配图生成（HTML→整页截图→PIL 裁剪）与日程图工具链 |
+| docx 转公众号（clz） | [`docx_to_mp/`](docx_to_mp/) | 把 docx 转成公众号图文并推送草稿箱：解析 → 渲染微信兼容 HTML → 推送。内容忠实保留只做样式；含横滑相册、GIF 动效、平台硬限制实测记录 |
+| 科研文献证据工程（ylx） | [`research_evidence_synthesis/`](research_evidence_synthesis/) | ylx·科研文献证据工程与 Related Work 写作：Claim-first（证据矩阵 + 逻辑树 + 综述），含输出样例 |
+| one-hub 用量监测（ylx） | [`onehub_usage_monitor/`](onehub_usage_monitor/) | 监测 one-hub API 用量与费用：总额度/已用/剩余、每日每月记账、各模型单价对比 |
+| 操作微信公众号后台（clz） | [`wechat_mp_ops/`](wechat_mp_ops/) | 操作微信公众号后台（mp.weixin.qq.com）：登录与扫码（stealth/chrome-direct）、草稿箱/发表记录、读取与编辑图文草稿（标题/正文）、上传图片、获取草稿 appmsgid。含 ProseMirror 编辑器**唯一可靠的正文改法**（dispatch + 点「保存为草稿」）、token 过期与自动保存陷阱、配套的配图生成（HTML→整页截图→PIL 裁剪）与日程图工具链 |
 
 ## 其他自制 Skill（无前缀）
 
@@ -20,7 +20,7 @@
 | 科研论文绘图（Nature 投稿级） | [`nature-figure/`](nature-figure/) | 投 Nature 系及高影响期刊的科研配图：Python（matplotlib/seaborn）或 R（ggplot2）多面板图，出图前先定结论、证据逻辑、数据完整性与审稿风险，导出 SVG/PDF/TIFF；另含 AI 生成的机制示意图/图形摘要通道 |
 | ML 论文绘图 | [`academic-plotting/`](academic-plotting/) | 从论文上下文提取系统组件与关系生成架构图；从实验数据自动选图型并用 matplotlib/seaborn 生成数据图 |
 | 概念问答沉淀 | [`kb-capture/`](kb-capture/) | 说一句「存知识库」即把当前对话里的概念性问答沉淀成知识库原子卡片并 push：先 `search` 判重，命中则读全文后合并、未命中则新建；卡片与索引同步放在同一次提交，写盘前做敏感与卡片规范校验 |
-| 公众号模板库 | [`mp-template-lib/`](mp-template-lib/) | 把「看到一个好排版」变成「能吃进来的可复用主题」：`extract_theme.py` 从一篇已发表文章（URL 或 HTML）反推设计令牌、组件形态与对照图，存进 `templates/<主题名>/` 供排版流程取用。触发词：套模板、反推模板、模板库、仿这个排版。不用于写文章（用 khazix-writer）与渲染本身（用 clz_docx_to_mp） |
+| 公众号模板库 | [`mp-template-lib/`](mp-template-lib/) | 把「看到一个好排版」变成「能吃进来的可复用主题」：`extract_theme.py` 从一篇已发表文章（URL 或 HTML）反推设计令牌、组件形态与对照图，存进 `templates/<主题名>/` 供排版流程取用。触发词：套模板、反推模板、模板库、仿这个排版。不用于写文章（用 khazix-writer）与渲染本身（用 docx_to_mp） |
 | ABaCAS 平台操纵 | [`abacas-cloud-ops/`](abacas-cloud-ops/) | ABaCAS Cloud 平台任务/文件/费效评估/结果导入与本地可视化（9 个脚本） |
 | n8n 工作流操纵 | [`n8n-web-ops/`](n8n-web-ops/) | n8n 网页操纵：登录、执行记录只读查看、callback_token 自动提取 |
 | 网申表单速填 | [`job-form-autofill/`](job-form-autofill/) | 按简历填任意网页的求职/网申表单：闭合选项（下拉/单选）交给 Jev 一次批量判定，需要写字的由助手依据简历生成；**绝不提交**，没依据的一律留空并列出"需要你提供"清单 |

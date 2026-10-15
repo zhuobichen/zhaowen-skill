@@ -1,6 +1,6 @@
 # 链路实测记录（2026-09-16）
 
-本文件记录 `clz_docx_to_mp` 全链路的**原始验证证据**。结论已写进 SKILL.md，
+本文件记录 `docx_to_mp` 全链路的**原始验证证据**。结论已写进 SKILL.md，
 这里保留证据与「为什么这么设计」，便于日后微信改版时对照排查。
 
 **环境**：browser-act 1.4.2 · 微信公众平台编辑器（ProseMirror）· 2026-09-16
@@ -9,7 +9,7 @@
 
 ## 1. 新建草稿：`isNew=1`
 
-`clz_wechat_mp_ops` 里记载的全部是「编辑已有草稿」，新建是空白。实测：
+`wechat_mp_ops` 里记载的全部是「编辑已有草稿」，新建是空白。实测：
 
 ```
 GET https://mp.weixin.qq.com/cgi-bin/appmsg

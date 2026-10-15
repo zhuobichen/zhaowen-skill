@@ -8,8 +8,8 @@ description: |
   两件事：① extract_theme.py 给一篇已发表文章（URL 或 HTML）自动吐出
   设计令牌 + 组件形态 + 对照图，存进 templates/<name>/；
   ② templates/ 下的主题供排版流程取用。
-  配套 skill：clz_docx_to_mp（docx → 公众号图文渲染与推送）、clz_wechat_mp_ops（后台草稿操作）。
-  不要用于：写文章（用 khazix-writer）、排版渲染本身（用 clz_docx_to_mp）。
+  配套 skill：docx_to_mp（docx → 公众号图文渲染与推送）、wechat_mp_ops（后台草稿操作）。
+  不要用于：写文章（用 khazix-writer）、排版渲染本身（用 docx_to_mp）。
 ---
 
 # 公众号模板库
@@ -80,7 +80,7 @@ python scripts/extract_theme.py --html ./body.html --name xxx --preview ./shot.p
 红序号+深色图 / 纯黑长文。
 每收一个都撞出新缺陷（见下）——**那才是这个库真正的资产**。
 
-（`clz_docx_to_mp` 里的 `abaas2024` 是蓝色学术风，那个主题在**那个** skill 里，不在这里。
+（`docx_to_mp` 里的 `abaas2024` 是蓝色学术风，那个主题在**那个** skill 里，不在这里。
  两个 skill 各管各的，没有依赖。）
 
 ## 已修的缺陷（每一条都是实测撞出来的）
@@ -469,7 +469,7 @@ n_acc = len(re.findall(r'<(?:strong|span)[^>]*color:\s*(?:rgb|#)[^;"]{3,30}', ht
 - **`preview.png` 需要外部提供**（`--preview`）。脚本自己截图要起浏览器，
   目前没内建；用 browser-act 截一张传进来即可。
 - 微信会剥 `<style>` 和 `class`，所以**所有样式必须内联** —— 这是
-  `clz_docx_to_mp` 那条流水线的硬约束，本库的产物要喂给它，同样受约束。
+  `docx_to_mp` 那条流水线的硬约束，本库的产物要喂给它，同样受约束。
 
 - **`--out` 指向不存在的目录会崩**（2026-10-10 发现，未修）。`main()` 里 `find_duplicate()`
   在 `os.makedirs(outdir)` **之前**就 `os.listdir(out_dir)`，于是报

@@ -1,5 +1,5 @@
 ---
-name: ylx_onehub_usage_monitor
+name: onehub_usage_monitor
 description: 监测 one-hub API 用量与费用：查询总额度/已用/剩余(美元+人民币)、每日/每月记账、各模型 one-hub 实际单价 vs 官方价对比。当需要查询公司/个人 one-hub 中转额度消耗、统计每日费用、评估模型成本或选模型省钱时使用。
 metadata:
   type: skill
