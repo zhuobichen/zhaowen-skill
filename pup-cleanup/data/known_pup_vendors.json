@@ -21,8 +21,9 @@
     {
       "label": "天津中思明达科技有限公司",
       "signer": ["天津中思明达", "中思明达"],
-      "dirs": ["renameutility", "securebox", "filerecycle"],
-      "products": ["RenameUtility", "SecureBox", "超级回收站"]
+      "dirs": ["renameutility", "securebox", "filerecycle", "winquick"],
+      "products": ["RenameUtility", "SecureBox", "超级回收站", "WinQuick"],
+      "note": "WinQuick 带 winquick_shellext.dll / winquick_shellext_x64.dll（注入资源管理器右键菜单）和 winquick_service.exe；卸载项 name 形如 'WinQuick 版本 10.1026.1110.911'，注册表键名是 GUID+_is1 而非产品名，按 DisplayName 匹配才找得到。"
     },
     {
       "label": "天津星聚时代科技有限公司",
@@ -33,14 +34,23 @@
     {
       "label": "天津邦兴利达科技有限公司",
       "signer": ["天津邦兴利达", "邦兴利达"],
-      "dirs": ["renameflow"],
-      "products": ["RenameFlow"]
+      "dirs": ["renameflow", "vaultify"],
+      "products": ["RenameFlow", "Vaultify"],
+      "note": "Vaultify 的 dll 文件名带尾部 '--'（vaultify_svr.dll-- / vaultify_x64.dll--），是投放载荷的常见形状。会注册名为 'vaultify schedule' 的计划任务常驻——目录删了任务还在，会自己回来。"
     },
     {
       "label": "天津立方星球文化传媒有限公司",
-      "signer": ["天津立方星球", "立方星球"],
-      "dirs": ["filefort"],
-      "products": ["FileFort"]
+      "signer": ["天津立方星球", "立方星球", "天津立方星球文化传媒"],
+      "dirs": ["filefort", "wineease"],
+      "products": ["FileFort", "WinEase"],
+      "note": "WinEase 夹带 cssdk.exe（签名是北京奇虎/360）——同一目录里混着别家的 sdk。含 precise_dispatch_runner.exe（精准投放）、screensave.exe、web_sight.exe、pyra64.exe，是纯推广壳。"
+    },
+    {
+      "label": "重庆重橙网络科技有限公司（Flash 中国区发行方）",
+      "signer": ["重庆重橙", "chongqing zhongcheng"],
+      "dirs": ["flashcenter", "macromed"],
+      "products": ["FlashCenter", "Flash 中心", "Flash Helper Service"],
+      "note": "FlashCenter 里塞了一整套 CEF 浏览器（FCBrowser.exe / FCBrowserManager.exe / cef.pak）用来带货。Flash Helper Service 装在 C:\\Windows\\SysWOW64\\Macromed\\Flash\\，Running+Auto。注意真正的 Flash 播放器二进制签名是 Wipro Connected Services（Adobe 外包），重橙只签服务那一层。"
     }
   ],
   "promoter_shells": {
@@ -55,5 +65,22 @@
     ]
   },
   "superapp_marker": "SuperApp",
-  "superapp_note": "这类软件共用一套叫 SuperApp 的插件壳，一套壳里塞多个产品（如 LdsSysClean 下还有 omni_zip）。看到目录里有 SuperApp 基本可判定为同一类。"
+  "superapp_note": "这类软件共用一套叫 SuperApp 的插件壳，一套壳里塞多个产品（如 LdsSysClean 下还有 omni_zip）。看到目录里有 SuperApp 基本可判定为同一类。",
+  "uninstaller_side_effects": {
+    "_note": "官方卸载器的作用域常常比产品名大。跑之前先估它的边界，跑之后逐项复查——它可能把用户还想留的东西一起带走。",
+    "observed": [
+      {
+        "uninstaller": "FlashCenter\\FlashCenterUninst.exe (NSIS, 重橙)",
+        "asked_for": "FlashCenter",
+        "actually_removed": [
+          "C:\\Program Files (x86)\\FlashCenter (272 MB)",
+          "服务 FlashCenterSvc",
+          "Adobe Flash Player 34 ActiveX / NPAPI / PPAPI 三个卸载项",
+          "服务 Flash Helper Service（Running+Auto）",
+          "C:\\Windows\\SysWOW64\\Macromed\\Flash 下的全部播放器二进制"
+        ],
+        "lesson": "重橙的卸载器是连坐的：清 FlashCenter 会顺手把整个 Flash 栈卸掉。用户只说清 FlashCenter 时，先问要不要连 Flash Player 一起，或至少事后如实报告范围。"
+      }
+    ]
+  }
 }
