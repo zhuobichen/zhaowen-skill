@@ -6,6 +6,7 @@
 
 | Skill | 目录 | 用途 |
 |-------|------|------|
+| ylx_pup_cleanup | [`ylx_pup_cleanup/`](ylx_pup_cleanup/) | 清理本机流氓软件/开机弹窗广告：找出推广告的"壳"、用官方卸载器卸、卸不动的走隔离；含自启动普查、登录后执行痕迹、按厂商识别推广家族。 |
 | 英雄联盟「海克斯大乱斗」(海斗/ARAM | [`aram-mayhem-assistant/`](aram-mayhem-assistant/) | 英雄联盟「海克斯大乱斗」(海斗/ARAM) 分析助手：数对局、复盘单局、查符文与英雄、看趋势/画像/出装/对位/队友、跨 |
 | docx 转公众号（clz） | [`docx_to_mp/`](docx_to_mp/) | 把 docx 转成公众号图文并推送草稿箱：解析 → 渲染微信兼容 HTML → 推送。内容忠实保留只做样式；含横滑相册、GIF 动效、平台硬限制实测记录 |
 | 科研文献证据工程（ylx） | [`research_evidence_synthesis/`](research_evidence_synthesis/) | ylx·科研文献证据工程与 Related Work 写作：Claim-first（证据矩阵 + 逻辑树 + 综述），含输出样例 |
