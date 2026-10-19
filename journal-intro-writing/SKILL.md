@@ -1,9 +1,13 @@
 ---
 name: journal-intro-writing
-description: 按 Elsevier 环境类期刊（Atmospheric Environment 实测 19 篇、精读 9 篇）的真实论文范式写 Introduction / 研究背景。核心是「引言讲一个领域，不是给文献写摘要」：按知识点分段、引用成组挂句尾、单篇结果数字 ≤2、缺口必须写成可判定的方法学缺陷、中心议题与题目主语对齐。当用户要写论文引言/研究背景、抱怨「写得像综述」「像报告」「很怪」「抓不到重点」，或要把文献笔记改写成论文体时使用。
+description: AE 范式（Atmospheric Environment 实测 19 篇、精读 9 篇、48 段统计）的期刊 Introduction / 研究背景写作法。核心是「引言讲一个领域，不是给文献写摘要」：按知识点分段、引用成组挂句尾、单篇结果数字 ≤2、缺口须写成可判定的方法学缺陷（Given that → Consequently → Therefore）、中心议题与题目主语对齐。当用户要写论文引言/研究背景、抱怨「写得像综述」「像报告」「很怪」「抓不到重点」，或要把文献笔记改写成论文体时使用。
 ---
 
-# 期刊 Introduction / 研究背景写作范式（AE 实测）
+# AE 范式：期刊 Introduction / 研究背景写作法
+
+> **语料边界**：本 skill 的范式来自本机 Zotero 库内 **19 篇 *Atmospheric Environment* 论文**
+> （精读 9 篇、48 个段落统计）。它是对 AE 实际稿件的归纳，**不是 Elsevier 官方写作规范**；
+> 样本为用户自有库，存在选择偏差。跨期刊使用时，建议先核对目标刊的 Guide for Authors。
 
 ## 两条核心判据
 
