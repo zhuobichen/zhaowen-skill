@@ -214,7 +214,44 @@ Alkuwari、Tang、Mousavinezhad、Hojeily。
 
 ---
 
-## 六、与本项目的对照
+## 六、结尾段的四种写法（16 篇逐篇核对）
+
+| 写法 | 论文 | 结尾原文要点 |
+|---|---|---|
+| **目标句** | Di 2024 | "Therefore, the goal of this study is to objectively assess and compare…" |
+| | 北京 2021 | "As a means of comprehensively and accurately evaluating…, this study analyzed the parametric or nonparametric linear trends of 12 ozone metrics…" |
+| | 五城市 2017 | "In this paper, we apply the data fusion approach to a multicity time-series study…" |
+| | Hojeily 2026 | "In this paper, we adopted the SEDI algorithm described in Lee et al. (2024)…" |
+| **研究问题清单** | Mousavinezhad 2023 | "…we intend to provide answers to the following questions …: (1) What are the trends…? (2) How does meteorology impact these trends…? (3) What are the key meteorological variables…? (4) How have emission control policies impacted respiratory-related premature mortality…?" |
+| **贡献 + 验证** | Madden 2026 | "**Here we introduce** a Bayesian spatial–temporal downscaler model … We demonstrate model utility and performance on two case studies … Finally, we detail new functionality…" |
+| | Alkuwari 2013 | "To our knowledge, there is no application of PFCs as a downscaling method in the literature. **We present here the first of such application**…" |
+| **增量改进清单** | Wells 2021 | "In this work, the authors explore potential refinements to the existing method … which are listed below. 1. …" |
+| **章节组织**（常与其他并用） | Tang 2024 / CAMS 2024 / Alkuwari 2013 / WRF-CMAQ 2017 / Hojeily 2026 | "The paper is organized as follows. Section 2 … Section 3 …" |
+
+> **观察**：章节组织段是**可选的**。Yu 2018、Berrocal 2020、Di 2024、Madden 2026、北京 2021 都没有。
+
+---
+
+## 七、四重转折型缺口（Mousavinezhad 2023）
+
+> **Despite** the relative strengths of these approaches, many studies have used them to focus only on the relationship between ozone and a small set of meteorological variables, which limits their application. Studies have **also** limited their investigations to a specific city/region. **Although** several studies have examined large geographical regions such as the CONUS (Porter et al., 2015) and China (Mousavinezhad et al., 2021), **they are typically limited to** a relatively short period. **Additionally**, some studies tend to focus on seasonal average ozone levels, which fails to identify meteorological variables that influence the occurrence of episodes of ozone (Wells et al., 2021).
+
+四刀砍完：变量太少 → 地域太窄 → 时期太短 → 只看季节均值。
+剩下的位置恰好就是"多尺度 × 多变量 × 多年代 × 峰值浓度"。
+
+---
+
+## 八、抽取局限说明
+
+| 论文 | 情况 |
+|---|---|
+| [CHMU67KM] 2019 PM₂.₅ 达标系统 | EPA 作者稿单栏版式，未定位到 Introduction，未纳入统计 |
+| [HT5JHLST] / [W93WTUGW] | 与 [P33ZR5UN] / [JJGSN2TB] 为同一文献的重复条目，跳过 |
+| 汾渭平原 2026 P6–P7 | PDF 文本层两栏交织，抽取时部分句子顺序错乱；结构与关键句已人工核对 |
+
+---
+
+## 九、与本项目的对照
 
 本项目（多融合数据集的臭氧长期变化评估）同时对应三种现成范式：
 

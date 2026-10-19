@@ -1,6 +1,6 @@
 ---
 name: journal-intro-writing
-description: AE 范式（Atmospheric Environment 库里 19 条、去重 17 篇、精读 16 篇）的期刊 Introduction / 研究背景写作法。核心是「引言讲一个领域，不是给文献写摘要」：按知识点分段、引用成组挂句尾、缺口须写成可判定的方法学缺陷、中心议题与题目主语对齐。区分紧凑论证型（4–8 段）与综述铺陈型（9–13 段）两种风格。当用户要写论文引言/研究背景、抱怨「写得像综述」「像报告」「很怪」「抓不到重点」，或要把文献笔记改写成论文体时使用。
+description: AE 范式（Atmospheric Environment 库里 19 条、去重 17 篇、精读 16 篇）的期刊 Introduction / 研究背景写作法。核心是「引言讲一个领域，不是给文献写摘要」：按知识点分段、引用成组挂句尾、缺口须写成可判定的方法学缺陷（五种写法）、中心议题与题目主语对齐。区分紧凑论证型（4–8 段）与综述铺陈型（9–13 段）两种风格。当用户要写论文引言/研究背景、抱怨「写得像综述」「像报告」「很怪」「抓不到重点」，或要把文献笔记改写成论文体时使用。
 ---
 
 # AE 范式：期刊 Introduction / 研究背景写作法
@@ -59,7 +59,7 @@ Mousavinezhad 2023（9 段/1,641）、Hojeily 2026（13 段/1,925）
 > **两条路都通向同一个终点**：在引言末尾用一个明确的方法学缺口把本文接上。
 > 区别只在于铺垫的厚度。
 
-## 四种缺口写法
+## 五种缺口写法
 
 ### A. 方法学缺陷型 —— 最有力量
 
@@ -126,6 +126,43 @@ The limitations of previously published studies include: 1) …; 2) …; 3) ….
 The objective of this study is to ….
 ```
 
+### E. 四重转折型
+
+Mousavinezhad 2023 用一个段落连打四次转折，把缺口逼到唯一出口：
+
+> **Despite** the relative strengths of these approaches, many studies have used them to focus only on the relationship between ozone and a small set of meteorological variables, which limits their application. Studies have **also** limited their investigations to a specific city/region. **Although** several studies have examined large geographical regions such as the CONUS (Porter et al., 2015) and China (Mousavinezhad et al., 2021), **they are typically limited to** a relatively short period. **Additionally**, some studies tend to focus on seasonal average ozone levels, which fails to identify meteorological variables that influence the occurrence of episodes of ozone (Wells et al., 2021).
+
+骨架：
+
+```
+Despite [已有做法的优点], [它们] only [局限 1].
+[主语] have also [局限 2].
+Although [少数例外], [它们] are typically limited to [局限 3].
+Additionally, [局限 4].
+```
+
+四刀砍完，剩下的位置恰好就是本文。
+
+## 结尾段的四种写法
+
+读完 16 篇的结尾，**结尾段和缺口段一样有固定套路**：
+
+| 写法 | 原型 | 句式 |
+|---|---|---|
+| **目标句** | Di 2024、北京 2021 | "Therefore, the goal of this study is to …" / "As a means of … this study analyzed …" |
+| **研究问题清单** | Mousavinezhad 2023 | "…we intend to provide answers to the following questions: (1) …? (2) …? (3) …? (4) …?" |
+| **贡献 + 验证** | Madden 2026 | "**Here we introduce** … We demonstrate model utility on two case studies … Finally, we detail …" |
+| **章节组织**（可选，常与其他并用） | Tang 2024、CAMS 2024、Alkuwari 2013 | "The paper is organized as follows. Section 2 … Section 3 …" |
+
+**选择建议**
+
+- 论文有**并列的多个科学问题** → 用 RQ 清单（读者一眼看到全貌）。
+- 论文有**单一明确目标** → 用目标句。
+- 论文提供**新方法 / 新工具** → 用贡献 + 验证（"Here we introduce … We demonstrate …"）。
+
+> 注意：Wells 2021 属于"增量改进"型，结尾是 `In this work, the authors explore potential refinements … which are listed below. 1. …`。
+> Alkuwari 2013 则用了一句强新颖性声明：`To our knowledge, there is no application of PFCs as a downscaling method in the literature. We present here the first of such application.`
+
 ## 关于「点名作者」——不是禁止，而是必须有判据
 
 **实测**：紧凑型引言里几乎不点名；综述型引言里大量点名。
@@ -164,7 +201,7 @@ Tang 2024 的写法：
 | 2 | 为什么难（机理 / 数据限制） |
 | 3 | 已有做法，按类别推进 |
 | 4 | 每类的局限 → Consequently |
-| 5 | 缺口（A/B/C/D 之一） |
+| 5 | 缺口（A/B/C/D/E 之一） |
 | 6 | 本文目标 + 路线（句内编号） |
 
 ### 综述型（9–13 段）
@@ -202,7 +239,7 @@ Tang 2024 的写法：
 1. **定中心**：用题目主语写一句「本文问的是 ______」。
 2. **拆段**：给每段标一个"论点"；写不出论点的段落合并或重写。
 3. **收引用**：`X 等发现 Y[n]` → `Y 已被反复报告[1,2,3]`；主语从作者换成现象。
-4. **补缺口**：用 A/B/C/D 之一写出缺口，并检查它是否**可判定**（能说出"缺的具体是哪一环"）。
+4. **补缺口**：用 A/B/C/D/E 之一写出缺口，并检查它是否**可判定**（能说出"缺的具体是哪一环"）。
 
 ## 自检清单（12 条）
 
@@ -213,7 +250,7 @@ Tang 2024 的写法：
 - [ ] 5. 每段至少一处引用？
 - [ ] 6. 成组引用占 60% 以上（紧凑型要求；综述型放宽）？
 - [ ] 7. 每个结果级数字都能说出"它在支撑哪个论点"？
-- [ ] 8. 有一个明确写出的缺口句，用的是 A/B/C/D 之一？
+- [ ] 8. 有一个明确写出的缺口句，用的是 A/B/C/D/E 之一？
 - [ ] 9. 缺口之前有"每类方法的局限"作为铺垫？
 - [ ] 10. 最后一段给出本文路线，用句内编号而非项目符号？
 - [ ] 11. 段落数落在所选风格的区间（紧凑 4–8 / 综述 9–13）？
