@@ -1,203 +1,233 @@
 ---
 name: journal-intro-writing
-description: AE 范式（Atmospheric Environment 实测 19 篇、精读 9 篇、48 段统计）的期刊 Introduction / 研究背景写作法。核心是「引言讲一个领域，不是给文献写摘要」：按知识点分段、引用成组挂句尾、单篇结果数字 ≤2、缺口须写成可判定的方法学缺陷（Given that → Consequently → Therefore）、中心议题与题目主语对齐。当用户要写论文引言/研究背景、抱怨「写得像综述」「像报告」「很怪」「抓不到重点」，或要把文献笔记改写成论文体时使用。
+description: AE 范式（Atmospheric Environment 库里 19 条、去重 17 篇、精读 16 篇）的期刊 Introduction / 研究背景写作法。核心是「引言讲一个领域，不是给文献写摘要」：按知识点分段、引用成组挂句尾、缺口须写成可判定的方法学缺陷、中心议题与题目主语对齐。区分紧凑论证型（4–8 段）与综述铺陈型（9–13 段）两种风格。当用户要写论文引言/研究背景、抱怨「写得像综述」「像报告」「很怪」「抓不到重点」，或要把文献笔记改写成论文体时使用。
 ---
 
 # AE 范式：期刊 Introduction / 研究背景写作法
 
-> **语料边界**：本 skill 的范式来自本机 Zotero 库内 **19 篇 *Atmospheric Environment* 论文**
-> （精读 9 篇、48 个段落统计）。它是对 AE 实际稿件的归纳，**不是 Elsevier 官方写作规范**；
-> 样本为用户自有库，存在选择偏差。跨期刊使用时，建议先核对目标刊的 Guide for Authors。
+> **语料边界**：来自本机 Zotero 库内 **19 条 *Atmospheric Environment* 记录**（去重后 17 篇，
+> 其中 16 篇成功抽取引言）。是对 AE 实际稿件的归纳，**不是 Elsevier 官方写作规范**；
+> 样本为用户自有库，存在选择偏差。
 
 ## 两条核心判据
 
 **判据一：删掉所有作者名和年份，论证还成立吗？**
 
 - 成立 → 你在讲一个领域，合格。
-- 不成立 → 你在写 annotated bibliography，不合格。
+- 不成立 → 你在写 annotated bibliography。
 
 **判据二：引言的「中心对象」等于题目的「主语」吗？**
 
-- 相等 → 读者从第一段就知道你要问什么。
-- 不等 → 整篇读下来"很全"，但不知道在问什么。这是最隐蔽、也最致命的病。
+题目讲「X 如何影响 Y」，引言就该围绕 X。前三分之一在讲 Y 的一般背景 → 判据二不通过。
 
-> 例：题目是「**数据集选择**如何改变对长期变化的解释」，
-> 引言前三分之一却在校述臭氧健康与法规史 → 判据二不通过。
+> 这是最隐蔽的病：整篇读下来"很全"，但读者不知道你在问什么。
 
-## 实测基线（9 篇 AE）
+## 实测基线（16 篇）
 
-| 指标 | 实测 | 建议 |
-|---|---|---|
-| 段落数 | **4–9**（中位 6） | 5–7 |
-| 总词数 | **495–1,500**（中位 ~870） | 600–1,000 |
-| 每段词数 | 中位 **130**，范围 27–278 | 80–200 |
-| 段首用连接/过渡词 | **35%**（其余直接进入事实） | 1/3 左右 |
-| 平均句长 | 25–32 词 | 26–30 |
-| 成组引用占比 | 高 | ≥60% |
-| 单篇结果数字 | **0–2** | ≤2 |
-| 项目符号 | **0** | 0 |
+| 指标 | 实测 |
+|---|---|
+| 段落数 | **4–13，中位 6–7** |
+| 总词数 | **347–1,925，中位 ~840** |
+| 每段词数 | 中位 ~110，短的可到 27 词，长的可到 518 词 |
+| 段首用连接/过渡词 | 约 35%，其余直接进入事实 |
+| 项目符号 | **0**（句内 `1) 2) 3)` 可以） |
+| 组织结构段 | 约半数有，可选 |
 
-> 「背景级数字」= 法规阈值、量级、年份、百分比变化。
-> 「结果级数字」= 某论文的 R²、RMSE、回归系数。**这类不进引言。**
+原始数据见 `references/ae-corpus-analysis.md`。
 
-## 三种缺口写法（引言的胜负手）
+## 两种风格（都合法，按论文类型选）
 
-### 写法 A：方法学缺陷型 —— 最有力量
+### 紧凑论证型 —— 4–8 段，350–1,000 词
 
-**适用**：现有评价体系存在结构性偏差，本文换一种评价方式。
+**代表**：Guillas 2008（4 段/347）、Yu 2018（4 段/468）、Berrocal 2020（6 段/644）、
+五城市 2017（6 段/603）、Wells 2021（6 段/650）、CAMS vs CMAQ 2024（7 段/744）、
+Madden 2026（8 段/805）、侧边界 2018（6 段/810）、WRF-CMAQ 2017（7 段/870）、
+北京 2021（6 段/945）、Di 2024（8 段/1,003）、汾渭平原 2026（8 段/1,025）
 
-三步：**机制 → 后果 → 本文目标**
+**特征**：每段一个论点；引用成组；具体结果数字 0–2 个。
+**适用**：方法比较、数据集比较、评价体系改进。
 
-原文（Di et al., 2024, *AE* 338:120799）：
+### 综述铺陈型 —— 9–13 段，1,200–1,900 词
 
-> **Given that** the ground truth used as learning samples during the development of these datasets originated from public national air quality monitoring network consisting of monitoring sites mainly located in urban and densely populated areas, **the assessment of datasets with the same source data is likely to yield overrated results**, as these sample points were presumed to be of the highest level of accuracy. **Consequently**, the assessment of trained ML models with considerable error metrics like high Cross-Validation R-Squared (CV-R2) **was always reported** by dataset creators, **which neglected** the model performance in regions originally without ground-based observation. **Therefore, the goal of this study is to** objectively assess and compare the accuracy of eight freely available PM2.5 concentration datasets with **completely independent observation records** from monitoring sites predominantly located in suburban and sparsely populated areas.
+**代表**：Alkuwari 2013（10 段/1,271）、Tang 2024（12 段/1,285）、
+Mousavinezhad 2023（9 段/1,641）、Hojeily 2026（13 段/1,925）
 
-**可复制的骨架**
+**特征**：会用 "X et al. (year) 做了什么" 的形式铺开一批研究，会带具体指标数字。
+但**最后仍会收束到一段限制清单 + 本文目标**。
+**适用**：应用型论文、需要交代领域全貌的场合。
+
+> **两条路都通向同一个终点**：在引言末尾用一个明确的方法学缺口把本文接上。
+> 区别只在于铺垫的厚度。
+
+## 四种缺口写法
+
+### A. 方法学缺陷型 —— 最有力量
+
+**三步：机制 → 后果 → 换基准**
+
+原型（Di et al., 2024, *AE* 338:120799）：
+
+> **Given that** the ground truth used as learning samples ... originated from public national air quality monitoring network consisting of monitoring sites mainly located in urban and densely populated areas, **the assessment of datasets with the same source data is likely to yield overrated results**, as these sample points were presumed to be of the highest level of accuracy. **Consequently**, the assessment ... like **high Cross-Validation R-Squared (CV-R2) was always reported** by dataset creators, **which neglected** the model performance in regions originally without ground-based observation. **Therefore, the goal of this study is to** objectively assess ... with **completely independent observation records** ...
+
+骨架：
 
 ```
-Given that [现有做法的前提], the [常规评估/建模] is likely to [系统性偏差],
-because [为什么].
-Consequently, [现有研究报告的指标] was always [被当作结论],
-which neglected [真正关心的东西].
+Given that [现有做法的前提], the [常规评估/建模] is likely to [系统性偏差], because [为什么].
+Consequently, [现有研究报告的指标] was always [被当作结论], which neglected [真正关心的东西].
 Therefore, the goal of this study is to [换一个评价对象/基准].
 ```
 
-这是"CV 高 ≠ 可信"这类论点的标准写法。**如果你要论证现有评价指标不足以支撑你的结论，用这个骨架。**
+### B. 评价维度不足型 —— 与本项目最相关
 
-### 写法 B：逐类局限型
+三篇 AE 论文用了同一招：**指出"现有评价维度"与"真正要回答的问题"不是一回事**。
 
-**适用**：方法谱系宽，需要说明每类都缺一块。
+WRF-CMAQ 动态评估（2017, *AE*）：
 
-每介绍一类，紧跟它的局限，段落用 **Consequently** 收尾。
+> There have been many studies focusing on the **operational evaluation** of regional air quality models, but **only few addressed the other three components** ... Recent studies ... **Hogrefe et al. (2008) stated that operational model evaluation provides little insight into the reliability of the estimation of relative changes** ... **Dynamic evaluation entails the assessment of the model's ability to reproduce the changes** in observed air quality conditions ... **Dynamic model evaluation for a 21-yr timeframe over CONUS has never been performed.**
 
-原文（汾渭平原, 2026, *AE*）:
-
-> **Although** photochemical indicators allow for rapid OPS identification, they simplify the nonlinear relationship between O3 and its precursors, thereby amplifying uncertainties (Liu et al., 2022). The EBM approach requires designing numerous emission sensitivity experiments and is constrained by uncertainties in the emission inventory (de Meij et al., 2024). In contrast, OBMs are associated by observational data and can better represent the evolving characteristics ... **However**, since OBMs rely on historical observational data, they cannot predict future changes in OPS and are thus inadequate for supporting practical operational needs. **Consequently, there is an urgent need to develop** rapid and accurate OPS identification methods ...
+Di 2024（见写法 A）说的是同一件事：**CV-R² 评的是逐点拟合，不是区域可迁移性**。
 
 **骨架**
 
 ```
-Although [方法 A] allows ..., it [局限 A] (refs).
-[方法 B] requires ..., and is constrained by [局限 B] (refs).
-In contrast, [方法 C] can ..., However, since [原因], it cannot ... (refs).
-Consequently, there is an urgent need to [本文要提供的东西].
+现有研究几乎都在 [维度 A] 上比较（refs），但 [维度 A] 提供不了关于 [真正问题] 的信息 (refs)。
+[维度 B] 才是评估 [真正问题] 的方式，而 [维度 B] 在 [范围/尺度] 上尚未做过。
 ```
 
-### 写法 C：开放问题型
+> **"has never been performed" 是 AE 里合法的强缺口表述**，前提是范围写得具体
+> （"for a 21-yr timeframe over CONUS"），不能只写"尚无人研究"。
 
-**适用**：现有系统能跑，但有一个关键问题没回答。
+### C. 逐类局限型
 
-原文（CAMS vs CMAQ, 2024, *AE*）:
+每介绍一类方法，紧跟它的局限，段末用 **Consequently** 收尾。
 
-> **A limitation of** this current NAQFC operational method **is that** it is inherently point-based, with ground truth concentrations known only at AirNow station locations. **An open question is whether** that approach could be improved upon by instead defining a gridded "truth" dataset ... **The first step to answering that question is** to explore what gridded datasets could provide the best gridded analysis ... **and that is the subject of this paper.**
+原型（汾渭平原, 2026, *AE*）：
 
-**骨架**
+> **Although** photochemical indicators allow for rapid OPS identification, they simplify the nonlinear relationship ..., thereby amplifying uncertainties (Liu et al., 2022). The EBM approach requires ... and is constrained by ... (de Meij et al., 2024). **In contrast**, OBMs are associated by observational data ... **However**, since OBMs rely on historical observational data, they cannot predict future changes ... **Consequently, there is an urgent need to develop** rapid and accurate OPS identification methods ...
+
+侧边界 2018 连用三次 "However" 做同一件事：
+
+> ... CTM-derived LBCs are typically used ... **However**, they might contain large biases ... (P2)
+> ... utilized satellite retrievals to enhance ... **However**, most satellite retrievals did not fulfill ... (P3)
+> ... Bayesian modeling ... **However**, this approach requires a large number of observations ... (P4)
+
+### D. 限制清单型 —— 最省力
+
+在句内用 `1) 2) 3)` 列出现有研究的限制，然后接本文。
+
+原型（Tang et al., 2024, *AE*）：
+
+> **The limitations of previously published studies include: 1) focus on observation dense regions; 2) prediction of single species; and 3) neglect potentially useful CTM model products**, including long-term public reanalysis datasets. **The objective of this study is to** further advance the capabilities to fuse measurement and CTM models ... and test ML model dependency on observation density ...
+
+骨架：
 
 ```
-A limitation of [现有做法] is that [局限].
-An open question is whether [可改进方向].
-The first step to answering that question is [本文做的那一步],
-and that is the subject of this paper.
+The limitations of previously published studies include: 1) …; 2) …; 3) ….
+The objective of this study is to ….
 ```
 
 ## 关于「点名作者」——不是禁止，而是必须有判据
 
-AE **允许**写 "Ali et al. (2022) obtained ..."，但只在一种情况下：**这个作者名承担了一个判据**。
+**实测**：紧凑型引言里几乎不点名；综述型引言里大量点名。
 
-北京臭氧那篇（2021, *AE*）的用法：
+Tang 2024 的写法：
 
-> Previous studies ... were only based on individual sites or applied with simple evaluation metrics (Cheng et al., 2019b; Chen et al., 2020; Li et al., 2020). **For example**, the records of an urban site in Beijing showed that the annual MDA8-O3 ... increased by 2.30 and 1.91 ppbv year−1 (Chen et al., 2020). **All of the previous studies** showed ozone increases in Beijing, **but they concealed the spatial difference** ... **None of them have** comprehensively estimated the spatiotemporal variation.
+> Zheng et al. (2020) built a ML model in Beijing and tested the model in Shanghai, using a CNN and a RF ... Chen et al. (2021) used RF ML in the Yangtze River Delta ... Wei et al. (2020) found that adding spatiotemporal coordinates as predictors improved ... Di et al. (2016) used a CNN ...
 
-点名 Chen et al. 不是因为他重要，而是因为**他的数字恰好证明了"只基于单站点"这个缺陷**。
+北京 2021 的写法（点名 + 判据）：
 
-**判据**：删掉作者名，这个论点还成立吗？
+> ... were only based on individual sites or applied with simple evaluation metrics (Cheng et al., 2019b; Chen et al., 2020; Li et al., 2020). **For example**, the records of an urban site in Beijing showed ... (Chen et al., 2020). **All of the previous studies** showed ozone increases in Beijing, **but they concealed the spatial difference** ... **None of them have** comprehensively estimated ...
 
-- 成立 → 不必点名，改成成组引用。
+**判据**：删掉这个作者名，这个论点还成立吗？
+
+- 成立 → 改成成组引用。
 - 不成立 → 可以点名，但必须写出"它证明了什么"。
 
-## 黄金六段
+## 关于数字
 
-| 段 | 任务 | 结束时读者应知道 |
-|:--:|---|---|
-| 1 | 现象的重要性 + 现状数字（背景级） | 为什么值得做 |
-| 2 | 机理 / 为什么难 | 问题的性质 |
-| 3 | 已有做法，**按类别**推进 | 领域里有几类解法 |
-| 4 | 每一类的局限 → Consequently | 为什么还不够 |
-| 5 | 缺口（写法 A/B/C 之一） | 缺的到底是哪一个具体环节 |
-| 6 | 本文目标 + 路线 | 本文做什么、分几步 |
+**实测**：紧凑型引言 0–2 个结果级数字；综述型可以有十几个。
 
-段数 4–9 都正常；**但每一段必须是论点的递进，不是文献的并列**。
+**判据不是"数量"，而是"服务对象"**：
+
+- 数字**支撑一个论点** → 可以留（"CAMS overestimated in urban areas" 这类对比）。
+- 数字只是**罗列**（"A 报告 R²=0.85，B 报告 0.88，C 报告 0.90"）→ 删掉，改成"普遍报告较高"。
+
+**背景级数字永远可以留**：法规阈值、年份、站点数、空间分辨率。
+
+## 黄金结构
+
+### 紧凑型（6 段）
+
+| 段 | 任务 |
+|:--:|---|
+| 1 | 现象的重要性 + 一个关键现状事实 |
+| 2 | 为什么难（机理 / 数据限制） |
+| 3 | 已有做法，按类别推进 |
+| 4 | 每类的局限 → Consequently |
+| 5 | 缺口（A/B/C/D 之一） |
+| 6 | 本文目标 + 路线（句内编号） |
+
+### 综述型（9–13 段）
+
+重要性 → 数据/方法背景 → 逐个方向铺开已有研究 → 限制清单 → 本文目标 → 章节组织。
 
 ## 八句可复制句式
 
 1. **起手**（主语是现象，引用成组）
-   > Ambient air pollution is among the leading overall risk factors for global mortality (Cohen et al., 2017; Landrigan et al., 2018; Murray et al., 2020).
+   > Ambient air pollution is among the leading overall risk factors for global mortality (Cohen et al., 2017; ...).
 
 2. **收口句**——把宽背景收到研究对象
-   > Such studies use estimates of air pollutant concentration fields in reaching their conclusions.
-   *（Yu et al., 2018）*
+   > Such studies use estimates of air pollutant concentration fields in reaching their conclusions. *(Yu 2018)*
 
 3. **方法列举**——方法名 + 括注一篇代表
-   > These approaches include ordinary least squares, universal kriging (Cressie, 1993), statistical downscaling (Berrocal et al., 2010), and machine learning methods, including random forest (Hu et al., 2017) ...
-   *（Berrocal et al., 2020）*
+   > These approaches include ordinary least squares, universal kriging (Cressie, 1993), statistical downscaling (Berrocal et al., 2010), and machine learning methods, including random forest (Hu et al., 2017) ... *(Berrocal 2020)*
 
-4. **缺口开场**
-   > This paper aims to address an important gap in the current literature: the fact that ...
-
-5. **机制 → 后果 → 本文**（写法 A）
+4. **机制 → 后果 → 本文**（写法 A）
    > Given that ..., the assessment ... is likely to ... Consequently, ... was always reported ..., which neglected ... Therefore, the goal of this study is to ...
 
-6. **逐类局限收尾**（写法 B）
-   > Consequently, there is an urgent need to develop ...
+5. **维度不足**（写法 B）
+   > ... operational model evaluation provides little insight into the reliability of the estimation of relative changes ... Dynamic evaluation ... has never been performed. *(WRF-CMAQ 2017)*
 
-7. **开放问题**（写法 C）
-   > An open question is whether ... The first step to answering that question is ... and that is the subject of this paper.
+6. **逐类局限收尾**（写法 C）
+   > Consequently, there is an urgent need to develop ... *(汾渭平原 2026)*
 
-8. **路线**（句内编号，不换行）
-   > Comparisons were focused on four aspects: 1) spatial concentration fields; 2) Temporal correlations and statistical performance; 3) Auto-correlations ...; 4) Interspecies correlations.
+7. **限制清单**（写法 D）
+   > The limitations of previously published studies include: 1) ...; 2) ...; 3) ....
+
+8. **贡献开场**
+   > Here we introduce ... *(Madden 2026)* ／ In this work, we investigate if ... *(Guillas 2008)*
 
 ## 改写流程（4 步）
 
-### Step 1 定中心
-用题目的主语写一句：**本文问的是 ______。**
-写不出来 → 题目没吃透，先回去看标题。
+1. **定中心**：用题目主语写一句「本文问的是 ______」。
+2. **拆段**：给每段标一个"论点"；写不出论点的段落合并或重写。
+3. **收引用**：`X 等发现 Y[n]` → `Y 已被反复报告[1,2,3]`；主语从作者换成现象。
+4. **补缺口**：用 A/B/C/D 之一写出缺口，并检查它是否**可判定**（能说出"缺的具体是哪一环"）。
 
-### Step 2 拆段
-给每段标一个"论点"。
-- 写不出论点（只能写"这段介绍了某某等"）→ 合并或重写。
-- 重排成：重要性 → 机理 → 做法 → 局限 → 缺口 → 本文。
+## 自检清单（12 条）
 
-### Step 3 收引用
-`X 等发现 Y[n]` → `Y 这一现象已被反复报告[1,2,3]`。
-主语从**作者**换成**现象 / 方法 / 结论**。
-
-### Step 4 删数字
-只留 ≤2 个背景级数字，其余移到 Results / Discussion。
-
-## 自检清单（12 条，逐条可判定）
-
-- [ ] 1. 每段第一句是一个**论断**，不是"某某研究了"？
-- [ ] 2. 删掉所有作者名和年份，论证仍然成立？
+- [ ] 1. 每段第一句是**论断**，不是"某某研究了"？
+- [ ] 2. 删掉所有作者名和年份，论证仍成立？
 - [ ] 3. 引言的**中心对象** = 题目的**主语**？
-- [ ] 4. 没有任何一段以"此外 / 首先 / 其次 / 最后"开头？
+- [ ] 4. 没有任何一段以"此外/首先/其次/最后"开头？
 - [ ] 5. 每段至少一处引用？
-- [ ] 6. 成组引用（≥2 篇并列）占全部引用的 60% 以上？
-- [ ] 7. 单篇文献的具体结果数字 ≤2 个？
-- [ ] 8. **有一个明确写出的缺口句**，且用的是 A/B/C 三种骨架之一？
-- [ ] 9. 缺口句之前，是否有"每类方法的局限"作为铺垫？
+- [ ] 6. 成组引用占 60% 以上（紧凑型要求；综述型放宽）？
+- [ ] 7. 每个结果级数字都能说出"它在支撑哪个论点"？
+- [ ] 8. 有一个明确写出的缺口句，用的是 A/B/C/D 之一？
+- [ ] 9. 缺口之前有"每类方法的局限"作为铺垫？
 - [ ] 10. 最后一段给出本文路线，用句内编号而非项目符号？
-- [ ] 11. 段落 5–7 段、总词数 600–1,000？
-- [ ] 12. 每段 80–200 词，没有超过 280 词的巨段？
+- [ ] 11. 段落数落在所选风格的区间（紧凑 4–8 / 综述 9–13）？
+- [ ] 12. 没有超过 280 词的巨段（除非是综述型的背景段）？
 
 ## 两个常见误判
 
 **「引用要具体」≠「把每篇的 R² 抄进引言」**
-具体指的是**论点具体**（"这类方法在留出检验下抓不住空间梯度"），不是数字多。
+具体指的是**论点具体**，不是数字多。
 
 **「不能笼统」≠「必须逐篇复述」**
-AE 的做法是把文献归到类别里，一句话说清这一类的做法与局限，括号里给三五个代表。
+紧凑型的做法是把文献归到类别里，一句话说清这一类的做法与局限。
 
 ## 参考
 
-- `references/ae-corpus-analysis.md` —— 9 篇论文的实测数据与原文摘录
-- `references/before-after.md` —— 四组逐句改造对照
+- `references/ae-corpus-analysis.md` —— 16 篇的实测数据、逐篇结构与原文摘录
+- `references/before-after.md` —— 五组逐句改造对照

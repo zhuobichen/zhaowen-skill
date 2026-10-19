@@ -1,220 +1,228 @@
-# AE 引言实测语料（Atmospheric Environment，19 篇筛查、9 篇精读）
+# AE 引言全量实测（*Atmospheric Environment*，19 条记录 / 去重 17 篇 / 成功抽取 16 篇）
 
 > 测量日期：2026-10-19
-> 方法：从 Zotero 库筛出 `publicationTitle` 含 *Atmospheric Environment* 的条目（19 篇），
+> 方法：Zotero 库按 `publicationTitle` 筛出 19 条 AE 记录（其中 2 条为重复条目），
 > 用 PyMuPDF 按**首行缩进**重建段落（Elsevier 正文首行缩进，比 block 边界可靠），
-> 抽 Introduction 正文后人工剔除作者信息块与页眉。
-> 统计：9 篇共 **48 个有效段落**。
+> 抽取 Introduction 后剔除作者信息块、页眉与 DOI 行。
 
 ---
 
-## 一、总表
+## 一、全量表
 
-| # | 论文 | 卷期 | 类型 | 段落 | 词数 |
-|:--:|---|---|---|:--:|:--:|
-| 1 | Yu et al., 2018 | 179: 49–60 | 方法横向比较（14 方法 / 8 污染物） | **5** | ~515 |
-| 2 | Berrocal et al., 2020 | 222: 117130 | 统计 vs 机器学习跨范式比较 | **5** | ~495 |
-| 3 | Mousavinezhad et al., 2023 | 300: 119693 | 臭氧趋势 + 健康 | **8** | ~1,500 |
-| 4 | Hojeily et al., 2026 | 371: 121805 | 城市尺度融合 | **8–9** | ~1,300 |
-| 5 | Di et al., 2024 | 338: 120799 | **八套公开数据集精度评估** | **6–7** | ~1,000 |
-| 6 | 汾渭平原 O₃ 控制, 2026 | — | 臭氧控制策略（方法谱系） | **8** | ~1,025 |
-| 7 | 北京 O₃ 变化与成因, 2021 | — | 城市尺度臭氧趋势 | **6** | ~945 |
-| 8 | CAMS vs CMAQ, 2024 | — | 两产品比较 | **8** | ~790 |
-| 9 | 五城市逐日指标融合评估, 2017 | — | 融合产品评估 | **6** | ~603 |
-| 10 | WRF-CMAQ 二十年动态评估, 2017 | — | 模型动态评估 | **7** | ~870 |
-| 11 | 优化融合改进侧边界, 2018 | — | 融合方法改进 | **6** | ~810 |
+| # | 论文 | 类型 | 段 | 词 |
+|:--:|---|---|:--:|:--:|
+| 1 | Guillas et al., 2008 | CTM 统计订正降尺度 | **4** | **347** |
+| 2 | Yu et al., 2018 | 方法横向比较（14 方法/8 污染物） | **4** | **468** |
+| 3 | 五城市逐日指标融合评估, 2017 | 融合产品健康评估 | 6 | 603 |
+| 4 | Berrocal et al., 2020 | 统计 vs 机器学习 | 6 | 644 |
+| 5 | Wells et al., 2021 | 气象订正趋势（方法改进） | 6 | 650 |
+| 6 | CAMS vs CMAQ, 2024 | 两产品比较 | 7 | 744 |
+| 7 | Madden et al., 2026 | 可扩展贝叶斯地统计 | 8 | 805 |
+| 8 | 优化融合改进侧边界, 2018 | 融合方法改进 | 6 | 810 |
+| 9 | WRF-CMAQ 二十年动态评估, 2017 | 模型评估维度 | 7 | 870 |
+| 10 | 北京臭氧时空变化与成因, 2021 | 城市尺度趋势 | 6 | 945 |
+| 11 | Di et al., 2024 | **八套公开 PM₂.₅ 数据集评估** | 8 | 1,003 |
+| 12 | 汾渭平原臭氧控制, 2026 | 控制策略 | 8 | 1,025 |
+| 13 | Alkuwari et al., 2013 | EOF 统计降尺度 | 10 | 1,271 |
+| 14 | Tang et al., 2024 | 韩国 ML 融合 | 12 | 1,285 |
+| 15 | Mousavinezhad et al., 2023 | 臭氧趋势与死亡 | 9 | 1,641 |
+| 16 | Hojeily et al., 2026 | 城市尺度融合 | 13 | 1,925 |
 
-> 表内 3–4 为先前实测，1–2、5–11 为本轮补充。合计精读 9 篇（3–4 与 1、2、5、6、7、8、9/10/11 中的代表）。
+> 未抽出：[CHMU67KM] 2019 PM₂.₅ 达标系统（EPA 作者稿，版式与期刊排版不同，未定位到 Introduction）。
 
-## 二、段落统计（48 个有效段落）
+**统计**
 
 | 指标 | 值 |
 |---|---|
-| 段落词数 中位 | **130** |
-| 段落词数 均值 | 125 |
-| 段落词数 范围 | 27 – 278 |
-| 段首用连接/过渡词 | **35%**（其余直接进入事实） |
+| 段落数 范围 / 中位 | 4–13 / **6–7** |
+| 总词数 范围 / 中位 | 347–1,925 / **~840** |
 | 项目符号 | **0** |
-| 单篇结果数字 | 0 – 2 |
-
-**结论**：AE 引言 **4–9 段、495–1,500 词、每段中位 130 词**。
-越是"数据集/方法比较类"论文（1、2、5、8），引言越短（5–8 段、500–1,000 词）。
-
-**段首词分布（48 段）**
-
-| 词 | 次数 |
-|---|:--:|
-| The | 4 |
-| In | 3 |
-| Given | 2 |
-| Since | 2 |
-| As | 2 |
-| To | 2 |
-| Another | 2 |
-| However / Although / But / While / Yet | 各 1 或 0 |
-
-没有任何一个连接词占主导；**段首多数时候直接是事实或论断**，不靠连接词撑结构。
+| 组织结构段（"The paper is organized as follows"） | 约半数（Tang、CAMS-CMAQ 有；Yu、Di、Madden 无） |
 
 ---
 
-## 三、逐篇要点
+## 二、两种风格
 
-### 1. Di et al., 2024 —— 与"数据集选择"类论文同构，**最值得模仿**
+### 紧凑论证型（4–8 段，350–1,000 词）——12 篇
 
-**结构（6–7 段，约 1,000 词）**
+Guillas、Yu、五城市、Berrocal、Wells、CAMS-CMAQ、Madden、侧边界、WRF-CMAQ、北京、Di、汾渭平原。
+
+**共同特征**
+
+- 每段一个论点；引用成组。
+- 具体结果数字 0–2 个。
+- 缺口段短促、明确。
+
+### 综述铺陈型（9–13 段，1,200–1,900 词）——4 篇
+
+Alkuwari、Tang、Mousavinezhad、Hojeily。
+
+**共同特征**
+
+- 会以 "X et al. (year) 做了什么" 铺开一批研究。
+- 会带具体指标数字（R²、RMSE）。
+- **但最后仍收束到限制清单 + 本文目标。**
+
+> 结论：**风格取决于论文类型，不取决于期刊。**
+> 方法/数据集比较类 → 紧凑型；应用类 → 可放宽。
+
+---
+
+## 三、逐篇结构（重点 8 篇）
+
+### 1. Di et al., 2024 —— 与本项目同构，最值得模仿
+
+**结构（8 段 / 1,003 词）**
 
 | 段 | 内容 |
 |:--:|---|
 | 1 | PM₂.₅ 是什么 + 健康危害（WHO 数据） |
-| 2 | 中国应对（法规、监测网建设，5000+ 站点） |
+| 2 | 中国应对（法规、5,000+ 站点） |
 | 3 | 但：起步晚、标准低于 WHO、站点分布不均 → 遥感成为替代 |
 | 4 | 多个长期高分辨率数据集被创建（ML + AOD + 地面真值） |
-| 5 | 以往研究做了什么（评估再分析、分析时空格局、健康应用） |
-| 6 | **核心方法学批评 + 本文目标** |
+| 5 | 以往研究做了什么 |
+| 6 | 以往研究的共同前提问题 |
+| 7 | **核心方法学批评** |
+| 8 | 本文目标 |
 
-**最关键的收尾段（写法 A 原型）**
+**收尾段（写法 A 原型）**
 
-> **Given that** the ground truth used as learning samples during the development of these datasets originated from public national air quality monitoring network consisting of monitoring sites mainly located in urban and densely populated areas, **the assessment of datasets with the same source data is likely to yield overrated results**, as these sample points were presumed to be of the highest level of accuracy. **Consequently**, the assessment of trained ML models with considerable error metrics like **high Cross-Validation R-Squared (CV-R2) was always reported** by dataset creators, **which neglected** the model performance in regions originally without ground-based observation. **Therefore, the goal of this study is to** objectively assess and compare the accuracy of eight freely available PM2.5 concentration datasets with **completely independent observation records** from monitoring sites predominantly located in suburban and sparsely populated areas.
-
-**为什么值得学**：它把"现有评价指标（CV-R²）不可信"直接立成研究动机，
-论证链是**机制 → 后果 → 换基准**，没有一句在复述某篇文献的结果。
-
----
-
-### 2. 汾渭平原 O₃ 控制, 2026 —— 写法 B 原型
-
-**结构（8 段）**：区域背景与 O₃ 恶化 → 输送问题 → 源解析方法及其局限 → 前体物敏感性方法三类及其局限 → 本文思路。
-
-**逐类局限 + Consequently 收尾**
-
-> **Although** photochemical indicators allow for rapid OPS identification, they simplify the nonlinear relationship between O3 and its precursors, thereby amplifying uncertainties (Liu et al., 2022). The EBM approach requires designing numerous emission sensitivity experiments and is constrained by uncertainties in the emission inventory (de Meij et al., 2024). **In contrast**, OBMs are associated by observational data and can better represent the evolving characteristics of the nonlinear relationship ... **However**, since OBMs rely on historical observational data, they cannot predict future changes in OPS and are thus inadequate for supporting practical operational needs. **Consequently, there is an urgent need to develop** rapid and accurate OPS identification methods ...
-
-> 注意：**同一篇论文里出现了两次 "Consequently, ..."**，都是"方法局限 → 所以需要什么"的收尾。
+> **Given that** the ground truth used as learning samples ... originated from public national air quality monitoring network consisting of monitoring sites mainly located in urban and densely populated areas, **the assessment of datasets with the same source data is likely to yield overrated results**, as these sample points were presumed to be of the highest level of accuracy. **Consequently**, the assessment ... like **high Cross-Validation R-Squared (CV-R2) was always reported** by dataset creators, **which neglected** the model performance in regions originally without ground-based observation. **Therefore, the goal of this study is to** objectively assess and compare the accuracy of eight freely available PM2.5 concentration datasets with **completely independent observation records** ...
 
 ---
 
-### 3. 北京 O₃ 变化与成因, 2021 —— 缺口段写得最细
+### 2. WRF-CMAQ 二十年动态评估, 2017 —— 「评价维度不足」原型
 
-**结构（6 段，945 词）**
+**结构（7 段 / 870 词）**：模型用途 → 四类评估框架 → 现有研究只做 operational → **dynamic evaluation 的定义与必要性** → 本文设计。
 
-| 段 | 内容 |
-|:--:|---|
-| 1 | 政策背景 + 全国 O₃ 恶化（2.4 ppb yr⁻¹、90% 站点正趋势） |
-| 2 | 机理一：NOx/VOC regime |
-| 3 | 机理二：PM₂.₅ 下降削弱气溶胶汇（"However, this issue remains controversial"） |
-| 4 | **以往研究都在国家/区域尺度，城市尺度缺** |
-| 5 | **但北京缺少综合定量评估；以往只基于单站点或简单指标** |
-| 6 | 本文方法 |
+**关键段**
 
-**缺口段原文**
+> There have been many studies focusing on the **operational evaluation** of regional air quality models, but **only few addressed the other three components** of the model evaluation framework recommended by Dennis et al. (2010). ... **Hogrefe et al. (2008) stated that operational model evaluation provides little insight into the reliability of the estimation of relative changes** which pertains to the actual model application in the regulatory setting and argued that more emphasis should be placed on the development and application of dynamic and retrospective model evaluation approaches. **Dynamic evaluation entails the assessment of the model's ability to reproduce the changes** in observed air quality conditions stemming from the changes in emissions and meteorology and is one of the key components for building confidence in a model's use for policy analysis.
 
-> Previous studies ... were **only based on individual sites or applied with simple evaluation metrics** (Cheng et al., 2019b; Chen et al., 2020; Li et al., 2020). **For example**, the records of an urban site in Beijing showed that the annual MDA8-O3 ... increased by 2.30 and 1.91 ppbv year−1 (Chen et al., 2020). **All of the previous studies** showed ozone increases in Beijing, **but they concealed the spatial difference** in ozone concentrations and trends. **None of them have** comprehensively estimated the spatiotemporal variation of ozone in Beijing.
+> Dynamic model evaluation for a 21-yr timeframe over the contiguous U.S. (CONUS) **has never been performed**.
 
-**点名作者的正当用法**：提 Chen et al. (2020) 给出具体数字，
-是因为那个数字**恰好证明了"只基于单站点"这个缺陷**。
+**要点**
+
+- "operational vs dynamic" 的区分，和"点位精度 vs 长期变化判断"是同一种论证。
+- **`has never been performed` 是 AE 合法的强缺口表述**，但范围必须写具体。
 
 ---
 
-### 4. CAMS vs CMAQ, 2024 —— 写法 C 原型
+### 3. Tang et al., 2024 —— 综述型 + 限制清单
 
-**结构（8 段，790 词）**：危害（健康 + 经济）→ 不确定性来源 → 应对方法（集合、AnEn、同化、偏差校正）→ 现行业务系统 → **其局限 + 开放问题** → 本文比较设计 → 章节组织。
+**结构（12 段 / 1,285 词）**：健康负担 → 监测网不均 → CTM/卫星各自局限 → 机器学习研究（按地区铺开，点名）→ 韩国具体研究（带 R²/RMSE）→ **限制清单** → 本文 → 章节组织。
 
-**开放问题句式**
+**限制清单段**
 
-> **A limitation of** this current NAQFC operational method **is that** it is inherently point-based, with ground truth concentrations known only at AirNow station locations. **An open question is whether** that approach could be improved upon by instead defining a gridded "truth" dataset ... **The first step to answering that question is** to explore what gridded datasets could provide the best gridded analysis ... **and that is the subject of this paper.**
+> **The limitations of previously published studies include: 1) focus on observation dense regions; 2) prediction of single species; and 3) neglect potentially useful CTM model products**, including long-term public reanalysis datasets. **The objective of this study is to** further advance the capabilities to fuse measurement and CTM models to produce high-resolution near-surface estimates of multiple species ...
 
-**注意**：这篇有 "The paper is organized as follows..." 段，但 Yu 2018 与 Di 2024 都没有。**组织结构段是可选的**，不是必需。
+**点名写法（前一段）**
+
+> Zheng et al. (2020) built a ML model in Beijing and tested the model in Shanghai ... Chen et al. (2021) used RF ML in the Yangtze River Delta ... Wei et al. (2020) found that adding spatiotemporal coordinates as predictors improved ... Di et al. (2016) used a CNN ...
+
+> 这是**综述型**的典型写法，说明"点名作者"在 AE 里完全合法——关键是最后要收束到限制清单。
 
 ---
 
-### 5. Yu et al., 2018 —— 最短、最干净
+### 4. Madden et al., 2026 —— 「However」双线收束
 
-**结构（5 段，515 词）**
+**结构（8 段 / 805 词）**：健康 → 需要完整覆盖 → 监测稀疏 → 代理变量（CTM / AOD）→ downscaler → **贝叶斯：However 计算昂贵** → **机器学习：However 无不确定性量化** → **Here we introduce**。
 
-| 段 | 内容 | 词数 |
-|:--:|---|:--:|
-| 1 | 健康危害（一句话带 6 篇引用）+ **收口句** | 87 |
-| 2–3 | 历史上三类做法 + hybrid | ~100 |
-| 4 | 每一类的优缺点，一段讲完 | 185 |
-| 5 | 本文比较四个维度（句内编号） | 143 |
+> P5: We employ Bayesian inference ... **However, these models can become computationally burdensome** when fitting large numbers of monitors ... covariance inversions that scale cubically ...
+>
+> P6: Machine learning approaches ... are also effective ... **However, these do not provide straightforward and principled uncertainty quantification**, and do not explicitly model spatial–temporal dependence in the outcome.
+>
+> P7: **Here we introduce** a Bayesian spatial–temporal downscaler model ... with two extensions that enable the model to scale ...
 
-**收口句**（把宽背景收到"浓度场"）
+**要点**：两条技术路线各给一个 "However"，缺口就是"两条各缺一半"。
 
-> Such studies use estimates of air pollutant concentration fields in reaching their conclusions.
+---
 
-**动机句**（从"各有优缺点"推到"所以结果会不同"）
+### 5. 汾渭平原臭氧控制, 2026 —— 逐类局限 + Consequently
 
-> Results and outcomes of exposure estimation and epidemiologic studies will also likely vary depending on the method used (Baxter et al., 2013; Goldman et al., 2010, 2012).
+**结构（8 段 / 1,025 词）**：区域背景 → O₃ 恶化 → 输送 → 源解析方法及局限 → **前体物敏感性三类方法及局限** → 本文思路。
+
+> **Although** photochemical indicators allow for rapid OPS identification, they simplify the nonlinear relationship ..., thereby amplifying uncertainties (Liu et al., 2022). The EBM approach requires ... and is constrained by ... (de Meij et al., 2024). **In contrast**, OBMs are associated by observational data ... **However**, since OBMs rely on historical observational data, they cannot predict future changes in OPS ... **Consequently, there is an urgent need to develop** rapid and accurate OPS identification methods ...
+
+> 同一篇里出现两次 "Consequently, ..."，都是"方法局限 → 所以需要什么"的收尾。
+
+---
+
+### 6. 北京臭氧时空变化与成因, 2021 —— 缺口段最细
+
+**结构（6 段 / 945 词）**：政策背景 + 全国恶化 → 机理一（NOx/VOC）→ 机理二（PM₂.₅ 下降）+ "remains controversial" → 以往都在国家/区域尺度 → **北京缺综合评估；以往只基于单站点或简单指标** → 本文。
+
+> Previous studies ... were **only based on individual sites or applied with simple evaluation metrics** (Cheng et al., 2019b; Chen et al., 2020; Li et al., 2020). **For example**, the records of an urban site in Beijing showed ... (Chen et al., 2020). **All of the previous studies** showed ozone increases in Beijing, **but they concealed the spatial difference** ... **None of them have** comprehensively estimated the spatiotemporal variation of ozone in Beijing.
+
+---
+
+### 7. Yu et al., 2018 —— 最短，零数值
+
+**结构（4 段 / 468 词）**：健康危害（一句话 6 篇引用）+ **收口句** → 三类做法 → 每类优缺点一段讲完 → 本文四个比较维度。
+
+> Such studies use estimates of air pollutant **concentration fields** in reaching their conclusions.
+>
+> Results and outcomes of exposure estimation and epidemiologic studies **will also likely vary depending on the method used**.
+>
+> Comparisons were focused on four aspects: 1) spatial concentration fields; 2) Temporal correlations and statistical performance; 3) Auto-correlations ...; 4) Interspecies correlations.
 
 **全篇具体数值：0 个。**
 
 ---
 
-### 6. Berrocal et al., 2020 —— 五步缺口结构
+### 8. Berrocal et al., 2020 —— 五步缺口
 
 > This paper aims to address an important gap in the current literature: **the fact that** ... they are typically only compared to simpler models **within the same modeling paradigms**. **Examples include** comparisons between A (refs); between B (refs); or between C (refs). **There has been very limited cross-paradigm comparisons** (refs), **likely due to** ... **In particular, there is a lack of** ...
 
 五步：**主张 → 三个 examples → 反例 → 原因 → 具体缺口**。
 
-**方法列举（六种方法一句带过）**
+---
 
-> These approaches include ordinary least squares, universal kriging (Cressie, 1993), statistical downscaling (Berrocal et al., 2010), and machine learning methods, including random forest (Hu et al., 2017), support vector machine (Liu et al., 2017), and neural networks (Di et al., 2016).
+## 四、其余 8 篇（结构速记）
+
+| 论文 | 结构 |
+|---|---|
+| Guillas 2008（4 段/347） | O₃ 危害 → 统计与 CTM 各有成绩 → 统计可订正系统性缺陷 → **本文把两者结合，且"Previous studies ... have not taken advantage of statistical methods to directly correct the outputs"** |
+| 五城市 2017（6 段/603） | 健康关联 → 中心站点代表性不足 → 指标不确定性 → 需要高分辨率场 → 本文应用融合方法 |
+| Wells 2021（6 段/650） | O₃ 与气象 → 方法史 → **"However, most ... only a small number of variables / small region / seasonal mean"** → Porter 2015 的改进 → **"Here, the work of Camalier et al. is extended to ..."** → 本文细化清单 |
+| CAMS vs CMAQ 2024（7 段/744） | 危害 → 不确定性来源 → 应对方法 → 现行业务系统 → **"A limitation ... is that ... An open question is whether ... that is the subject of this paper."** → 比较设计 |
+| 侧边界 2018（6 段/810） | CTM 偏差 → LBC 是主要不确定性 → 两类设 LBC 方法各有限制 → 卫星增强有限 → 融合可解决 → 本文 |
+| Alkuwari 2013（10 段/1,271） | O₃ 背景 → 法规 → 统计 vs CTM → 尺度错配 → 降尺度概念 → 已有少量降尺度研究 → 本文 EOF 方法 |
+| Mousavinezhad 2023（9 段/1,641） | 4 段化学机理（引用成组）→ 法规演进（120→84→75→70 ppb）→ 气象订正方法史 → **三个转折串缺口（Despite / also limited to / Although … typically limited to）** → 本文 |
+| Hojeily 2026（13 段/1,925） | 健康 → 政策与不达标 → 研究区特殊性 → 监测密度不足（13 个 O₃ 站点）→ 低成本传感器 → 融合技术（LUR/卫星/ML）→ 数据需求门槛 → 本文 SEDI |
 
 ---
 
-### 7. Mousavinezhad et al., 2023 —— 知识陈述式
+## 五、跨篇规律与对旧版规则的修正
 
-前 4 段全部讲臭氧化学（NOx/VOC、滴定、下风向生成），**没有一段是在介绍某篇文献**。
-法规阈值这类背景级数字可以直接写：
+### 确认成立的
 
-> Following the lowering of NAAQS for ozone from 120 ppb in 1979 to 84 ppb in 1997 ... the NAAQS level of ozone further declined to 75 ppb in 2008 and then to 70 ppb in 2015 (US EPA, 2015).
+1. **引言的主语极少是作者名**（综述型除外）。
+2. **方法谱系按"类别"组织**，每类一句话说清做法与局限。
+3. **缺口必须可判定**——能说出"缺的具体是哪一环"，不能停在"需要进一步研究"。
+4. **项目符号为 0**；句内 `1) 2) 3)` 可以。
+5. **最后一段给本文路线**，常与章节组织段合并。
 
-缺口用三个转折串起：`Despite …` → `also limited to …` → `Although … typically limited to …`。
+### 需要修正的（旧版写错了）
 
----
-
-### 8. Hojeily et al., 2026
-
-**结构（8–9 段）**：健康 → 政策与不达标现状 → 研究区特殊性 → 监测密度不足 → 低成本传感器 → 现有融合技术 → 现有方法的数据需求门槛 → 本文采用 SEDI。
-
-监测不足用**事实类数字**（不是某论文的结果）：
-
-> Regulatory-grade measurements from monitoring sites, however, are insufficient to capture hyperlocal variability; major urban areas may only have a handful of monitors, e.g., **13 O3 regulatory-grade sites in NYC**.
-
----
-
-### 9. 其余两篇（快速核对）
-
-- **五城市融合评估, 2017**（6 段，603 词）：需求 → 融合产品 → 评价现状 → 缺口 → 本文 → 路线。
-- **WRF-CMAQ 动态评估, 2017**（7 段，870 词）：模型用途 → 评估方法演进（operational vs dynamic）→ 以往评估的局限 → 本文设计。
-
-两篇都遵循同一骨架，印证了范式的稳定性。
+| 旧规则 | 实际情况 |
+|---|---|
+| "段落 5–7 段、600–900 词" | 实为 **4–13 段、347–1,925 词**，分两种风格 |
+| "作者名开头的句子必须为 0" | Tang 2024、Hojeily 2026 大量点名；**点名合法，但必须服务判据** |
+| "单篇结果数字 ≤2" | Tang 2024 有十余个；**判据是"数字是否支撑论点"，不是数量** |
+| "必须有一个缺口段" | 仍然成立，但**四种写法**任选，不限于一种 |
 
 ---
 
-## 四、可提取的稳定规律
+## 六、与本项目的对照
 
-1. **引言的主语几乎从不是作者名**。最常见的主语是现象、方法类别、数据产品。
-2. **引用以组为单位**；点名单篇只出现在"该文献的数字正好支撑某个判据"时。
-3. **具体数值很少**，且多为法规阈值、时间跨度、空间分辨率、站点数这类**事实**，而非**某论文的结果**。
-4. **缺口段是全文唯一允许"直接反驳"的地方**，句式高度模板化：
-   `Despite / However / Although / There has been very limited / Given that … which neglected …`
-5. **方法谱系按"类别"组织**，每类一句话说清做法与局限；不按时间、不按作者。
-6. **"Consequently, there is an urgent need to …" 是方法局限段的标准收尾**。
-7. **最后一段就是本文路线**，用句内编号列出比较维度或贡献，不换行。
-8. **组织结构段（"The paper is organized as follows"）是可选的**，约半数论文没有。
+本项目（多融合数据集的臭氧长期变化评估）同时对应三种现成范式：
 
----
+| 现成范式 | 对应关系 |
+|---|---|
+| **Di 2024** | 8 套数据集互比；现有评价（CV）与实际关心的问题脱节 → 换独立基准 |
+| **WRF-CMAQ 2017** | operational（点位拟合）vs dynamic（能否复现变化）→ 正是"CV vs 长期趋势判断" |
+| **Tang 2024** | 直接可用 `limitations include: 1) … 2) … 3)` 的收束式 |
 
-## 五、与本项目的对照
-
-本项目论文（多融合数据集的臭氧长期变化评估）与 **Di et al. 2024** 高度同构：
-
-| 维度 | Di 2024 | 本项目 |
-|---|---|---|
-| 比较对象 | 8 套公开 PM₂.₅ 数据集 | 8 套臭氧融合数据集 |
-| 现有评价 | 数据集作者自报 CV-R² | 站点交叉验证指标 |
-| 评价缺陷 | 训练与评估站点同源 → 高估 | 点位精度 ≠ 长期趋势判断可靠 |
-| 本文解法 | 用**完全独立**的观测记录 | 用**趋势保持 / 解释稳定性**作为评价对象 |
-
-因此 Di 2024 的**写法 A（机制 → 后果 → 换基准）**可直接作为本项目引言的骨架。
+**推荐路线**：写法 B（评价维度不足）为主，写法 D（限制清单）为辅，
+最后用 Di 2024 的 "Therefore, the goal of this study is to …" 收口。
