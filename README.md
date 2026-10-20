@@ -16,6 +16,7 @@
 
 | Skill | 目录 | 用途 |
 |-------|------|------|
+| air-journal-intro-writing | [`air-journal-intro-writing/`](air-journal-intro-writing/) | 空气/环境类期刊 Introduction / 研究背景写作法，实证自 Atmospheric Environment（16 篇、120 段）与 Aerosol and Air Quality Research（14 篇、93 段）。 |
 | ae-intro-writing（仅 AE） | [`ae-intro-writing/`](ae-intro-writing/) | **只适用于 Atmospheric Environment**：基于库内 19 条（去重 17 篇、精读 16 篇）实测的 Introduction / 研究背景写作法。两种风格（紧凑 4–8 段 / 综述 9–13 段）、五种缺口写法、四种结尾写法。**其他期刊范式不同，需另行实测** |
 | pup-cleanup | [`pup-cleanup/`](pup-cleanup/) | 清理本机流氓软件/开机弹窗广告：找出推广告的"壳"、用官方卸载器卸、卸不动的走隔离；含自启动普查、登录后执行痕迹、按厂商识别推广家族。 |
 | dsh_messaging | [`dsh_messaging/`](dsh_messaging/) | 用官方 CLI 从外部给 DeepSeek Harness (DSH) 发消息、续接既有会话、拿结构化输出与 token 用量。 |
