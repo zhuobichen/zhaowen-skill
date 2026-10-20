@@ -93,14 +93,42 @@ description: 空气/环境类期刊 Introduction / 研究背景写作法，实�
 
 （原型：Mousavinezhad et al., 2023, AE）
 
-## 结尾段四种写法
+## 结尾段：六种写法与实测占比（AE 16 篇逐篇核对）
 
-| 写法 | 原型 | 句式 |
-|---|---|---|
-| 目标句 | Di 2024 / AAQR 多数 | "Therefore, the goal of this study is to …" |
-| 研究问题清单 | Mousavinezhad 2023 | "…answers to the following questions: (1) …? (2) …? (3) …?" |
-| 贡献 + 验证 | Madden 2026 | "**Here we introduce** … We demonstrate … on two case studies …" |
-| 章节组织（可选） | Tang 2024 / CAMS 2024 | "The paper is organized as follows. Section 2 …" |
+| 写法 | 占比 | 原型 | 典型句式 |
+|---|---:|---|---|
+| **目标型** | 5/16（31%） | 汾渭平原 2026、北京 2021、侧边界 2018、五城市 2017、Yu 2018 | "**To address this gap, this study employs** …" ／ "**In this study, we improved** …" |
+| **章节组织型** | 4–5/16（25–31%） | Hojeily 2026、CAMS 2024、Tang 2024、WRF-CMAQ 2017 | "**The paper is organized as follows.** Section 2 describes …" |
+| **贡献型** | 3/16（19%） | Madden 2026、Berrocal 2020、Guillas 2008 | "**Here we introduce** … **We demonstrate** …" ／ "another contribution of this study is …" |
+| **机制→目标型**（写法 A） | 1/16（6%） | Di 2024 | "**Given that** … is likely to … **Consequently** … **Therefore, the goal of this study is to** …" |
+| **研究问题清单型** | **1/16（6%）** | Mousavinezhad 2023 | "…answers to the following questions: (1) …? (2) …? (3) …?" |
+| **增量改进清单型** | 1/16（6%） | Wells 2021 | "…explore potential refinements … which are listed below. 1. …" |
+
+### 三条硬数据
+
+| 指标 | AE 实测 |
+|---|---|
+| 末段词数 | **中位 116 词，范围 36–193**（章节组织型最短，中位约 68；贡献型最长，中位约 171） |
+| 末段含引用 | **4/16 = 25%**（四分之三的末段没有引用） |
+| 最后 1/3 段落至少一处引用 | **13/16 = 81%** |
+
+> **含义**：末段本身可以不带引用，但**整个尾部不能全是无引用的空转**。
+
+### ⚠️ 研究问题清单要慎用
+
+**AE 里只有 1/16（6%）显式列出研究问题**，Sustainability 为 **0/15**。
+绝大多数论文用散文陈述目标（"this study aims to…"），**不写 RQ1/RQ2/RQ3**。
+编号列表只用在论文确有多个并列、彼此独立的问题时（如 Mousavinezhad 的四问）。
+
+### 引言不设小节
+
+**AE 16 篇全部是单一 "1. Introduction"，没有一篇使用 1.1 / 1.2 / 1.3。**
+投稿版应写成连续散文，不设小标题。
+
+### 引言内可以重复引用
+
+**12/16（75%）的 AE 论文在引言内重复引用同一文献。**
+"一条文献只出现一次"不是期刊规范；同一篇文献在不同段落支撑不同论点时，重复引用是常态。
 
 ## 关于「点名作者」和「数字」
 

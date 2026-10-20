@@ -263,3 +263,54 @@ Alkuwari、Tang、Mousavinezhad、Hojeily。
 
 **推荐路线**：写法 B（评价维度不足）为主，写法 D（限制清单）为辅，
 最后用 Di 2024 的 "Therefore, the goal of this study is to …" 收口。
+
+---
+
+## 十、结尾段实测（16 篇逐篇核对，2026-10-20）
+
+### 分类与占比
+
+| 写法 | 篇数 | 论文 | 末段词数 |
+|---|:--:|---|---|
+| 目标型 | 5 | 汾渭平原 2026(107)、北京 2021(132)、侧边界 2018(118)、五城市 2017(159)、Yu 2018(144) | 107–159 |
+| 章节组织型 | 4–5 | Hojeily 2026(80)、CAMS 2024(54)、Tang 2024(68)、WRF-CMAQ 2017(118)、Alkuwari 2013(53) | 53–118 |
+| 贡献型 | 3 | Madden 2026(36)、Berrocal 2020(171)、Guillas 2008(193) | 36–193 |
+| 机制→目标型 | 1 | Di 2024(166) | 166 |
+| 研究问题清单型 | 1 | Mousavinezhad 2023(114) | 114 |
+| 增量改进清单型 | 1 | Wells 2021(42) | 42 |
+
+### 统计
+
+| 指标 | 值 |
+|---|---|
+| 末段词数 | 中位 **116**，范围 **36–193** |
+| 末段含引用 | **4/16 = 25%** |
+| 最后 1/3 段落至少一处引用 | **13/16 = 81%** |
+| 含章节组织段（任意位置） | **4/16 = 25%**（正则未捕获 Alkuwari 的 "In the next section we introduce…"，实际约 5/16） |
+| 显式列研究问题 | **1/16 = 6%** |
+| 引言内重复引用同一文献 | **12/16 = 75%** |
+| 使用 1.1 / 1.2 / 1.3 小节 | **0/16 = 0%** |
+
+### 结尾段原文样例
+
+**目标型**（汾渭平原 2026）
+> **To address this gap, this study employs** an observation driven OBM approach to identify OPS … The objectives of this study are: (1) … (2) … (3) …
+
+**章节组织型**（CAMS vs CMAQ 2024，全文仅此一段作结）
+> **The paper is organized as follows.** Section 2 describes the model and observational datasets we use. Section 3 briefly describes our methodology … Section 4 presents the results …
+
+**贡献型**（Madden 2026，全篇最短的结尾段，36 词）
+> … **Finally, we detail new functionality** included within the ensembleDownscaleR R package that enables researchers to employ these models on their own analyses.
+
+**机制→目标型**（Di 2024，唯一一篇）
+> **Given that** … **Consequently** … **Therefore, the goal of this study is to** objectively assess and compare the accuracy of eight freely available PM2.5 concentration datasets …
+
+**研究问题清单型**（Mousavinezhad 2023，唯一一篇）
+> … we intend to provide answers to the following questions …: **(1)** What are the trends …? **(2)** How does meteorology impact these trends …? **(3)** What are the key meteorological variables …? **(4)** How have emission control policies impacted respiratory-related premature mortality …?
+
+### 对本项目的启示
+
+1. **不要写 RQ1/RQ2/RQ3 编号列表**——AE 只有 6% 这么做。改成散文目标句。
+2. **结尾段控制在 100–150 词**（中位 116），不要写成两三百词。
+3. **末段可以不带引用**，但前一段（缺口段）最好有。
+4. **"一条文献只出现一次"不成立**——75% 的论文在引言内重复引用。
