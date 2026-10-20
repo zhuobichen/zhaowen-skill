@@ -5,6 +5,10 @@ description: AE 范式（Atmospheric Environment 库里 19 条、去重 17 篇�
 
 # AE 范式：期刊 Introduction / 研究背景写作法
 
+> **适用范围：仅 *Atmospheric Environment*。**
+> 不同期刊的引言范式并不相同（*Environmental Research*、*ACP*、*EST* 各有自己的惯例），
+> 换刊时需另行实测，不要直接套用。
+>
 > **语料边界**：来自本机 Zotero 库内 **19 条 *Atmospheric Environment* 记录**（去重后 17 篇，
 > 其中 16 篇成功抽取引言）。是对 AE 实际稿件的归纳，**不是 Elsevier 官方写作规范**；
 > 样本为用户自有库，存在选择偏差。
