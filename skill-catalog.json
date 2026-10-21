@@ -363,6 +363,14 @@
       "short_description": "Synthesize research evidence with claim tracking",
       "ui_metadata": "agents/openai.yaml",
       "upstream": null
+    },
+    {
+      "name": "watch",
+      "path": "watch/",
+      "display_name": "Watch Video",
+      "short_description": "Turn any video into timestamped keyframes plus a transcript so the agent can answer questions about it, at a controlled token cost",
+      "ui_metadata": null,
+      "upstream": "bradautomates/claude-video@03ceb42f7fa2c4439aca01752118044baabffb8f"
     }
   ]
 }

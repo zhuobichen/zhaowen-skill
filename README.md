@@ -11,6 +11,7 @@
 | 科研文献证据工程（ylx） | [`research_evidence_synthesis/`](research_evidence_synthesis/) | ylx·科研文献证据工程与 Related Work 写作：Claim-first（证据矩阵 + 逻辑树 + 综述），含输出样例 |
 | one-hub 用量监测（ylx） | [`onehub_usage_monitor/`](onehub_usage_monitor/) | 监测 one-hub API 用量与费用：总额度/已用/剩余、每日每月记账、各模型单价对比 |
 | 操作微信公众号后台（clz） | [`wechat_mp_ops/`](wechat_mp_ops/) | 操作微信公众号后台（mp.weixin.qq.com）：登录与扫码（stealth/chrome-direct）、草稿箱/发表记录、读取与编辑图文草稿（标题/正文）、上传图片、获取草稿 appmsgid。含 ProseMirror 编辑器**唯一可靠的正文改法**（dispatch + 点「保存为草稿」）、token 过期与自动保存陷阱、配套的配图生成（HTML→整页截图→PIL 裁剪）与日程图工具链 |
+| 看视频（bradautomates） | [`watch/`](watch/) | 把任意视频变成「时间戳关键帧 + 字幕/转写」两份证据再交给模型：yt-dlp 下载、ffmpeg 按场景/关键帧抽帧并做 16×16 近似去重、字幕优先、无字幕走本地 WhisperX。四档 detail（transcript/efficient/balanced/token-burner）直接决定 token 成本，配合 `--start/--end` 与 `--timestamps` 可只盯一段或几帧；local 引擎全程不上传视频。**本地新增**：`windows-notes.md` 记录了 Windows 下的 PATH/TEMP 处理、WhisperX 安装坑与 Silero VAD 离线补丁 |
 
 ## 其他自制 Skill（无前缀）
 
