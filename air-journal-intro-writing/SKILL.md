@@ -114,6 +114,22 @@ description: 空气/环境类期刊 Introduction / 研究背景写作法，实�
 
 > **含义**：末段本身可以不带引用，但**整个尾部不能全是无引用的空转**。
 
+### 末段可以写"做法"，但不能写成"分析流水线"
+
+| 写法 | 占比 |
+|---|---:|
+| 描述"做了什么"（apply / analyze / compare / employ…） | **9/16 = 56%** |
+| 用 First / Second / Finally 串分析步骤 | **1/16 = 6%** |
+| 用 1) 2) 3) 列分析维度 | 1/16 = 6% |
+
+**可以**：交代用了什么方法、比较了哪些对象和维度。
+> this study **analyzed** the parametric or nonparametric linear trends of 12 ozone metrics … emissions and sensitivity **were inferred** on the basis of OMI columns … **Then**, the control measures **were further evaluated**.（北京 2021）
+
+**不要**：把 Methods 的步骤顺序搬进引言。
+> ✗ "分析沿三条线索推进：先检查…；再比较…；最后逐日逐网格去除极值…"
+
+判据：**引言说"我们做了什么"，Methods 说"具体怎么一步步做"。** 出现"先/再/最后"的执行顺序，基本就是越界了。
+
 ### ⚠️ 研究问题清单要慎用
 
 **AE 里只有 1/16（6%）显式列出研究问题**，Sustainability 为 **0/15**。
