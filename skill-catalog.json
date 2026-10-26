@@ -197,6 +197,14 @@
       "upstream": "tiangong-ai/agent-skills@5e692461708a4e02c1012086a59d2bd75da99673"
     },
     {
+      "name": "dsh-session-viewer",
+      "path": "dsh-session-viewer/",
+      "display_name": "DSH Session Viewer",
+      "short_description": "Read, search, inspect and export local DeepSeek Harness (DSH) session logs",
+      "ui_metadata": null,
+      "upstream": null
+    },
+    {
       "name": "hv-analysis",
       "path": "hv-analysis/",
       "display_name": "Horizontal-Vertical Analysis",

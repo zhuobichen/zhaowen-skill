@@ -20,6 +20,7 @@
 | air-journal-intro-writing | [`air-journal-intro-writing/`](air-journal-intro-writing/) | 空气/环境类期刊 Introduction / 研究背景写作法，实证自 Atmospheric Environment（16 篇）、Aerosol and Air Quality Research（14 篇）与 Sustainability… |
 | pup-cleanup | [`pup-cleanup/`](pup-cleanup/) | 清理本机流氓软件/开机弹窗广告：找出推广告的"壳"、用官方卸载器卸、卸不动的走隔离；含自启动普查、登录后执行痕迹、按厂商识别推广家族。 |
 | dsh_messaging | [`dsh_messaging/`](dsh_messaging/) | 用官方 CLI 从外部给 DeepSeek Harness (DSH) 发消息、续接既有会话、拿结构化输出与 token 用量。 |
+| 看 DSH 会话 | [`dsh-session-viewer/`](dsh-session-viewer/) | 只读直翻本机 DSH 会话文件：列会话（带侧栏分组）、全文搜索「我什么时候提过 X」、定位「会话不见了」、按轮次查看、导出 Markdown。含三个必踩坑：多帧 zstd 只解出第一帧、正文在 `data` 里、注入上下文混在 user 消息中 |
 | 用 AI 操作手机 | [`android-phone-ops/`](android-phone-ops/) | 配套 `android` MCP 操作模拟器/真机：构建装包、点界面、读层级、截图、**输入中文**、看日志，也包括"帮我在手机上干件事"这类委托。写的是流程与纪律（开工先 `status`+`prepare`、用 `wait_idle` 替 sleep、能按文字就别按坐标、发送/登录类动作先确认），工具清单不重复 MCP 的 README；**禁区**（如 QQ/微信的「空间」）在工具层强制拦截，命中就停手交回给用户 |
 | 科研论文绘图（Nature 投稿级） | [`nature-figure/`](nature-figure/) | 投 Nature 系及高影响期刊的科研配图：Python（matplotlib/seaborn）或 R（ggplot2）多面板图，出图前先定结论、证据逻辑、数据完整性与审稿风险，导出 SVG/PDF/TIFF；另含 AI 生成的机制示意图/图形摘要通道 |
 | ML 论文绘图 | [`academic-plotting/`](academic-plotting/) | 从论文上下文提取系统组件与关系生成架构图；从实验数据自动选图型并用 matplotlib/seaborn 生成数据图 |
