@@ -72,3 +72,14 @@ node test-parse.mjs     # 用真实抓取的 HTML 片段做 fixture，8 项断�
 - 解析依赖页面结构；贴吧改版可能失效，改 `tieba.mjs` 里的 `parseThreadList` / `parseThread` 即可。
 - 依赖 `bsk`（browser-skill）与一个已登录贴吧的浏览器。
 - 移动版一页 **30 条**（不是 PC 版常见的 50），`-Pages` 按此步进。
+
+## 装进本地技能目录（可选）
+
+技能仓库是源码，本地已安装的 skill 目录是另一份副本。如果希望技能目录自带脚本（脱离仓库也能跑），执行一次：
+
+```powershell
+New-Item -ItemType Directory -Force "$env:USERPROFILE\.agents\skills\tieba\scripts" | Out-Null
+Copy-Item '.\*' "$env:USERPROFILE\.agents\skills\tieba\scripts\" -Recurse -Force
+```
+
+（在 `zhaowen-skill\tieba\scripts\` 目录下执行；其他 harness 把 `.agents\skills` 换成对应目录。）
