@@ -7,7 +7,8 @@ description: Turn phone photos of paper documents (contracts, forms, receipts, s
 
 ## Core Goal
 - One phone photo of a sheet in, one flat scan-looking page out (JPG/PNG/PDF).
-- Fixes, in this order: perspective → 90/180/270 → skew → cast shadow/border → crop → scan look.
+- Fixes, in this order: 90/180/270 → skew → shadow/border → crop → scan look
+  (perspective warp is opt-in, see below).
 - Keeps seals, red stamps and coloured pen: the ink layer is binarised, the colour layer is only whitened.
 
 ## Required Tools
@@ -61,6 +62,12 @@ description: Turn phone photos of paper documents (contracts, forms, receipts, s
   binarises (smallest files, best for OCR of clean sheets).
 - `--deskew auto` searches ±`--max-skew` degrees; `--deskew 0` leaves the page as is.
 - `--orient auto` may be overridden with `0|90|180|270`.
+- **Perspective is off by default.** The quad detector happily locks onto the
+  table's outer border instead of the sheet edge, and everything outside that
+  border — page margins, the note under the form, the printed page number — is
+  then cropped away, silently and irreversibly. Turn it on with `--perspective`
+  only for clearly angled shots, and read the `perspective` field in the report:
+  when it says `skipped (would drop N% of the ink)` the warp was rejected.
 - Blank/rotated/oversized photos: the long side is capped at `--max-side` (2600).
 - Output is `<stem>.scan.jpg`, 300 DPI by default, with a 1.5 % white margin.
 - `--json report.json` writes per-page orientation, skew, crop and output paths.
