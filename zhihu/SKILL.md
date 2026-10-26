@@ -17,7 +17,24 @@ version: 1.0.0
    - 未登录时顶栏只有「登录/注册」，任何操作都会弹登录框
 3. 没登录就 `bsk request-help` 让用户扫码，**不要尝试代填账号密码**。
 
-## 生命周期（每个任务都走）
+## 现成脚本（优先用）
+
+`scripts/` 下已经封装好：
+
+```powershell
+.\scripts\zhihu.ps1 question -Id 2098047112466227298 [-Json] [-Full]
+.\scripts\zhihu.ps1 hot [-Json]
+.\scripts\zhihu.ps1 raw -Url 'https://...' -Out q.html
+node scripts\zhihu.mjs question --file q.html    # 离线复算
+```
+
+原理：bsk 用你的登录态打开问题页 → `get-html` 落盘 → 解析页面内嵌的 `js-initialData`
+（标题、回答数、首屏答案都在里面），**不需要 x-zse-96 签名，也不读 cookie**。
+要求 `bsk` 在 PATH，或设环境变量 `BSK_EXE`。
+
+限制：首屏只有 5 条回答，更多要走签名接口，暂未做。细节见 `scripts/README.md`。
+
+## 生命周期（手工模式）
 
 ```bash
 bsk session start                       # 记下 4 位会话 id

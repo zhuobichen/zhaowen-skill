@@ -16,7 +16,23 @@ version: 1.0.0
    - 未登录会被重定向到 `passport.baidu.com` 登录页
 3. 没登录就 `bsk request-help` 让用户扫码/登录。
 
-## 生命周期
+## 现成脚本（优先用）
+
+`scripts/` 下已经封装好，比手敲 bsk 命令稳：
+
+```powershell
+.\scripts\tieba.ps1 posts  -Kw 显卡 [-Pn 30] [-Pages 3] [-Json]
+.\scripts\tieba.ps1 thread -Tid 11137538751 [-Json]
+.\scripts\tieba.ps1 raw    -Url 'https://...' -Out x.html
+node scripts\tieba.mjs posts --file x.html      # 离线复算
+```
+
+原理：bsk 用你的登录态打开**移动版**页面 → `bsk get-html` 落成本地 HTML → `tieba.mjs` 离线解析。
+**全程不读 cookie、不需要签名**。要求 `bsk` 在 PATH，或设环境变量 `BSK_EXE` 指向 `bsk.exe`。
+
+细节（为什么不用 PC 页面、一页 30 条、踩过的坑）见 `scripts/README.md`。
+
+## 手工模式（脚本覆盖不到时）
 
 ```bash
 bsk session start

@@ -7,3 +7,6 @@ __pycache__/
 # 可复用的绘图脚本（assets 下的 *.py）仍在库内，不受此规则影响。
 nature-figure/assets/**/*.png
 nature-figure/assets/**/*.pdf
+
+# tieba/zhihu 脚本抓页面时的临时 HTML
+**/scripts/.cache/
