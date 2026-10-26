@@ -218,11 +218,13 @@ async function cmdThread() {
   }
 
   const posts = parseThread(html);
+  const pageTitle = ((html.match(/<title>([^<]*)<\/title>/) || [])[1] || '').replace(/-百度贴吧$/, '').trim();
   if (hasFlag('json')) {
-    console.log(JSON.stringify(posts, null, 2));
+    // 带上标题，方便下游把它当会话名（消费方：Ember 的 tieba 适配器）
+    console.log(JSON.stringify({ tid: tid || null, 标题: pageTitle, 楼层: posts }, null, 2));
     return;
   }
-  console.log(`帖子 ${tid || path.basename(fromFile)} 解析到 ${posts.length} 层`);
+  console.log(`帖子 ${tid || path.basename(fromFile)}${pageTitle ? ' · ' + pageTitle : ''} 解析到 ${posts.length} 层`);
   for (const p of posts.slice(0, 20)) {
     console.log(`\n[${p.楼层 || '-'}] ${p.作者 || '-'}  ${p.时间 || ''} ${p.地区 || ''}`);
     console.log(`  ${p.内容.slice(0, 200)}`);
