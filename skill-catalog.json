@@ -387,6 +387,22 @@
       "short_description": "Turn any video into timestamped keyframes plus a transcript so the agent can answer questions about it, at a controlled token cost",
       "ui_metadata": null,
       "upstream": "bradautomates/claude-video@03ceb42f7fa2c4439aca01752118044baabffb8f"
+    },
+    {
+      "name": "zhihu",
+      "path": "zhihu/",
+      "display_name": "Zhihu",
+      "short_description": "Drive Zhihu in the real browser: search, read questions and answers, vote/save/follow, read the hot list, post ideas (publish actions always confirmed first)",
+      "ui_metadata": null,
+      "upstream": null
+    },
+    {
+      "name": "tieba",
+      "path": "tieba/",
+      "display_name": "Baidu Tieba",
+      "short_description": "Drive Baidu Tieba in the real browser: open forums, read threads, search, reply and post topics (publish actions always confirmed first); handles the mobile-vs-desktop layout switch",
+      "ui_metadata": null,
+      "upstream": null
     }
   ]
 }
