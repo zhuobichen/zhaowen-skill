@@ -1,0 +1,4 @@
+interface:
+  display_name: "Photo to Scan"
+  short_description: "Phone photo of a page -> flat, upright, deskewed scan (JPG/PDF)"
+  default_prompt: "Use $photo-to-scan to turn these photos of paper documents into flat upright scans and a single PDF."

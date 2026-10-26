@@ -301,6 +301,14 @@
       "upstream": null
     },
     {
+      "name": "photo-to-scan",
+      "path": "photo-to-scan/",
+      "display_name": "Photo to Scan",
+      "short_description": "Turn phone photos of paper documents into flat, deskewed, upright scans (JPG/PDF)",
+      "ui_metadata": "agents/openai.yaml",
+      "upstream": null
+    },
+    {
       "name": "ppt-assembler",
       "path": "ppt-assembler/",
       "display_name": "PPT Assembler",
