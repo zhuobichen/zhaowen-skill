@@ -22,12 +22,19 @@ param(
 
 $ErrorActionPreference = 'Stop'
 
-# bsk 位置：环境变量 BSK_EXE > PATH > 报错（不写死本机路径，方便换机器）
+# bsk 位置：环境变量 BSK_EXE > PATH > 上级工作区的 .tools\bsk（本机放法）> 报错
 function Resolve-Bsk {
   if ($env:BSK_EXE -and (Test-Path $env:BSK_EXE)) { return $env:BSK_EXE }
   $c = Get-Command bsk -ErrorAction SilentlyContinue
   if ($c) { return $c.Source }
+  # scripts -> zhihu -> zhaowen-skill -> <workspace>/.tools/bsk
+  $cand = Join-Path $PSScriptRoot '..\..\..\.tools\bsk\bsk.exe'
+  if (Test-Path $cand) { return (Resolve-Path $cand).Path }
   throw '找不到 bsk：装好 browser-skill 后确保 bsk 在 PATH，或设环境变量 BSK_EXE 指向 bsk.exe'
+}
+if (-not $env:BSK_HOME) {
+  $homeCand = Join-Path $PSScriptRoot '..\..\..\.bsk-home'
+  if (Test-Path $homeCand) { $env:BSK_HOME = (Resolve-Path $homeCand).Path }
 }
 $bsk = Resolve-Bsk
 
