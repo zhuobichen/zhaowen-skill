@@ -1,0 +1,10 @@
+# ?????????????
+qqmail.config.json
+llm.config.json
+state.json
+llm-cache.json
+last-run.json
+report/
+*.log
+*.out
+node_modules/

@@ -1,0 +1,11 @@
+{
+  "_说明": "可选。复制成 llm.config.json 后填 key；shape=jev 走 TypeSafe Jev（推荐），shape=chat 走普通对话模型，不配就纯规则跑。",
+  "shape": "jev",
+  "baseUrl": "https://api.302ai.cn/typesafeai/v1/systemone",
+  "apiKey": "sk-xxxx",
+  "model": "jev-latest",
+  "batchSize": 8,
+  "timeoutMs": 60000,
+  "minConfidence": 0.6,
+  "chat": { "baseUrl": "https://api.302ai.cn/v1", "model": "deepseek-chat" }
+}

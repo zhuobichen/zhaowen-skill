@@ -1,0 +1,5 @@
+{
+  "_说明": "复制成 qqmail.config.json 后填真实值。authCode 是 QQ邮箱 设置→账户 里生成的 16 位授权码（不是登录密码），泄露就重新生成。",
+  "user": "123456789@qq.com",
+  "authCode": "xxxxxxxxxxxxxxxx"
+}

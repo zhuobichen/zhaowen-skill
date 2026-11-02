@@ -77,22 +77,6 @@
       "upstream": null
     },
     {
-      "name": "docx_to_mp",
-      "path": "docx_to_mp/",
-      "display_name": "DOCX to WeChat Draft",
-      "short_description": "Convert DOCX files into WeChat draft articles",
-      "ui_metadata": "agents/openai.yaml",
-      "upstream": null
-    },
-    {
-      "name": "wechat_mp_ops",
-      "path": "wechat_mp_ops/",
-      "display_name": "WeChat Official Account Ops",
-      "short_description": "Edit and validate WeChat Official Account drafts",
-      "ui_metadata": "agents/openai.yaml",
-      "upstream": null
-    },
-    {
       "name": "cnki-advanced-search",
       "path": "cnki-advanced-search/",
       "display_name": "CNKI Advanced Search",
@@ -197,6 +181,14 @@
       "upstream": "tiangong-ai/agent-skills@5e692461708a4e02c1012086a59d2bd75da99673"
     },
     {
+      "name": "docx_to_mp",
+      "path": "docx_to_mp/",
+      "display_name": "DOCX to WeChat Draft",
+      "short_description": "Convert DOCX files into WeChat draft articles",
+      "ui_metadata": "agents/openai.yaml",
+      "upstream": null
+    },
+    {
       "name": "dsh-session-viewer",
       "path": "dsh-session-viewer/",
       "display_name": "DSH Session Viewer",
@@ -245,18 +237,18 @@
       "upstream": null
     },
     {
-      "name": "layered-explainer",
-      "path": "layered-explainer/",
-      "display_name": "Layered Explainer",
-      "short_description": "Escalate reading cost to understand hard material, or learn it by teaching back",
-      "ui_metadata": "agents/openai.yaml",
-      "upstream": null
-    },
-    {
       "name": "latex-paper-writing",
       "path": "latex-paper-writing/",
       "display_name": "LaTeX Paper Writing",
       "short_description": "Write and compile academic papers in LaTeX",
+      "ui_metadata": "agents/openai.yaml",
+      "upstream": null
+    },
+    {
+      "name": "layered-explainer",
+      "path": "layered-explainer/",
+      "display_name": "Layered Explainer",
+      "short_description": "Escalate reading cost to understand hard material, or learn it by teaching back",
       "ui_metadata": "agents/openai.yaml",
       "upstream": null
     },
@@ -277,14 +269,6 @@
       "upstream": null
     },
     {
-      "name": "nature-figure",
-      "path": "nature-figure/",
-      "display_name": "Nature Figure",
-      "short_description": "Submission-grade scientific figures for Nature-family venues in Python or R",
-      "ui_metadata": null,
-      "upstream": null
-    },
-    {
       "name": "n8n-web-ops",
       "path": "n8n-web-ops/",
       "display_name": "n8n Web Operations",
@@ -293,10 +277,26 @@
       "upstream": null
     },
     {
+      "name": "nature-figure",
+      "path": "nature-figure/",
+      "display_name": "Nature Figure",
+      "short_description": "Submission-grade scientific figures for Nature-family venues in Python or R",
+      "ui_metadata": null,
+      "upstream": null
+    },
+    {
       "name": "obsidian-wiki-workflow",
       "path": "obsidian-wiki-workflow/",
       "display_name": "Obsidian Wiki Workflow",
       "short_description": "Build and maintain an Obsidian LLM Wiki",
+      "ui_metadata": "agents/openai.yaml",
+      "upstream": null
+    },
+    {
+      "name": "onehub_usage_monitor",
+      "path": "onehub_usage_monitor/",
+      "display_name": "One-Hub Usage Monitor",
+      "short_description": "Monitor one-hub API usage, costs, and history",
       "ui_metadata": "agents/openai.yaml",
       "upstream": null
     },
@@ -333,6 +333,14 @@
       "upstream": null
     },
     {
+      "name": "qqmail-auto-sort",
+      "path": "qqmail-auto-sort/",
+      "display_name": "QQMail Auto Sort",
+      "short_description": "Archive a QQ mailbox into fixed folders daily (rules first, Jev for the uncertain), with an HTML report",
+      "ui_metadata": null,
+      "upstream": null
+    },
+    {
       "name": "remove-similar-image",
       "path": "remove-similar-image/",
       "display_name": "Remove Similar Image",
@@ -341,12 +349,44 @@
       "upstream": "tiangong-ai/agent-skills@5e692461708a4e02c1012086a59d2bd75da99673"
     },
     {
+      "name": "research_evidence_synthesis",
+      "path": "research_evidence_synthesis/",
+      "display_name": "Research Evidence Synthesis",
+      "short_description": "Synthesize research evidence with claim tracking",
+      "ui_metadata": "agents/openai.yaml",
+      "upstream": null
+    },
+    {
       "name": "reverse-engineer-anything",
       "path": "reverse-engineer-anything/",
       "display_name": "Reverse Engineer Anything",
       "short_description": "Reverse engineer binaries, Electron apps, APKs and firmware with REA",
       "ui_metadata": "agents/openai.yaml",
       "upstream": "morluto/rea@b8fab74"
+    },
+    {
+      "name": "tieba",
+      "path": "tieba/",
+      "display_name": "Baidu Tieba",
+      "short_description": "Drive Baidu Tieba in the real browser: open forums, read threads, search, reply and post topics (publish actions always confirmed first); handles the mobile-vs-desktop layout switch",
+      "ui_metadata": null,
+      "upstream": null
+    },
+    {
+      "name": "watch",
+      "path": "watch/",
+      "display_name": "Watch Video",
+      "short_description": "Turn any video into timestamped keyframes plus a transcript so the agent can answer questions about it, at a controlled token cost",
+      "ui_metadata": null,
+      "upstream": "bradautomates/claude-video@03ceb42f7fa2c4439aca01752118044baabffb8f"
+    },
+    {
+      "name": "wechat_mp_ops",
+      "path": "wechat_mp_ops/",
+      "display_name": "WeChat Official Account Ops",
+      "short_description": "Edit and validate WeChat Official Account drafts",
+      "ui_metadata": "agents/openai.yaml",
+      "upstream": null
     },
     {
       "name": "wechat-claude-code",
@@ -365,42 +405,10 @@
       "upstream": null
     },
     {
-      "name": "onehub_usage_monitor",
-      "path": "onehub_usage_monitor/",
-      "display_name": "One-Hub Usage Monitor",
-      "short_description": "Monitor one-hub API usage, costs, and history",
-      "ui_metadata": "agents/openai.yaml",
-      "upstream": null
-    },
-    {
-      "name": "research_evidence_synthesis",
-      "path": "research_evidence_synthesis/",
-      "display_name": "Research Evidence Synthesis",
-      "short_description": "Synthesize research evidence with claim tracking",
-      "ui_metadata": "agents/openai.yaml",
-      "upstream": null
-    },
-    {
-      "name": "watch",
-      "path": "watch/",
-      "display_name": "Watch Video",
-      "short_description": "Turn any video into timestamped keyframes plus a transcript so the agent can answer questions about it, at a controlled token cost",
-      "ui_metadata": null,
-      "upstream": "bradautomates/claude-video@03ceb42f7fa2c4439aca01752118044baabffb8f"
-    },
-    {
       "name": "zhihu",
       "path": "zhihu/",
       "display_name": "Zhihu",
       "short_description": "Drive Zhihu in the real browser: search, read questions and answers, vote/save/follow, read the hot list, post ideas (publish actions always confirmed first)",
-      "ui_metadata": null,
-      "upstream": null
-    },
-    {
-      "name": "tieba",
-      "path": "tieba/",
-      "display_name": "Baidu Tieba",
-      "short_description": "Drive Baidu Tieba in the real browser: open forums, read threads, search, reply and post topics (publish actions always confirmed first); handles the mobile-vs-desktop layout switch",
       "ui_metadata": null,
       "upstream": null
     }
