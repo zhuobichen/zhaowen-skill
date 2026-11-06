@@ -229,7 +229,14 @@ def passages(pdf_path, terms, ctx=300, max_hits=3):
 def main():
     ap = argparse.ArgumentParser(description=__doc__,
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("query", nargs="?", default=None)
+    ap.add_argument("query", nargs="?", default=None,
+                    help="search terms (FTS5 syntax: AND/OR/NOT, \"exact phrase\")")
+    ap.add_argument("--query", dest="query_opt", default=None,
+                    help="same as the positional argument; also accepts @file "
+                         "to read the query from a file")
+    ap.add_argument("--query-file", default=None,
+                    help="read the query from a file (one line). Safest way to "
+                         "pass a query containing quoted phrases on any shell")
     ap.add_argument("--limit", type=int, default=15)
     ap.add_argument("--kind", choices=["pdf", "note", "both"], default="both")
     ap.add_argument("--passages", action="store_true")
@@ -240,6 +247,16 @@ def main():
     ap.add_argument("--list-cites", default=None, help="formatted citation for one DOI")
     ap.add_argument("--find-doi", default=None, help="locate one DOI in the library")
     args = ap.parse_args()
+    # --query wins over the positional form; PowerShell splits a positional
+    # argument that contains quoted phrases.
+    if args.query_opt:
+        args.query = args.query_opt
+    if args.query_file:
+        with open(args.query_file, encoding="utf-8-sig") as f:
+            args.query = f.read().strip()
+    if args.query and args.query.startswith("@"):
+        with open(args.query[1:], encoding="utf-8-sig") as f:
+            args.query = f.read().strip()
 
     tmpdir = tempfile.mkdtemp(prefix="zotsearch-")
     try:

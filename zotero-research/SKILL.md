@@ -52,6 +52,21 @@ matching sentences with page numbers, pulled from the PDF.
 FTS5 syntax is passed through, so `AND` / `OR` / `NOT` and `"exact phrase"`
 work. Everything else is auto-quoted, so `PM2.5` and `MDA8` are safe as-is.
 
+### Passing a query with quoted phrases (PowerShell)
+
+PowerShell splits an argument containing quotes, so
+`"data products" OR intercomparison` arrives as three separate arguments and
+argparse rejects it. Use either form:
+
+```bash
+# write the query to a file, then:
+python scripts/zotero_search.py --query-file q.txt --limit 10
+python scripts/zotero_search.py @q.txt --limit 10
+```
+
+Both read the file as UTF-8 with BOM tolerated. A single-term query
+(`MDA8`, `fusion`) needs none of this and can be passed positionally.
+
 ## The workflow for writing a paper
 
 1. **Locate** — `zotero_search.py "<topic terms>" --limit 20 --passages`
