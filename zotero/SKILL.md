@@ -8,34 +8,243 @@ argument-hint: "[action] [params...]"
 
 Manage Zotero library for bibliography management, PDF content reading, reference generation, and SCUT thesis writing with LaTeX.
 
-## CRITICAL: Read-Only Restriction
+## Tooling: prefer `mcp__zotero__*` over the legacy CLI
 
-**Zotero 文献库只读限制：严禁任何写入、修改、删除操作。**
+DSH and Claude Code sessions connect to Zotero's `zotero-mcp-plugin` over MCP.
+Those tools are the primary path — they are typed, validated, and use Zotero's
+own translators:
 
-| 允许 | 禁止 |
-|------|------|
-| `item list/find/get` 查询文献 | `note add` 添加笔记 |
-| `item notes / note get` 读取笔记 | `import file/json` 导入文献 |
-| `item children/attachments/file` 查看附件 | `collection create` 创建集合 |
-| `item export/citation/bibliography` 导出引用 | `item add-to-collection / move-to-collection` 移动文献 |
-| `item context` 构建LLM上下文 | 任何写入 `zotero.sqlite` 的操作 |
-| `collection list/find/tree/items` 查看集合 | `item analyze` (调用外部API) |
-| `app status/ping` 状态检查 | `pdf_to_zotero.py` 导入PDF |
+| Capability | MCP tool |
+|------------|----------|
+| Import by identifier (DOI / arXiv / ISBN / PMID / ADS bibcode) | `mcp__zotero__add_by_identifier` |
+| Create an item, attach a local PDF | `mcp__zotero__write_item` |
+| Edit title / abstract / date / DOI / creators | `mcp__zotero__write_metadata` |
+| Add / remove tags | `mcp__zotero__write_tag` |
+| Create / rename / delete a collection | `mcp__zotero__create_collection`, `update_collection`, `delete_collection` |
+| Move items into a collection | `mcp__zotero__add_items_to_collection`, `remove_items_from_collection` |
+| Read notes | `mcp__zotero__write_note` (action `create`/`update`/`append`) |
+| Search the library | `mcp__zotero__search_library` |
+| Read PDF full text | `mcp__zotero__get_content`, `search_fulltext` |
+| Read annotations | `mcp__zotero__get_annotations`, `search_annotations` |
 
-**Why:** 用户明确要求 Zotero 文献库内容不可修改，防止误操作破坏数据。
+> **There is no delete-item tool.** `write_item` / `write_metadata` can only
+> create and edit. To remove an item, use the Zotero local API — see
+> "Two things that will bite you" below for the exact recipe.
 
-**How to apply:** 涉及 Zotero 操作时只使用只读命令，遇到任何写入/修改类操作必须拒绝执行。
+**Import rule:** prefer `add_by_identifier` over `write_item` whenever an
+identifier (DOI, arXiv ID, ISBN, PMID) exists — `add_by_identifier` runs
+Zotero's own translators, so item type, venue, authors and date come out
+correct, while `write_item` requires you to guess metadata by hand and often
+picks the wrong item type. `write_item` is the fallback for sources with no
+identifier (e.g. a local PDF with no metadata).
+
+**Batch limit:** `add_by_identifier` runs as a background job above 3
+identifiers; poll it with the `jobID` field it returns.
+
+## Importing a paper with its PDF — the working recipe
+
+Verified end-to-end on 2026-11-05. Three steps:
+
+1. **Import the metadata** so Zotero's translator fills in the fields:
+   ```json
+   {"identifiers": ["arXiv:1706.03762"], "saveAttachments": false}
+   ```
+   → returns `results[0].item.itemKey` (e.g. `P3EE4V82`).
+
+2. **Attach the local PDF** as a child of that item:
+   ```json
+   {"action": "import", "filePath": "<abs path>.pdf",
+    "parentItemKey": "<itemKey>", "title": "Full Text PDF"}
+   ```
+   → returns `attachmentKey`. Zotero copies the file into
+   `E:\CodeProject\Zotero\storage\<attachmentKey>\` and builds the full-text
+   index automatically (`hasFulltext: true`).
+
+3. **Verify** with `get_item_details` — check the attachment shows
+   `contentType: application/pdf`, the expected `size`, and a `path` inside
+   the storage directory.
+
+### Two things that will bite you
+
+- **`add_by_identifier` can time out but still succeed.** A timeout on the
+  tool call does not mean the import failed. Before retrying, run
+  `search_library` with the title — re-importing the same identifier returns
+  status `exists` rather than creating a duplicate, so a blind retry is
+  safe, but check first so you don't end up with two entries.
+
+- **`write_item` / `write_metadata` cannot delete.** There is no delete tool
+  in this MCP surface. To remove an item you need the Zotero local API:
+  1. `POST http://127.0.0.1:23119/api/local/authorize` with
+     `{"username":..., "password":..., "appName":"dsh", "scopes":["library","files"]}`
+     and the `Zotero-Server-ID` header → returns a token (it is remembered,
+     so later calls work without re-authorizing).
+  2. Read `Zotero-Server-ID` from any response header, then
+     `DELETE http://127.0.0.1:23119/api/users/0/items/<itemKey>` with
+     `Authorization: Bearer <token>` and
+     `If-Unmodified-Since-Version: <version>`. A `204` means deleted;
+     verify with a follow-up GET (`404` = gone).
+
+`zotero-cli` (the legacy `cli-anything-zotero` CLI) remains available for
+scripts that need shell access, but prefer the MCP tools interactively.
+
+## Importing many papers at once
+
+When the task is "add these N papers", work in this order. Each step has a
+trap that silently produces wrong results — the details are in the
+**Batch import: pitfalls** section below.
+
+1. **Verify every DOI against Crossref.** A DOI list can contain typos, or a
+   DOI that points at a different paper than the one the title suggests.
+   Compare the registered title with yours (normalise: strip HTML, lowercase,
+   collapse non-alphanumerics; keep CJK so Chinese titles still match).
+   Report title / year / journal / pages / authors per DOI — that report is
+   what the user checks against.
+
+2. **De-duplicate against the library.** Build an index of the existing
+   library first, then match candidates on normalised DOI *and* normalised
+   title. Check the first 6–10 significant title words too, for near-misses.
+
+3. **Import** with `add_by_identifier` (dry-run first, batch above 3
+   identifiers runs as a background job — poll the `jobID`).
+
+4. **Get the PDFs.** Open-access ones come down automatically with
+   `saveAttachments: true`. Paywalled ones need a direct link — see below.
+
+5. **Attach the PDFs** to the right items.
+
+### Elsevier: the PII is the key, and it is not derivable from the DOI
+
+Elsevier's PDF URL needs an internal article id (the **PII**) such as
+`S0306457325004157`. You cannot derive it from the DOI — `10.1016/j.ipm.2025.104474`
+does not contain it, and guessing gives a 404.
+
+Resolve it from the DOI redirect:
+
+```
+https://linkinghub.elsevier.com/retrieve/pii/<PII>   ->  Location: .../pii/<PII>
+```
+
+or follow `https://doi.org/<DOI>` and read the PII out of the final URL.
+Then:
+
+```
+https://www.sciencedirect.com/science/article/pii/<PII>/pdfft
+```
+
+**Verified PIIs (2026-11-06):**
+
+| DOI | PII |
+|---|---|
+| `10.1016/j.ipm.2025.104474` | `S0306457325004157` |
+| `10.1016/j.envsoft.2025.106438` | `S1364815225001227` |
+| `10.1016/j.jag.2025.104506` | `S1569843225001530` |
+| `10.1016/j.resenv.2025.100219` | `S2666916125000313` |
+| `10.1016/j.rsase.2025.101793` | `S2352938525003465` |
+| `10.1016/j.acags.2026.100416` | `S259019742600100X` |
+| `10.1016/j.atmosres.2025.108213` | `S0169809525003059` |
+| `10.1016/j.apr.2026.103070` | `S1309104226001868` |
+
+Other publishers:
+
+| Publisher | PDF URL |
+|---|---|
+| Springer | `https://link.springer.com/content/pdf/<DOI>.pdf` |
+| T&F | `https://www.tandfonline.com/doi/pdf/<DOI>?download=true` |
+| ACS | `https://pubs.acs.org/doi/pdf/<DOI>` |
+| Wiley | `https://onlinelibrary.wiley.com/doi/pdfdirect/<DOI>` |
+
+### Cloudflare blocks scripts here — give the user the link
+
+This machine's IP is rate-limited by Cloudflare. Elsevier, T&F and ACS serve a
+"Are you a robot?" captcha to automated traffic, and the challenge endpoint
+(`?crasolve=1`) answers 403.
+
+The user's own Chrome, with their institutional session, passes it fine — the
+article page shows *"Brought to you by: South China University of Technology"*.
+
+**So: hand the user a table of DOI → direct PDF link → Zotero itemKey, plus
+one folder to drop the files into. They download; you attach.** Five
+automated approaches were tried and all failed: copying the Chrome profile
+into Playwright, `context.request.get()`, in-page navigation with a route
+handler, CDP `Browser.setDownloadBehavior`, and clicking the publisher's own
+"View PDF" button. Even the signed URL the article page exposes
+(`/pdfft?md5=<signature>&pid=1-s2.0-<PII>-main.pdf`) gets challenged —
+200 `text/html`, then a redirect to `?crasolve=1`, then 403. Don't re-test
+these; Springer PDFs do work from a script (no Cloudflare there).
+
+## Batch import: pitfalls
+
+Each of these produced wrong results in practice.
+**The Zotero local API pages with `start`, not `offset`.** `offset` is a key
+filter and returns the same page forever. Using it, a 239-item library
+produced 988 rows containing only 76 unique keys and 66 unique DOIs — and
+de-duplication then let papers through that were already in the library.
+Always guard the loop against a repeated page.
+
+**Match a downloaded PDF by the DOI printed inside it, never by filename.**
+Elsevier writes `1-s2.0-S0306457325004157-main.pdf`, which says nothing about
+the paper, and a stale file with the same name fools you. Extract with
+`pypdf`/`PyPDF2` over the first 3 pages and regex for
+`10\.\d{4,9}/[^\s"'<>,;)]+`; fall back to title-token overlap only if no
+DOI is present.
+
+**Crossref times out intermittently here.** Both `URLError: timed out` and
+`SSL handshake timed out` occur. Retry 3–4 times before calling a DOI
+invalid — a timeout is not the same as "DOI does not exist".
+
+**`hasFulltext` is not populated in the `/children` response.** It always
+reads as missing there. Use `get_item_details`, which reports it correctly.
+
+**Python's PDF libraries are noisy.** `PyPDF2` on some publisher PDFs emits
+thousands of "Ignoring wrong pointing object" warnings. Silence them with
+`warnings.filterwarnings("ignore")` plus
+`logging.getLogger("pypdf").setLevel(logging.CRITICAL)`.
+
+**`add_by_identifier` can time out but still succeed.** See
+"Two things that will bite you" above.
+
+### Helper script
+
+`scripts/zotero_batch.py` implements steps 1, 2 and 5 as one command:
+
+```bash
+# Build a de-duplication index of the current library.
+python scripts/zotero_batch.py index --out <workdir>
+
+# Crossref-check a DOI list, resolve each DOI to a direct PDF link, and
+# flag anything already in the library.
+python scripts/zotero_batch.py verify dois.txt --out <workdir>
+
+# Match downloaded PDFs to their library items by the DOI inside the file.
+python scripts/zotero_batch.py match <file.pdf> [...] --out <workdir>
+```
+
+It prints the `itemKey` for each matched PDF — that key is what
+`write_item(action=import)` needs as `parentItemKey`.
+
+## Safety rules for writes
+
+- **Always confirm with the user before a write** (import, create, delete,
+  metadata edit, collection move). Say what will be written and where.
+- **Never run the cleanup / import scripts that write `zotero.sqlite`
+  directly** — see the `zotero-db` skill for details. Direct SQLite writes
+  bypass Zotero's own bookkeeping and corrupt the library.
+- Prefer `add_by_identifier` with `dryRun: true` first when the target
+  collection or duplicates are unclear.
+- `delete_collection` with `deleteItems: true` sends items to the trash —
+  confirm before using it.
+- **Back up the database before any risky write** — see the `zotero-db`
+  skill's backup Action.
 
 ## Prerequisites
 
 1. **Zotero running** with Local API enabled:
    - Edit → Preferences → Advanced → General → "启动浏览器连接" (Allow browser integration)
-   - Port: 23119
+   - Port: 23119 (Connector API) / 23120 (MCP server, from `zotero-mcp-plugin`)
 
-2. **Zotero CLI installed**:
-   ```bash
-   pip install cli-anything-zotero
-   ```
+2. **MCP connected** (for `mcp__zotero__*` tools):
+   - Zotero plugin `zotero-mcp-plugin` must be enabled
+   - DSH: the `dsh-zotero-mcp` bundle provides the `mcp-zotero` row
 
 3. **Python PDF library** (for reading PDFs):
    ```bash
@@ -221,7 +430,7 @@ text = text.replace('\ufffd', '?').replace('\u2212', '-')
 
 ## Zotero Storage Structure
 
-- Base path: `C:\Users\chenlizhuo\Zotero\storage\`
+- Base path: `E:\CodeProject\Zotero\storage\`
 - Each item has a folder named by its Zotero key
 - PDFs are stored inside these folders
 - Attachment keys differ from parent item keys
@@ -233,6 +442,7 @@ text = text.replace('\ufffd', '?').replace('\u2212', '-')
 | BibTeX | `C:\Users\chenlizhuo\SCUT_thesis\biblibrary\Zotero_References.bib` |
 | compile_refs.py | `C:\Users\chenlizhuo\SCUT_thesis\compile_refs.py` |
 | Test thesis | `C:\Users\chenlizhuo\SCUT_thesis\test_background.tex` |
-| Zotero storage | `C:\Users\chenlizhuo\Zotero\storage\` |
+| Zotero database | `E:\CodeProject\Zotero\zotero.sqlite` |
+| Zotero storage | `E:\CodeProject\Zotero\storage\` |
 | XeLaTeX | `C:/Users/chenlizhuo/AppData/Local/Programs/MiKTeX/miktex/bin/x64/xelatex.exe` |
 | Biber | `C:/Users/chenlizhuo/AppData/Local/Programs/MiKTeX/miktex/bin/x64/biber.exe` |
