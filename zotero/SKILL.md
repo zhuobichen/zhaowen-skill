@@ -203,9 +203,128 @@ thousands of "Ignoring wrong pointing object" warnings. Silence them with
 **`add_by_identifier` can time out but still succeed.** See
 "Two things that will bite you" above.
 
-### Helper script
+## Merging duplicate items
 
-`scripts/zotero_batch.py` implements steps 1, 2 and 5 as one command:
+The library accumulates duplicates in three distinct layers, and conflating
+them leads to data loss. Check each layer separately.
+
+| Layer | What it is | How to detect |
+|-------|-----------|----------------|
+| **Item** | the same paper stored as two Zotero items | same normalised DOI, or same normalised title |
+| **Attachment** | two PDF attachments under one item | identical bytes under two attachment keys |
+| **Storage file** | one PDF file on disk under two keys | same md5 in two `storage/<key>/` folders |
+
+### The API trap that breaks every write
+
+**Every PATCH / PUT / DELETE against the local API must carry
+`If-Unmodified-Since-Version`.** Without it the API answers **428
+Precondition Failed** on every single call — reads work fine, so the failure
+looks like a permissions problem rather than a missing header.
+
+```python
+cur = get(f"/items/{item_key}")["data"]["version"]
+req = urllib.request.Request(
+    f"{BASE}/items/{item_key}", data=body, method="PATCH",
+    headers={**H, "Content-Type": "application/json",
+             "If-Unmodified-Since-Version": str(cur)},
+)
+```
+
+A 21-action merge run without this header returned 428 on all 21 calls. It
+looked like it had worked until the response codes were read.
+
+### "Same paper" is not the same as "same file"
+
+Two PDFs of the same paper can differ in bytes — publishers embed a download
+timestamp, so the same document fetched twice has different md5. Compare
+**extracted text**, not bytes:
+
+```python
+import difflib
+ratio = difflib.SequenceMatcher(None, text_a, text_b).quick_ratio()
+```
+
+Measured on this library: 7 of 8 duplicate groups had byte-different but
+text-identical PDFs (one pair differed by 720 bytes and 67 KB respectively).
+
+### Supplementary material is NOT a duplicate
+
+A paper's supplementary file is a separate document that belongs on the
+**same item**. Detect it from an anchored phrase on the first page — a loose
+search for "supplement" hits ordinary body text and misclassifies articles:
+
+```python
+SI_STRICT = [
+    r"supplementary\s+materials?\s+for",   # Science / Elsevier SI banner
+    r"^\s*supplementary\s+information\b",
+    r"^\s*supporting\s+information\b",
+    r"^\s*supplementary\s+material\b",
+]
+```
+
+Verified case: the Science paper "Fires reverse progress toward ozone air
+quality standards" was stored as two items — a 29-page
+*"Supplementary Materials for …"* file and the 6-page article body. Merging
+them means keeping **both** PDFs on one item, the SI renamed
+`Supplementary Information` and the body `Full Text PDF`.
+
+### Pick the keeper by content, not by accident
+
+Score candidates on metadata completeness. Weight abstract **length**, not
+"has an abstract" — a boolean test makes a 1218-character abstract tie with a
+3487-character one:
+
+```python
+def score(m):
+    return (min(m["abstract_len"], 4000) // 40) * 3 \
+        + bool(m["journal"]) * 12 + bool(m["volume"]) * 8 \
+        + len(m["notes"]) * 25 + len(m["pdfs"]) * 5
+```
+
+Before deleting a losing item, migrate **notes, tags, attachments and
+collections** to the keeper, and fill blank fields on the keeper from the
+loser (a journal name, a volume). A 2317-character note lost to a
+61-character one is the worst kind of silent loss.
+
+### Deleting storage files: check the parent, not just the attachment
+
+A `storage/<key>/` folder is orphaned if no attachment row points at it —
+but verify by looking up **both** the attachment key and its `parentItem`:
+
+```python
+def in_library(key):
+    try:
+        get(f"/items/{key}")
+        return True
+    except Exception:
+        return False
+```
+
+A pagination bug made four live attachments look orphaned (their parent
+items were still in the library). Deleting those would have destroyed real
+papers. A separate check found that one "orphan" was the **only** copy of a
+document in the library — it was moved to the backup instead of deleted.
+
+### Verify after merging
+
+```python
+# duplicate groups should be zero
+by_doi = Counter(norm_doi(i["data"]["DOI"]) for i in bib if ...)
+by_title = Counter(norm_title(i["data"]["title"]) for i in bib if ...)
+
+# every note still has a live parent
+for i in items:
+    if i["data"]["itemType"] == "note" and i["data"].get("parentItem"):
+        get(f"/items/{i['data']['parentItem']}")   # raises if orphaned
+```
+
+Deleting an item via the local API moves it to the **trash**, not out of the
+library — recoverable from the Zotero trash, but the trashed item no longer
+appears in its collection.
+
+### Helper scripts
+
+`scripts/` holds the pieces of this pipeline as standalone programs.
 
 ```bash
 # Build a de-duplication index of the current library.
@@ -219,8 +338,28 @@ python scripts/zotero_batch.py verify dois.txt --out <workdir>
 python scripts/zotero_batch.py match <file.pdf> [...] --out <workdir>
 ```
 
-It prints the `itemKey` for each matched PDF — that key is what
-`write_item(action=import)` needs as `parentItemKey`.
+`zotero_batch.py match` prints the `itemKey` for each matched PDF — that key
+is what `write_item(action=import)` needs as `parentItemKey`.
+
+For de-duplication:
+
+```bash
+# Report every duplicate, at all three layers.
+python scripts/duplicate_report.py
+
+# Merge them. ALWAYS dry-run first and read the plan.
+python scripts/merge_dupes.py --dry-run
+python scripts/merge_dupes.py --execute
+python scripts/merge_dupes.py --execute --group 8   # one group only
+```
+
+`merge_dupes.py --execute` migrates notes, tags, attachments and
+collections to the keeper before deleting anything, and it handles the
+supplementary-material case (both PDFs kept on one item). Back up the
+database first — see the `zotero-db` skill.
+
+The scripts carry machine-specific defaults (local API token, storage path).
+Change the constants at the top to match another machine.
 
 ## Safety rules for writes
 
