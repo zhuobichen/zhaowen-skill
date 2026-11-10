@@ -361,7 +361,131 @@ database first — see the `zotero-db` skill.
 The scripts carry machine-specific defaults (local API token, storage path).
 Change the constants at the top to match another machine.
 
-## Safety rules for writes
+## Organising a library into collections (batch classification)
+
+Turning a whole library into a navigable taxonomy. Verified on 2026-11-10 on a
+283-item library: 12 collections created, 283 memberships written, zero
+orphans, item count unchanged (903 → 903).
+
+### Pick mutually exclusive buckets, not a tag cloud
+
+Zotero collections are like tags — an item can sit in many — which makes it
+tempting to file everything everywhere. Don't. A library where the same paper
+appears in four places is not organised.
+
+Decide the **decision rule first**, then apply it once per item. A rule that
+worked:
+
+| Top level | Test |
+|---|---|
+| **方法 / Method** | produces a reusable method/framework as its main output |
+| **应用 / Application** | no reusable method product; the contribution is a result, a product comparison, or an applied analysis |
+
+Borders that recur, and how they resolve:
+- "compares N methods and recommends the best" → **application** (it yields
+  selection advice, not a new method)
+- "reimplements a classic method with a materially new framework" →
+  **method** (a reusable implementation is a method product)
+- "applies an existing method to a new scene/pollutant" → **application**
+- the same author can publish one of each: a product paper goes to
+  *application*, its companion uncertainty-framework paper to *method*
+
+### Do not trust regex over titles
+
+A keyword rule engine was tried first and mis-filed whole families: a genuine
+deep-learning diffusion paper landed in statistics because the title mentioned
+a kriging prior; an ensemble-model-averaging product landed in statistics
+because "ensemble" was listed under a data-assimilation family. The failure
+was not tuning — the rules cannot tell *what the contribution is*.
+
+What works: read every title once, write the decision **as a table in a file**
+(`KEY: (top, sub)` with a one-line note per item), and let the renderer produce
+the CSV, the review document and the Zotero write from that single source.
+Manual judgement on 283 items is ~30 minutes; the table is also what the user
+edits when they disagree.
+
+Ship the user a **review document before writing**: one table per bucket with
+key / year / title / has-note, plus the counts. They will catch the two or
+three calls you got wrong.
+
+### Write path: MCP first, SQLite only when forced
+
+`mcp__zotero__create_collection` + `add_items_to_collection` is the correct
+path. It was unavailable here — **Zotero 10's local HTTP API is read-only**:
+`POST /api/users/0/collections` answers `428 Precondition Failed` even with a
+version header, and the MCP surface has no bulk-move primitive for 283 items.
+
+Falling back to SQLite worked, but only with these guards:
+
+1. **Back up first** (`zotero-db` skill's backup Action).
+2. **Refuse to run while Zotero is open.** Check with `tasklist /FI
+   "IMAGENAME eq zotero.exe"` and abort; an open Zotero holds the WAL and will
+   overwrite the write on exit.
+3. **One transaction** — `BEGIN IMMEDIATE` … `commit()`, rollback on any
+   exception, so a partial taxonomy never lands.
+4. **Dry run by default.** `--dry-run` prints the planned tree and counts;
+   `--apply` is a separate explicit flag.
+5. **Verify by count**: planned vs actual per collection, orphans
+   (`collectionItems` → missing `items`), duplicate memberships, and the total
+   `items` count before/after (must be unchanged — filing moves items, never
+   creates them).
+
+### Generate real keys, not sequential ones
+
+Zotero object keys are 8 characters from `A-Z2-9` (Crocker base32: no `0`, no
+`1`). A first pass produced `3OGAAAAA`, `4OGAAAAA`, … — unique and
+well-formed as strings, but a conspicuously pattered key invites collisions
+with Zotero's own generator and with sync. Rewrite them with
+`random.SystemRandom` over the correct alphabet and re-verify
+`re.fullmatch(r"[A-Z2-9]{8}", key)`.
+
+Also note: `str.isalnum()` is **False** for `₃` (subscript three, category
+`No`), so normalising `MLP-O₃` by "keep alnum" yields `MLPO`, not `MLPO3`.
+Fold subscripts to digits explicitly
+(`str.maketrans("₀₁₂₃₄₅₆₇₈₉", "0123456789")`) before comparing filenames or
+titles.
+
+### Retiring the old layout
+
+Users keep ad-hoc collections (`hp`, `其余文献`) from earlier sessions. Before
+deleting them, check whether their contents are **already** in the new
+taxonomy — in a 30-item case all 30 were, so the old collections were pure
+duplication, and deleting the collection rows (not the items) removed the
+visual clutter without losing anything. Always report
+`items before == items after` after such a delete.
+
+For genuinely off-topic records (a reviewer worksheet, an unrelated
+experiment), create a top-level **垃圾箱 / Trash** collection rather than
+deleting: the record stays searchable and recoverable. Keep it out of the main
+tree.
+
+### Describing the result to the user
+
+The parent collections hold zero items by design — they are grouping
+containers. Say so, or the user opens `方法` and concludes the classification
+failed. Tell them to click the disclosure triangle.
+
+## Organising by journal rank (中科院分区)
+
+Pairing a taxonomy with a journal-tier column is cheap and immediately useful
+("which buckets are mostly Q1?"). Build it from
+`publicationTitle` + `ISSN`, not from item titles.
+
+- **The CAS zone table is a paid, official database.** Free aggregator sites
+  republish it; treat any scraped value as indicative and say so in the
+  output. Note the edition: the **2025 upgraded edition** is what most
+  institutions use. Some journals are absent from the upgrade and only carry a
+  **basic-edition** zone — label which edition a number came from rather than
+  silently mixing them.
+- Page text often embeds structured JSON (`"cas_zone":1,"cas_top":1`), which
+  is far more reliable to parse than the visible HTML. Journal slugs are
+  lowercase-hyphenated but irregular (`Lancet Planetary Health` drops its
+  leading "The"); try a short list of variants before giving up.
+- **Separate preprints and unresolved journals from the statistics.** 62 of
+  283 items were arXiv preprints with no journal at all — counting them as
+  "unknown zone" halves the apparent resolution rate and distorts every
+  percentage.
+
 
 - **Always confirm with the user before a write** (import, create, delete,
   metadata edit, collection move). Say what will be written and where.

@@ -246,7 +246,132 @@ print("Cleanup complete!")
 
 ---
 
-## Action: Generate Citation Key
+## Action: Batch-create collections and file items (direct SQL)
+
+Use this only when the MCP `create_collection` / `add_items_to_collection`
+tools are unavailable **and** the user has confirmed. Zotero 10's local HTTP
+API is read-only (`POST` → `428`), so a 283-item taxonomy has no API path.
+
+Verified 2026-11-10: 12 collections, 283 memberships, 0 orphans, item count
+unchanged. The full narrative and the decision-rule discussion live in the
+`zotero` skill; this section is the SQL.
+
+### Schema
+
+```
+collections      collectionID, collectionName, parentCollectionID,
+                 clientDateModified, libraryID, key, version, synced,
+                 clientVersion
+collectionItems  collectionID, itemID, orderIndex
+```
+
+- A **top-level** collection has `parentCollectionID IS NULL` — not `0`, not
+  `''`.
+- `libraryID` for the personal library is `1`; read it
+  (`SELECT libraryID FROM items LIMIT 1`) instead of hard-coding.
+- `collectionItems` is the only membership table. There is no uniqueness
+  constraint, so a reprinted row silently duplicates membership — guard with
+  `SELECT 1 FROM collectionItems WHERE collectionID=? AND itemID=?` first.
+
+### Insert pattern
+
+```python
+con.execute("BEGIN IMMEDIATE")
+now = time.strftime("%Y-%m-%d %H:%M:%S")
+cur.execute(
+    "INSERT INTO collections (collectionName, parentCollectionID, "
+    "clientDateModified, libraryID, key, version, synced) "
+    "VALUES (?, ?, ?, ?, ?, 0, 0)",
+    (name, parent_id, now, library_id, new_key))
+cid = cur.lastrowid
+cur.execute("INSERT INTO collectionItems (collectionID, itemID, orderIndex) "
+            "VALUES (?, ?, 0)", (cid, item_id))
+con.commit()
+```
+
+Set `synced = 0` and `version = 0` so Zotero's sync layer re-reads the object
+rather than trusting a version it never issued.
+
+### Keys: format and generation
+
+Zotero keys are 8 characters from `A-Z` and `2-9` (no `0`, no `1`):
+
+```python
+alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ23456789"
+rng = random.SystemRandom()
+while True:
+    key = "".join(rng.choice(alphabet) for _ in range(8))
+    if key not in taken:      # taken = keys already in collections + items
+        break
+```
+
+Do **not** derive keys from a counter. A first pass emitted `3OGAAAAA`,
+`4OGAAAAA`, … — unique, but patterned, and collision-prone against Zotero's
+own generator.
+
+### Deleting a collection without deleting items
+
+```sql
+DELETE FROM collectionItems WHERE collectionID = ?;
+DELETE FROM collections      WHERE collectionID = ?;
+```
+
+Deleting the collection row does **not** touch `items`. Confirm afterwards
+that `SELECT COUNT(*) FROM items` is unchanged — that is the single most
+useful assertion for "I reorganised, I did not lose anything".
+
+### Verification queries (run every time)
+
+```sql
+-- planned vs actual, per collection
+SELECT c.collectionName, COUNT(ci.itemID)
+FROM collections c LEFT JOIN collectionItems ci ON ci.collectionID = c.collectionID
+GROUP BY c.collectionID ORDER BY c.collectionID;
+
+-- orphans: membership pointing at a dead item
+SELECT COUNT(*) FROM collectionItems ci
+LEFT JOIN items i ON i.itemID = ci.itemID WHERE i.itemID IS NULL;
+
+-- duplicate membership in one collection
+SELECT COUNT(*) FROM (SELECT collectionID, itemID, COUNT(*) c
+  FROM collectionItems GROUP BY 1,2 HAVING c > 1);
+
+-- how many bibliographic items are filed at all
+SELECT COUNT(DISTINCT itemID) FROM collectionItems;
+```
+
+### Reading the library for classification
+
+The field lookup is tedious but stable:
+
+```sql
+SELECT i.key, it.typeName, i.dateAdded, idv.value AS title
+FROM items i
+JOIN itemTypes it ON it.itemTypeID = i.itemTypeID
+JOIN itemData id ON id.itemID = i.itemID
+JOIN itemDataValues idv ON idv.valueID = id.valueID
+JOIN fields f ON f.fieldID = id.fieldID
+WHERE f.fieldName = 'title'
+  AND it.typeName NOT IN ('attachment','note','annotation');
+```
+
+To tell whether an item already has a note or a readable PDF:
+
+```sql
+SELECT COUNT(*) FROM itemNotes        WHERE parentItemID = ?;   -- notes
+SELECT i.key, a.path FROM itemAttachments a JOIN items i ON i.itemID = a.itemID
+WHERE a.parentItemID = ?;                                        -- then stat
+```
+
+Check the PDF by reading the first four bytes (`%PDF`) from the file under
+`storage/<attachmentKey>/`; a non-empty attachment row is not proof the file
+exists.
+
+**Note count caveat:** `itemNotes.parentItemID` is the right column, but an
+item can have a note whose parent was since deleted. Report notes and PDFs
+separately so "needs a note" and "has no PDF" stay distinguishable.
+
+## Action: Generate better-bibtex style citation keys
 
 Generate Better BibTeX format citation key.
 
