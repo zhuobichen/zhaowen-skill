@@ -465,6 +465,49 @@ The parent collections hold zero items by design — they are grouping
 containers. Say so, or the user opens `方法` and concludes the classification
 failed. Tell them to click the disclosure triangle.
 
+## Filling a third-party plugin's field: read its parser first
+
+When a plugin shows a column computed from a field (citation counts, citation
+keys, reading status), write the value in **the exact shape that plugin
+parses**, not the shape you would invent. Two rounds of guesswork are cheaper
+to avoid than to debug: open the plugin's script and find the regex.
+
+A worked example, Citation Tally:
+
+```js
+// content/scripts/citationtally.js
+const patt0 = new RegExp(`^Citations: *(\\d+) *\\(${safeTag}\\) *\\[\\d{4}-\\d{1,2}-\\d{1,2}\\]`, "i");
+const patt1 = new RegExp(`^Citations: *(\\d+) *\\(${safeTag}\\)`, "i");
+```
+
+So the stored line must be `Citations: 87 (Crossref) [2026-11-11]`, where the
+tag is the plugin's own l10n display name (`Crossref`, `INSPIRE`,
+`SemanticScholar`), not an internal id like `crossref` or `s2`. Writing
+`citationCount: 87` renders nothing, with no error anywhere.
+
+Three practical notes from that exercise:
+
+- **Check the display format before writing.** With two sources enabled the
+  plugin renders `12 | -` (pipe-separated, dashes for missing). That is by
+  design; configure a single source if a bare number is wanted.
+- **Preprints need their own source.** Crossref has no citation data for
+  `10.48550/arXiv.*`, so a Crossref-only configuration leaves every preprint
+  blank. Either keep the second source for display, or label the value with the
+  source that actually produced it.
+- **Reconcile two sources by max, not by first hit.** Semantic Scholar updates
+  recent papers sooner; Crossref covers non-English venues better. Taking the
+  larger value avoids reporting zero just because one index lags.
+
+Fetch pattern that worked for 264 DOIs:
+
+```python
+crossref  = f"https://api.crossref.org/works/{doi}"                  -> is-referenced-by-count
+semantic  = f"https://api.semanticscholar.org/graph/v1/paper/DOI:{doi}?fields=citationCount"
+```
+
+Six workers, a JSON cache keyed by DOI, and a 3 s back-off on HTTP 429. 264
+lookups completed without a block.
+
 ## Organising by journal rank (中科院分区)
 
 Pairing a taxonomy with a journal-tier column is cheap and immediately useful
