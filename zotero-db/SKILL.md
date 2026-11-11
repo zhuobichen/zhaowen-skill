@@ -8,22 +8,44 @@ argument-hint: "[action] [params...]"
 
 Directly manipulate Zotero's local SQLite database for advanced operations including PDF import, citation key generation, fulltext indexing, and database cleanup.
 
-## CRITICAL: Read-Only Restriction
+## Preferred path: use the MCP tools instead of direct SQLite writes
 
-**Zotero 文献库只读限制：严禁任何写入、修改、删除操作。**
+This skill describes **direct SQLite manipulation**, which is the last resort.
+Whenever Zotero's own APIs are available, use them instead — they maintain
+Zotero's internal bookkeeping (sync state, item versions, change tracking)
+that raw SQL does not:
 
-此 Skill 中的以下操作已被禁止：
-- Action: Import PDF to Zotero — **禁止**（写入数据库）
-- Action: Cleanup Database — **禁止**（删除数据）
-- Action: Create Fulltext Index — **禁止**（写入数据库）
-- Action: Generate Citation Key — **禁止**（写入数据库）
+| Task | Preferred tool |
+|------|----------------|
+| Import by identifier (DOI / arXiv / ISBN / PMID) | `mcp__zotero__add_by_identifier` |
+| Create an item + attach a local PDF | `mcp__zotero__write_item` (action `create` / `import`) |
+| Edit metadata | `mcp__zotero__write_metadata` |
+| Add / remove tags | `mcp__zotero__write_tag` |
+| Collections | `mcp__zotero__create_collection` / `update_collection` / `delete_collection` / `add_items_to_collection` |
+| Notes | `mcp__zotero__write_note` |
+| Search + full text | `mcp__zotero__search_library` / `search_fulltext` / `get_content` |
 
-唯一允许的操作：
-- Action: Analyze Database（只读查询，检查数据库健康状态）
+Only fall back to the direct-SQL scripts below when the MCP server is
+unreachable **and** the user explicitly asks for a database-level operation.
 
-**Why:** 用户明确要求 Zotero 文献库内容不可修改。
+## Safety rules for direct SQLite writes
 
-**How to apply:** 只使用 `mode=ro&immutable=1` 模式连接数据库进行查询，严禁任何 INSERT/UPDATE/DELETE 操作。
+Direct SQL writes bypass Zotero's own bookkeeping and can corrupt the
+library. When they are unavoidable:
+
+- **Back up first** — run the backup Action below. A plain file copy is not
+  enough; the script handles WAL correctly (see the traps it avoids).
+- **Close Zotero** before any write — an open Zotero holds its own connection
+  and will overwrite or conflict with your changes.
+- **Never run these without explicit user confirmation:** import PDF, cleanup
+  (deletes rows), fulltext index creation.
+- Report exactly which rows were touched.
+
+> Note: on this machine Zotero's live database **cannot be opened by another
+> process at all** — a normal connection fails with `database is locked`, and
+> `?immutable=1` reads a stale snapshot missing the WAL. This is why the
+> backup script copies files rather than using the SQLite backup API, and why
+> direct SQL writes require Zotero to be closed.
 
 ## Prerequisites
 
@@ -32,16 +54,98 @@ Directly manipulate Zotero's local SQLite database for advanced operations inclu
    pip install PyPDF2
    ```
 
-2. **Zotero closed** when doing database cleanup (to avoid corruption)
+2. **Zotero closed** when writing to the database directly (to avoid corruption)
 
 ## Database Paths
 
 - Database: `E:\CodeProject\Zotero\zotero.sqlite`
 - Storage: `E:\CodeProject\Zotero\storage\`
+- Backup script: `C:\Users\chenlizhuo\.agents\skills\zotero-db\scripts\zotero_backup.py`
+
+---
+
+## Action: Back up Zotero databases (RECOMMENDED before any risky operation)
+
+Run this **before** any direct-SQL write, bulk edit, or cleanup. It is the only
+safe way to snapshot a live Zotero.
+
+### Usage
+```bash
+python "C:/Users/chenlizhuo/.agents/skills/zotero-db/scripts/zotero_backup.py" "E:/CodeProject/Zotero-backup/<timestamp>"
+```
+
+The script takes a destination directory, creates it if needed, and writes one
+self-contained `.sqlite` per database plus `BACKUP_INFO.txt` (a manifest with
+restore steps).
+
+### What it copies
+
+| Database | Contents |
+|----------|----------|
+| `zotero.sqlite` | **The library** — items, collections, creators, attachments metadata |
+| `fulltext.sqlite` | PDF full-text index |
+| `llm-for-zotero-index.sqlite` | LLM for Zotero plugin index |
+| `zotero-mcp-vectors.sqlite` | zotero-mcp-plugin vector index |
+| `zoplicate.sqlite` | Zoplicate plugin data |
+| `beaver.sqlite` | Beaver plugin data |
+
+The PDF files themselves live in `E:\CodeProject\Zotero\storage\`. Back them up
+separately with `robocopy`:
+
+```bash
+robocopy "E:\CodeProject\Zotero\storage" "<dest>\storage" /E /R:1 /W:1 /MT:8
+```
+
+### Why the script is not a plain file copy — the traps it avoids
+
+Zotero runs SQLite in **WAL mode**, and on this machine the live database
+cannot be opened by another process at all. Three things follow, all of them
+verified by testing on 2026-11-05:
+
+1. **Copying `zotero.sqlite` alone silently loses recent changes.** Committed
+   transactions that have not yet been checkpointed live in
+   `zotero.sqlite-wal`. A main-file-only copy is stale.
+
+2. **A normal connection reports `database is locked` — even for
+   `PRAGMA journal_mode`.** SQLite needs to write the `-shm` (shared-memory
+   index) sidecar to open a WAL database read-write, and Zotero owns that
+   file. `?immutable=1` bypasses the lock but reads a **stale snapshot that
+   excludes the WAL**.
+
+3. **`VACUUM INTO` fails** with `database is locked` after ~20s, and a plain
+   `sqlite3.Connection.backup()` blocked for 12 minutes producing 0 bytes,
+   because the whole copy holds one read lock and Zotero's sync transaction
+   never releases it.
+
+### The method that works
+
+Copy the main file **and** the `-wal` sidecar, delete the stale `-shm`, then
+open the copy normally. SQLite replays the WAL into the copy and checkpoints
+it, producing one self-contained database with everything Zotero had
+committed.
+
+Verification (2026-11-05, live Zotero running): the backup reported **783
+items** while `?immutable=1` on the same live file reported **779** — the
+difference is exactly the transactions still in the WAL. After the copy,
+`PRAGMA integrity_check` returns `ok`.
+
+### Restore
+
+```
+1. Close Zotero completely.
+2. Replace the matching file in E:\CodeProject\Zotero\ with the backup copy.
+3. Delete the stale *.sqlite-wal and *.sqlite-shm files.
+4. Start Zotero and verify the library.
+```
 
 ---
 
 ## Action: Import PDF to Zotero
+
+> Prefer `mcp__zotero__write_item` (action `import`) for this — it goes
+> through Zotero's own API, keeps sync bookkeeping correct, and creates the
+> attachment + full-text index for you. Use `pdf_to_zotero.py` below only when
+> the MCP server is unreachable.
 
 ### Usage
 ```bash
@@ -142,7 +246,132 @@ print("Cleanup complete!")
 
 ---
 
-## Action: Generate Citation Key
+## Action: Batch-create collections and file items (direct SQL)
+
+Use this only when the MCP `create_collection` / `add_items_to_collection`
+tools are unavailable **and** the user has confirmed. Zotero 10's local HTTP
+API is read-only (`POST` → `428`), so a 283-item taxonomy has no API path.
+
+Verified 2026-11-10: 12 collections, 283 memberships, 0 orphans, item count
+unchanged. The full narrative and the decision-rule discussion live in the
+`zotero` skill; this section is the SQL.
+
+### Schema
+
+```
+collections      collectionID, collectionName, parentCollectionID,
+                 clientDateModified, libraryID, key, version, synced,
+                 clientVersion
+collectionItems  collectionID, itemID, orderIndex
+```
+
+- A **top-level** collection has `parentCollectionID IS NULL` — not `0`, not
+  `''`.
+- `libraryID` for the personal library is `1`; read it
+  (`SELECT libraryID FROM items LIMIT 1`) instead of hard-coding.
+- `collectionItems` is the only membership table. There is no uniqueness
+  constraint, so a reprinted row silently duplicates membership — guard with
+  `SELECT 1 FROM collectionItems WHERE collectionID=? AND itemID=?` first.
+
+### Insert pattern
+
+```python
+con.execute("BEGIN IMMEDIATE")
+now = time.strftime("%Y-%m-%d %H:%M:%S")
+cur.execute(
+    "INSERT INTO collections (collectionName, parentCollectionID, "
+    "clientDateModified, libraryID, key, version, synced) "
+    "VALUES (?, ?, ?, ?, ?, 0, 0)",
+    (name, parent_id, now, library_id, new_key))
+cid = cur.lastrowid
+cur.execute("INSERT INTO collectionItems (collectionID, itemID, orderIndex) "
+            "VALUES (?, ?, 0)", (cid, item_id))
+con.commit()
+```
+
+Set `synced = 0` and `version = 0` so Zotero's sync layer re-reads the object
+rather than trusting a version it never issued.
+
+### Keys: format and generation
+
+Zotero keys are 8 characters from `A-Z` and `2-9` (no `0`, no `1`):
+
+```python
+alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ23456789"
+rng = random.SystemRandom()
+while True:
+    key = "".join(rng.choice(alphabet) for _ in range(8))
+    if key not in taken:      # taken = keys already in collections + items
+        break
+```
+
+Do **not** derive keys from a counter. A first pass emitted `3OGAAAAA`,
+`4OGAAAAA`, … — unique, but patterned, and collision-prone against Zotero's
+own generator.
+
+### Deleting a collection without deleting items
+
+```sql
+DELETE FROM collectionItems WHERE collectionID = ?;
+DELETE FROM collections      WHERE collectionID = ?;
+```
+
+Deleting the collection row does **not** touch `items`. Confirm afterwards
+that `SELECT COUNT(*) FROM items` is unchanged — that is the single most
+useful assertion for "I reorganised, I did not lose anything".
+
+### Verification queries (run every time)
+
+```sql
+-- planned vs actual, per collection
+SELECT c.collectionName, COUNT(ci.itemID)
+FROM collections c LEFT JOIN collectionItems ci ON ci.collectionID = c.collectionID
+GROUP BY c.collectionID ORDER BY c.collectionID;
+
+-- orphans: membership pointing at a dead item
+SELECT COUNT(*) FROM collectionItems ci
+LEFT JOIN items i ON i.itemID = ci.itemID WHERE i.itemID IS NULL;
+
+-- duplicate membership in one collection
+SELECT COUNT(*) FROM (SELECT collectionID, itemID, COUNT(*) c
+  FROM collectionItems GROUP BY 1,2 HAVING c > 1);
+
+-- how many bibliographic items are filed at all
+SELECT COUNT(DISTINCT itemID) FROM collectionItems;
+```
+
+### Reading the library for classification
+
+The field lookup is tedious but stable:
+
+```sql
+SELECT i.key, it.typeName, i.dateAdded, idv.value AS title
+FROM items i
+JOIN itemTypes it ON it.itemTypeID = i.itemTypeID
+JOIN itemData id ON id.itemID = i.itemID
+JOIN itemDataValues idv ON idv.valueID = id.valueID
+JOIN fields f ON f.fieldID = id.fieldID
+WHERE f.fieldName = 'title'
+  AND it.typeName NOT IN ('attachment','note','annotation');
+```
+
+To tell whether an item already has a note or a readable PDF:
+
+```sql
+SELECT COUNT(*) FROM itemNotes        WHERE parentItemID = ?;   -- notes
+SELECT i.key, a.path FROM itemAttachments a JOIN items i ON i.itemID = a.itemID
+WHERE a.parentItemID = ?;                                        -- then stat
+```
+
+Check the PDF by reading the first four bytes (`%PDF`) from the file under
+`storage/<attachmentKey>/`; a non-empty attachment row is not proof the file
+exists.
+
+**Note count caveat:** `itemNotes.parentItemID` is the right column, but an
+item can have a note whose parent was since deleted. Report notes and PDFs
+separately so "needs a note" and "has no PDF" stay distinguishable.
+
+## Action: Generate better-bibtex style citation keys
 
 Generate Better BibTeX format citation key.
 
