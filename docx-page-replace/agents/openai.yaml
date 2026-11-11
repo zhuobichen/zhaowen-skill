@@ -1,0 +1,4 @@
+interface:
+  display_name: "Docx Page Replace"
+  short_description: "Replace a docx section with full-page images (e.g. signed scans)"
+  default_prompt: "Use $docx-page-replace to replace these blank form pages in my report with the scanned, signed copies."

@@ -7,6 +7,7 @@
 | Skill | 目录 | 用途 |
 |-------|------|------|
 | 英雄联盟「海克斯大乱斗」(海斗/ARAM | [`aram-mayhem-assistant/`](aram-mayhem-assistant/) | 英雄联盟「海克斯大乱斗」(海斗/ARAM) 分析助手：数对局、复盘单局、查符文与英雄、看趋势/画像/出装/对位/队友、跨 |
+| docx 整页替换 | [`docx-page-replace/`](docx-page-replace/) | 在 .docx 里按**文本锚点**删掉一段正文（段落或表格行），原位插入「一图一页」的图片：把空白考核表页换成签字盖章扫描件、把整节换成扫描附件、往报告末尾插几页图。纯标准库实现（不需要 python-docx），带 `list` / `replace` / `check` 三个子命令；拒绝歧义锚点、拒绝覆盖原文件，`check` 校验 zip/XML/关系引用/图片是否超出版心。三个真踩过的坑写在 SKILL.md 里（DrawingML 命名空间、删表要补闭合标签、图宽贴满会多挤出一页） |
 | docx 转公众号（clz） | [`docx_to_mp/`](docx_to_mp/) | 把 docx 转成公众号图文并推送草稿箱：解析 → 渲染微信兼容 HTML → 推送。内容忠实保留只做样式；含横滑相册、GIF 动效、平台硬限制实测记录 |
 | 科研文献证据工程（ylx） | [`research_evidence_synthesis/`](research_evidence_synthesis/) | ylx·科研文献证据工程与 Related Work 写作：Claim-first（证据矩阵 + 逻辑树 + 综述），含输出样例 |
 | one-hub 用量监测（ylx） | [`onehub_usage_monitor/`](onehub_usage_monitor/) | 监测 one-hub API 用量与费用：总额度/已用/剩余、每日每月记账、各模型单价对比 |

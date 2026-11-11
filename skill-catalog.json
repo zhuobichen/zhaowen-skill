@@ -181,6 +181,14 @@
       "upstream": "tiangong-ai/agent-skills@5e692461708a4e02c1012086a59d2bd75da99673"
     },
     {
+      "name": "docx-page-replace",
+      "path": "docx-page-replace/",
+      "display_name": "Docx Page Replace",
+      "short_description": "Replace a docx section with full-page images (e.g. signed scans), anchor-based",
+      "ui_metadata": "agents/openai.yaml",
+      "upstream": null
+    },
+    {
       "name": "docx_to_mp",
       "path": "docx_to_mp/",
       "display_name": "DOCX to WeChat Draft",
