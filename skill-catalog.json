@@ -173,6 +173,14 @@
       "upstream": "tiangong-ai/agent-skills@5e692461708a4e02c1012086a59d2bd75da99673"
     },
     {
+      "name": "dev-blog-distribution",
+      "path": "dev-blog-distribution/",
+      "display_name": "Dev Blog Distribution",
+      "short_description": "Cross-post Chinese technical articles to CSDN / Zhihu / Juejin / Tencent Cloud: per-site editors, tag rules, review gates, and bsk automation gotchas",
+      "ui_metadata": null,
+      "upstream": null
+    },
+    {
       "name": "document-granular-decompose",
       "path": "document-granular-decompose/",
       "display_name": "Document Granular Decompose",

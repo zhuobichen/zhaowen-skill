@@ -28,6 +28,7 @@
 | ML 论文绘图 | [`academic-plotting/`](academic-plotting/) | 从论文上下文提取系统组件与关系生成架构图；从实验数据自动选图型并用 matplotlib/seaborn 生成数据图 |
 | 概念问答沉淀 | [`kb-capture/`](kb-capture/) | 说一句「存知识库」即把当前对话里的概念性问答沉淀成知识库原子卡片并 push：先 `search` 判重，命中则读全文后合并、未命中则新建；卡片与索引同步放在同一次提交，写盘前做敏感与卡片规范校验 |
 | 公众号模板库 | [`mp-template-lib/`](mp-template-lib/) | 把「看到一个好排版」变成「能吃进来的可复用主题」：`extract_theme.py` 从一篇已发表文章（URL 或 HTML）反推设计令牌、组件形态与对照图，存进 `templates/<主题名>/` 供排版流程取用。触发词：套模板、反推模板、模板库、仿这个排版。不用于写文章（用 khazix-writer）与渲染本身（用 docx_to_mp） |
+| 技术博客多平台分发 | [`dev-blog-distribution/`](dev-blog-distribution/) | 把一篇技术长文铺到 CSDN / 知乎 / 掘金 / 腾讯云开发者（附博客园、开源中国、思否的实测特征）：**一稿一角度**的差异化矩阵（对抗判重与推荐降权）、各站发布器的真实控件与标签规则（腾讯云标签必须下拉选、掘金分类必选、CSDN 等级<3 不能建自定义标签）、bsk 在窗口最小化/编辑器是 CodeMirror·Draft·cledit 时的可靠操作法（`evaluate` 原生点击、剪贴板粘贴、sync+observation 配对）、发布只点一次并事后核对 |
 | ABaCAS 平台操纵 | [`abacas-cloud-ops/`](abacas-cloud-ops/) | ABaCAS Cloud 平台任务/文件/费效评估/结果导入与本地可视化（9 个脚本） |
 | n8n 工作流操纵 | [`n8n-web-ops/`](n8n-web-ops/) | n8n 网页操纵：登录、执行记录只读查看、callback_token 自动提取 |
 | 网申表单速填 | [`job-form-autofill/`](job-form-autofill/) | 按简历填任意网页的求职/网申表单：闭合选项（下拉/单选）交给 Jev 一次批量判定，需要写字的由助手依据简历生成；**绝不提交**，没依据的一律留空并列出"需要你提供"清单 |
