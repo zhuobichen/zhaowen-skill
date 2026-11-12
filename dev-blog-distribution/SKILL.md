@@ -30,6 +30,7 @@ version: 1.0.0
 | 知乎 | 同样是复盘，标题更口语 | 长尾搜索 + 专栏 |
 | 掘金 | 复盘，标题更抓 | 技术人信息流 |
 | 腾讯云开发者 | 部署/运维 | 云主机当批处理执行器、临时盘、机器绑定密钥、端口边界 |
+| 阿里云开发者 | 通用工程 | 从项目里抽一个可独立成立的实现问题（例：只读副本缓存的三层设计），全文不出现敏感业务词 |
 | 博客园 | 纯机制 | 去掉产品叙事，只讲通用机制与可复用代码 |
 | 开源中国 | 项目向 | 为什么这么设计，挂 GitHub 项目页 |
 | 思否 | 问答体 | 对着「XXX 能不能直接…」这类搜索词写 |
@@ -44,6 +45,7 @@ version: 1.0.0
 | 知乎 | `zhuanlan.zhihu.com/write` | Draft.js（`.public-DraftEditor-content`） | 顶栏有「创作中心」「消息 99+」 | 发布后弹「发布成功 感谢你的第 N 篇创作」 |
 | 掘金 | `juejin.cn/editor/drafts/new` | CodeMirror（`.CodeMirror`） | 顶栏无「登录/注册」，有「创作者中心」 | 发布弹窗必选分类；标签 `byte-select` |
 | 腾讯云开发者 | `cloud.tencent.com/developer/article/write` | Draft.js | 顶栏显示昵称（如「用户12117112」） | 发布后进**审核**；标签必须从下拉选 |
+| 阿里云开发者 | `developer.aliyun.com/article/new` | mditor（真输入是 `textarea.textarea`） | 顶栏显示昵称（如「陈礼卓比」） | 首次发布会弹**滑块验证**；发布后「内容审核中」，审核前公开页 404 |
 | 博客园 | `i.cnblogs.com/posts/edit` | Markdown/富文本两组 | 顶部有「我的博客」 | 支持 md，直接贴源码最省事 |
 | 开源中国 | `my.oschina.net/u/<id>/blog/write` | 富文本 | 顶栏头像 | 适合挂项目链接 |
 | 思否 | `segmentfault.com/write` | 富文本 | 顶栏头像 | 支持 md 模式 |
@@ -149,6 +151,17 @@ Draft.js 必须先 `document.querySelector('.public-DraftEditor-content').focus(
   4. 封面可选，专栏可选
 - 提交成功 toast 是「发布成功！文章正在审核中」，文章进 `审核中`，不是即时可见
 - 核对地址：`https://cloud.tencent.com/developer/creator/article`
+
+### 阿里云开发者
+
+- 首次直接开 `article/new` 会被重定向到「发表内容规则」页，**再导航一次**就进编辑器（不需要点同意）
+- 编辑器是 mditor：DOM 结构 `.mditor > .body > .editor > textarea.textarea` + `.viewer`
+  - **真输入是 `textarea.textarea`**；`textarea.mditor-hidden` 是提交用的隐藏字段（`display:none`），改它的 value 不生效、预览区也不会变
+  - 直接 `fill` 4 KB 正文会超时，用剪贴板：`t.focus(); t.select()` → `Ctrl+V`
+- 标题 `input[placeholder="请填写标题"]`；摘要 `textarea[placeholder="请填写摘要"]`
+- 「发布文章」→ 弹一个原生确认框「您确定发布文章？」→ 点「确认」
+- **首次发布会弹滑块验证**（`请完成安全验证` / `拖动滑块完成拼图`）。这一步只能人做，用 `request-help` 把窗口交给用户；用户拖完点「继续」，发布会自动继续
+- 成功后跳文章页 `developer.aliyun.com/article/<id>`，toast「内容审核中，请耐心等待」；**审核通过前公开访问是 404**，别当成发布失败
 
 ## 流水线
 
