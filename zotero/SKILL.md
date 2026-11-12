@@ -8,7 +8,138 @@ argument-hint: "[action] [params...]"
 
 Manage Zotero library for bibliography management, PDF content reading, reference generation, and SCUT thesis writing with LaTeX.
 
-## Tooling: prefer `mcp__zotero__*` over the legacy CLI
+## Three ways to touch the library - pick deliberately
+
+Every task reaches Zotero through one of three channels. They differ in what
+they can do, what they cost, and what can go wrong. Choosing the wrong one is
+the most common source of wasted turns.
+
+| | MCP plugin | SQLite (offline) | An add-on of your own |
+|---|---|---|---|
+| Entry point | `mcp__zotero__*` over `http://127.0.0.1:23120/mcp` | `zotero.sqlite` on disk | `bootstrap.js` inside an `.xpi` |
+| Zotero must be | **running** | **closed** | running |
+| Exercise | whole-library reads, single edits | bulk writes, schema-level surgery | UI that must persist |
+| Atomicity | per call, Zotero's own transaction | one `BEGIN IMMEDIATE` you control | whatever you write |
+| Failure mode | typed error | silent corruption if a FK or `synced=0` is missed | bootstrap throws and the add-on vanishes |
+
+### MCP - the default for reading and small edits
+
+25 tools, no JavaScript evaluation, **no delete**. It uses Zotero's own
+translators, so anything it creates has correct item types and field
+normalisation. Reach for it first:
+
+```
+get_libraries / search_library / get_item_details / get_content
+write_item / write_metadata / write_tag / write_note
+create_collection / add_items_to_collection / remove_items_from_collection
+```
+
+`search_library` cannot find notes whose first line is a heading like
+`# 分类索引：X` - it returns `total: 0` even though they exist. Detect them
+through SQLite instead.
+
+### SQLite - only when the volume justifies closing Zotero
+
+Close Zotero first. A `-wal` file means writes are still buffered; editing
+underneath a live process gives you a database the next launch may not read.
+
+**Back up before every write.** `zotero.sqlite` sits next to `-wal` and `-shm`;
+copy all three, because the base file alone is stale.
+
+```python
+import shutil, sqlite3, subprocess, tempfile
+from pathlib import Path
+
+ZOT = Path(r"E:\CodeProject\Zotero")
+BACKUP = Path(tempfile.gettempdir()) / "zt_before_edit"
+BACKUP.mkdir(exist_ok=True)
+
+# 1. refuse to run against a live process
+out = subprocess.run(["tasklist", "/FI", "IMAGENAME eq zotero.exe"],
+                     capture_output=True, text=True).stdout
+assert "zotero.exe" not in out.lower(), "close Zotero first"
+
+# 2. snapshot all three files
+for suffix in ("", "-wal", "-shm"):
+    src = ZOT / ("zotero.sqlite" + suffix)
+    if src.exists():
+        shutil.copy2(src, BACKUP / ("zotero.sqlite" + suffix))
+
+# 3. one transaction, so a mid-way failure rolls back
+con = sqlite3.connect(str(ZOT / "zotero.sqlite"))
+try:
+    con.execute("BEGIN IMMEDIATE")
+    ...
+    con.commit()
+except Exception:
+    con.rollback()
+    raise
+```
+
+Tables you will actually touch, and the traps in each:
+
+| Table | What it holds | Trap |
+|---|---|---|
+| `items` | every row, keyed by a 8-char base32 `key` | notes and attachments are items too |
+| `itemData` + `itemDataValues` | field values, shared by value | reuse an identical `valueID` instead of inserting duplicates |
+| `collectionItems` | membership | no unique constraint - inserting twice makes an item appear twice |
+| `itemTags` + `tags` | tag assignment | `tags` has **no colour column**; colours live in `syncedSettings` |
+| `itemNotes` | HTML note bodies | `parentItemID` NULL means a standalone note |
+| `deletedItems` | the trash, by `itemID` | deleting a row from `items` is not how you trash something |
+| `fields` | field name -> `fieldID` | look it up, never hard-code the id |
+
+**Reads can run without closing Zotero** if you copy the three files to a temp
+directory first and open that copy read-only. That is what every diagnostic in
+this repo does:
+
+```python
+con = sqlite3.connect(f"file:{copy_path}?mode=ro", uri=True)
+```
+
+### An add-on - when the change has to survive
+
+A column, a menu item, a toolbar button: anything the user must see on every
+launch. Writing one is a separate discipline - see the twelve Zotero 10
+pitfalls in `zotero-collection-tags/README.md`. The short version:
+
+- register columns as the **first statement** in `startup()`, before any `await`
+- no `importESModule` at module scope; one throw kills the whole bootstrap
+- write files with `nsIFileOutputStream`, not `writer`/`TextEncoder` on strings
+- pack with forward slashes; `.NET CreateFromDirectory` emits backslashes, which
+  `nsIZipReader.getEntry` will not find
+
+### The decision rule
+
+```
+read something                 -> MCP
+edit one item                  -> MCP
+add / move < ~20 items         -> MCP
+bulk rewrite (> ~50 rows)      -> SQLite, Zotero closed, backup first
+anything the user must SEE     -> an add-on
+```
+
+Why the volume threshold: an MCP round trip costs a request and a transaction
+each, so 200 individual `write_tag` calls is minutes of wall clock and 200
+chances to fail halfway. One `BEGIN IMMEDIATE` over 200 rows is milliseconds and
+all-or-nothing.
+
+### Verifying afterwards
+
+Whichever channel wrote, read back through a **different** one. If SQLite wrote,
+confirm via MCP; if MCP wrote, confirm via a SQLite snapshot. Same-channel
+verification only proves the write was accepted, not that it landed where the
+other readers look.
+
+```python
+# after a bulk SQLite write, re-open a fresh snapshot and count
+con = sqlite3.connect(f"file:{fresh_copy}?mode=ro", uri=True)
+n = con.execute("""SELECT COUNT(*) FROM itemData d
+  JOIN itemDataValues v ON v.valueID = d.valueID
+  JOIN fields f ON f.fieldID = d.fieldID
+  WHERE f.fieldName = 'extra' AND v.value LIKE '%Citations:%'""").fetchone()[0]
+```
+
+### MCP tool reference
 
 DSH and Claude Code sessions connect to Zotero's `zotero-mcp-plugin` over MCP.
 Those tools are the primary path — they are typed, validated, and use Zotero's

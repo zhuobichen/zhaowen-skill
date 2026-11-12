@@ -8,6 +8,25 @@ argument-hint: "[action] [params...]"
 
 Directly manipulate Zotero's local SQLite database for advanced operations including PDF import, citation key generation, fulltext indexing, and database cleanup.
 
+## When to use this skill vs the MCP plugin
+
+This skill edits `zotero.sqlite` directly, which means **Zotero must be closed**.
+That cost only pays off for bulk work. The full breakdown lives in the `zotero`
+skill under "Three ways to touch the library"; the short version:
+
+| Task | Channel |
+|---|---|
+| Read, search, single edits | `mcp__zotero__*` (Zotero running) |
+| Bulk writes, > ~50 rows | **this skill** (Zotero closed, back up first) |
+| A UI feature the user keeps | an add-on |
+
+**Reads do not need Zotero closed** if you copy `zotero.sqlite` plus its
+`-wal` and `-shm` to a temp directory and open the copy `mode=ro`. All the
+diagnostics in this repo do that.
+
+**Back up all three files, not just the base.** With a live `-wal` present the
+base file alone is stale, and restoring it alone loses recent writes.
+
 ## Preferred path: use the MCP tools instead of direct SQLite writes
 
 This skill describes **direct SQLite manipulation**, which is the last resort.
