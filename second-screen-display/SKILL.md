@@ -150,5 +150,6 @@ adb shell am start -a android.intent.action.VIEW -d http://127.0.0.1:8080/panel
 | `scripts/reading.py` | Markdown/TXT → 墨水屏排版 EPUB |
 | `scripts/make_screensaver.py` | 生成墨水屏竖屏图（仪表盘 / 远端快照） |
 | `scripts/check_m2.py` | 副屏自检：抓图取亮度极值，判断是否全黑 |
+| `scripts/upload_ireader.py` | 向 iReader 的 WiFi 传书接口（`/test.php?action=addBook`）上传文件 |
 
-完整实现与文档：仓库 `second-screen`（私有）。
+排障细节与实测数据见 [`references/副屏方案.md`](references/副屏方案.md)。
