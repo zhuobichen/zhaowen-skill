@@ -381,6 +381,14 @@
       "upstream": "morluto/rea@b8fab74"
     },
     {
+      "name": "second-screen-display",
+      "path": "second-screen-display/",
+      "display_name": "Second Screen as a Read-Only Display",
+      "short_description": "Turn an old phone, e-ink reader or spare monitor into a display-only second screen",
+      "ui_metadata": null,
+      "upstream": null
+    },
+    {
       "name": "tieba",
       "path": "tieba/",
       "display_name": "Baidu Tieba",

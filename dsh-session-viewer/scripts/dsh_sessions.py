@@ -292,11 +292,16 @@ def load_all(homes: list[str]) -> list[Session]:
     return sessions
 
 
+def _strip_session_prefix(sid: str) -> str:
+    """只剥掉字面的 "session-" 前缀 —— 别用 lstrip(chars)，它会把 id 开头
+    的 e/s/i/o/n 也一起吃掉（session-e221e301 会变成 221e301，前缀就找不到了）。"""
+    sid = sid.lower()
+    return sid[len("session-"):] if sid.startswith("session-") else sid
+
+
 def resolve(sessions: list[Session], prefix: str) -> Session:
-    key = prefix.lower()
-    if key.startswith("session-"):
-        key = key[len("session-"):]
-    hits = [s for s in sessions if s.id.lower().lstrip("session-").startswith(key)]
+    key = _strip_session_prefix(prefix)
+    hits = [s for s in sessions if _strip_session_prefix(s.id).startswith(key)]
     if not hits:
         sys.exit(f"没有匹配 {prefix!r} 的会话；先跑 list 看看 id")
     if len(hits) > 1:

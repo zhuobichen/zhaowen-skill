@@ -60,6 +60,7 @@
 | 大文件 AI 审核范式 | [`large-doc-ai-review/`](large-doc-ai-review/) | 几十到几百页 PDF/Word 的 AI 审核工程套路：目录树定位证据窗口、Prompt 契约（`.md` + `_spec.json` 双文件）、五档结论与人工复核边界、置信度降级兜底、进程锁与心跳；附 `check_verdict_order.py` 强制"结论字段写在证据字段之后"（已对 227 个真实 prompt/spec 零误报验证） |
 | Zotero Word 活字段引用 | [`zotero-word-citations/`](zotero-word-citations/) | 把 Word 手稿里的 author-year **文字引用**变成 Zotero 活字段，并生成「引用 ↔ 参考文献可点击跳转」的定稿版。适用：要在 Word 里用 Zotero 管引用而不想手工插文献；拿到一份引用是死文字的稿子；抱怨「点引用跳不到参考文献」 |
 | Zotero 文献管理 | [`zotero/`](zotero/) | 用 Zotero 做文献管理、PDF 阅读、引用生成与论文写作：按主题/作者检索条目、读全文与批注、导出引用、配 LaTeX 出参考文献 |
+| 只读副屏 | [`second-screen-display/`](second-screen-display/) | 把旧手机/墨水屏/实体副屏做成**只显示不操作**的第二块屏：本机一个 HTTP 服务喂画面（仪表盘/远端桌面/电子书），设备端只负责显示。涵盖 USB 反向隧道（adb reverse，不依赖网络）、局域网 HTTP、mDNS 固定名字、PrintWindow 抓远端窗口（**最小化即黑图**）、DXGI 与混合显卡下的"假黑"、MIUI 安装/输入门禁、墨水屏转载与屏保路径、CursorKeeper 锁鼠标（自写 ClipCursor 必须 DPI 感知，否则桌面点不动） |
 | Zotero 数据库直连 | [`zotero-db/`](zotero-db/) | 直接操作 Zotero 本地 SQLite：批量导入 PDF、生成 citation key、建全文索引、清理孤儿条目；Zotero API 不可用时的兜底通道 |
 
 ## 借鉴自 Tiangong AI Skills
