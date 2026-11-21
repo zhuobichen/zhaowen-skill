@@ -97,6 +97,33 @@ adb shell am start -a android.intent.action.VIEW -d http://127.0.0.1:8080/panel
 - 窗口定位**必须 DPI 感知**，否则 `SetWindowPos` 的坐标会被系统缩放，窗口跑到屏幕外
 - 浏览器的 `--window-position` 同样受 DPI 影响，别指望命令行参数摆准，用 API 摆
 
+### 让窗口在任务栏里可辨认
+
+`msedge --app=<url>` 启动的应用窗口，**任务栏图标与标题都取自网页**：
+`<link rel="icon">` 决定图标，`<title>` 决定标题。多个 `--app` 窗口全是 Edge 的默认地球时，
+根本分不清哪个是哪个。做法：给每个被投屏的页面配**不同颜色的 favicon**（服务端用 Pillow 现画即可）：
+
+```python
+def _make_icon(bg, glyph):          # 64x64 圆角方块 + 一个字母
+    img = Image.new("RGBA", (64, 64), (0, 0, 0, 0))
+    d = ImageDraw.Draw(img)
+    d.rounded_rectangle((2, 2, 61, 61), radius=15, fill=bg)
+    d.text((32, 33), glyph, font=_font(38, True), fill="white", anchor="mm")
+    ...
+```
+
+- 远端页：青色方块 + `R`，标题「ToDesk 远端」
+- 面板页：蓝色方块 + `P`，标题「面板」
+
+⚠️ **改标题会打断守护脚本**：守护按窗口标题找窗口，标题一改就找不到 →
+它以为窗口不存在，每轮重新 `--app` 开一个新窗口（很快会堆出好几个）。
+所以匹配函数要**同时接受新旧标题**：
+
+```python
+titles = {"remote", "todesk 远端"}
+```
+
+
 ## 五个必踩的坑（按严重程度）
 
 ### 1. `PrintWindow` 抓最小化窗口 = 黑图

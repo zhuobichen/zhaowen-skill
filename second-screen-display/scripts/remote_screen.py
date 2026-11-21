@@ -20,7 +20,7 @@ EDGE_CANDIDATES = [
 ]
 URL = "http://127.0.0.1:8080/remote"
 PROFILE = os.environ.get("REMOTE_PROFILE", os.path.join(os.path.expanduser("~"), ".second-screen", "edge-remote"))
-# x, y, w, h of the secondary monitor (see the DPI note in SKILL.md)
+# x, y, w, h of the secondary monitor (must be physical pixels - see the DPI note in SKILL.md)
 SECOND = tuple(int(v) for v in os.environ.get("SECOND_MON", "2560,0,1920,1280").split(","))
 SW_RESTORE, SW_SHOWNA = 9, 8
 SWP_SHOWWINDOW = 0x0040
@@ -45,8 +45,10 @@ def windows():
 
 
 def find_remote():
+    """The app window's title comes from the page <title>; accept both current and legacy names."""
+    titles = {"remote", "todesk \u8fdc\u7aef"}
     for h, t, c in windows():
-        if t.strip() == "remote" and "Chrome" in c:
+        if t.strip().lower() in titles and "Chrome" in c:
             return h
     return None
 

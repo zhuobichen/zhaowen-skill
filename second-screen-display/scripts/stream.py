@@ -46,6 +46,7 @@ _quota = {
 _panel = {"jpeg": b"", "t": 0}
 _eink = {"png": b"", "t": 0}
 _clients = {}          # ip -> last seen timestamp (who has requested the panel)
+_wake = {"result": None, "t": 0}   # Screen Wake Lock report from the phone page
 
 # DeepSeek has no usage API: we snapshot the balance and turn decreases into daily spend.
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -103,6 +104,27 @@ def _usage_summary():
 
 
 # ---------- panel renderer (drawn as an image: immune to browser zoom) ----------
+_ICONS = {}
+
+
+def _make_icon(bg, glyph, fg=(255, 255, 255)):
+    """64x64 rounded-square icon with a single glyph, used as the page favicon."""
+    if bg in _ICONS:
+        return _ICONS[bg]
+    img = Image.new("RGBA", (64, 64), (0, 0, 0, 0))
+    d = ImageDraw.Draw(img)
+    d.rounded_rectangle((2, 2, 61, 61), radius=15, fill=bg)
+    try:
+        f = _font(38, True)
+        d.text((32, 33), glyph, font=f, fill=fg, anchor="mm")
+    except Exception:
+        pass
+    buf = io.BytesIO()
+    img.save(buf, "PNG")
+    _ICONS[bg] = buf.getvalue()
+    return _ICONS[bg]
+
+
 def _font(size, bold=False):
     for name in (("msyhbd.ttc", "msyh.ttc") if bold else ("msyh.ttc", "simhei.ttf")):
         try:
@@ -663,7 +685,8 @@ def ping_loop():
 # ---------- pages ----------
 MIRROR_PAGE = """<!doctype html><html><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
-<title>mirror</title><style>
+<title>本机镜像</title>
+<link rel="icon" type="image/png" href="/icon-panel.png"><style>
 html,body{margin:0;padding:0;background:#000;overflow:hidden;width:100%;height:100%}
 #rot{position:absolute;top:0;left:0;transform-origin:0 0}
 #rot img{display:block;width:100%;height:100%;object-fit:contain}</style></head>
@@ -673,7 +696,8 @@ r.style.width=h+'px';r.style.height=w+'px';r.style.transform='translateX('+w+'px
 
 PANEL_PAGE = """<!doctype html><html><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
-<title>panel</title><style>
+<title>面板</title>
+<link rel="icon" type="image/png" href="/icon-panel.png"><style>
 :root{--bg:#0a0c10;--card:#141821;--line:#232a37;--fg:#e8edf6;--dim:#8b97ab;--acc:#6cc9ff;--warm:#ffc46b}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html,body{margin:0;background:var(--bg);color:var(--fg);
@@ -774,27 +798,54 @@ tick();setInterval(tick,1000);
 
 PANEL_VIEW = """<!doctype html><html><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
-<title>panel</title><style>
-html,body{margin:0;padding:0;background:#000;overflow:hidden;width:100%;height:100%}
+<title>面板</title>
+<link rel="icon" type="image/png" href="/icon-panel.png"><style>
+html,body{margin:0;background:#000;overflow:hidden;width:100%;height:100%;box-sizing:border-box}
+body{padding-top:8vh}
 img{display:block;width:100%;height:100%;object-fit:contain}
 </style></head><body><img id="p" src="/panel.jpg">
 <script>
 var a=new Image(), el=document.getElementById('p');
 a.onload=function(){ el.src=a.src; };
 setInterval(function(){ a.src='/panel.jpg?t='+Date.now(); },1000);
+(function(){function go(){var d=document.documentElement;if(d.requestFullscreen){d.requestFullscreen().catch(function(){});}else if(d.webkitRequestFullscreen){d.webkitRequestFullscreen();}}
+document.addEventListener('click',go);document.addEventListener('touchstart',go,{passive:true});
+if(location.hash==='#fs'){go();}})();
+(function(){
+function ping(r){try{new Image().src='/wakelock?r='+r+'&t='+Date.now();}catch(e){}}
+var lock=null;
+function keep(){
+  if(!('wakeLock' in navigator)){ping('unsupported');return;}
+  navigator.wakeLock.request('screen').then(function(l){
+    lock=l; ping('ok');
+    setInterval(function(){
+      if(document.visibilityState==='visible' && l.released){
+        navigator.wakeLock.request('screen').then(function(n){lock=n;ping('reok');}).catch(function(){ping('refail');});
+      }
+    },20000);
+  }).catch(function(){ping('fail');});
+}
+keep();
+document.addEventListener('visibilitychange',function(){ if(document.visibilityState==='visible'){keep();} });
+})();
 </script></body></html>"""
 
 
 EINK_PAGE = """<!doctype html><html><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
-<title>eink panel</title><style>
-html,body{margin:0;padding:0;background:#fff;color:#000;overflow:hidden;width:100%;height:100%}
+<title>面板 墨水屏</title>
+<link rel="icon" type="image/png" href="/icon-panel.png"><style>
+html,body{margin:0;background:#fff;color:#000;overflow:hidden;width:100%;height:100%;box-sizing:border-box}
+body{padding-top:8vh}
 img{display:block;width:100%;height:100%;object-fit:contain;background:#fff}
 </style></head><body><img id="p" src="/eink.jpg">
 <script>
 var a=new Image(), el=document.getElementById('p');
 a.onload=function(){ el.src=a.src; };
 setInterval(function(){ a.src='/eink.jpg?t='+Date.now(); }, 60000);
+(function(){function go(){var d=document.documentElement;if(d.requestFullscreen){d.requestFullscreen().catch(function(){});}else if(d.webkitRequestFullscreen){d.webkitRequestFullscreen();}}
+document.addEventListener('click',go);document.addEventListener('touchstart',go,{passive:true});
+if(location.hash==='#fs'){go();}})();
 </script></body></html>"""
 
 
@@ -886,14 +937,20 @@ def eink_loop():
 
 REMOTE_PAGE = """<!doctype html><html><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
-<title>remote</title><style>
-html,body{margin:0;padding:0;background:#000;overflow:hidden;width:100%;height:100%}
+<title>ToDesk 远端</title>
+<link rel="icon" type="image/png" href="/icon-remote.png">
+<style>
+html,body{margin:0;background:#000;overflow:hidden;width:100%;height:100%;box-sizing:border-box}
+body{padding-top:8vh}
 img{display:block;width:100%;height:100%;object-fit:contain}
 </style></head><body><img id="p" src="/remote.jpg">
 <script>
 var a=new Image(), el=document.getElementById('p');
 a.onload=function(){ el.src=a.src; };
-setInterval(function(){ a.src='/remote.jpg?t='+Date.now(); }, 3000);
+setInterval(function(){ a.src='/remote.jpg?t='+Date.now(); }, 1000);
+(function(){function go(){var d=document.documentElement;if(d.requestFullscreen){d.requestFullscreen().catch(function(){});}else if(d.webkitRequestFullscreen){d.webkitRequestFullscreen();}}
+document.addEventListener('click',go);document.addEventListener('touchstart',go,{passive:true});
+if(location.hash==='#fs'){go();}})();
 </script></body></html>"""
 
 _remote = {"jpg": b"", "png": b"", "t": 0, "hwnd": 0, "note": ""}
@@ -1006,7 +1063,7 @@ def remote_loop():
                     _remote["t"] = time.time()
         except Exception as e:
             _remote["note"] = "抓取失败"
-        time.sleep(3)
+        time.sleep(1)
 
 
 class Handler(BaseHTTPRequestHandler):
@@ -1026,7 +1083,7 @@ class Handler(BaseHTTPRequestHandler):
     def do_GET(self):
         try:
             with _lock:
-                _clients[self.client_address[0]] = time.time()
+                _clients[self.client_address[0]] = {"t": time.time(), "path": self.path[:80]}
         except Exception:
             pass
         path = self.path.split("?")[0]
@@ -1067,9 +1124,35 @@ class Handler(BaseHTTPRequestHandler):
                 return self._send(b"", "image/png", 503)
             return self._send(data, "image/png")
 
+        if path in ("/icon-remote.png", "/favicon.ico"):
+            return self._send(_make_icon((15, 118, 110), "R"), "image/png")
+
+        if path == "/icon-panel.png":
+            return self._send(_make_icon((37, 99, 235), "P"), "image/png")
+
+        if path == "/wakelock":
+            try:
+                q = self.path.split("?", 1)[1] if "?" in self.path else ""
+                kv = dict(p.split("=", 1) for p in q.split("&") if "=" in p)
+                _wake["result"] = kv.get("r", "?")
+                _wake["t"] = time.time()
+            except Exception:
+                pass
+            return self._send(b"", "image/gif", 204)
+
+        if path == "/wakestatus":
+            with _lock:
+                snap = dict(_wake)
+            return self._send(json.dumps(snap, ensure_ascii=False).encode(), "application/json; charset=utf-8")
+
         if path == "/clients":
             with _lock:
-                snap = {ip: round(time.time() - ts) for ip, ts in _clients.items()}
+                snap = {}
+                for ip, rec in _clients.items():
+                    if isinstance(rec, dict):
+                        snap[ip] = {"ago": round(time.time() - rec["t"]), "path": rec.get("path", "")}
+                    else:
+                        snap[ip] = {"ago": round(time.time() - rec)}
             return self._send(json.dumps(snap, ensure_ascii=False).encode(), "application/json; charset=utf-8")
 
         if path == "/panel.jpg":
