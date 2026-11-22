@@ -956,27 +956,63 @@ if(location.hash==='#fs'){go();}})();
 _remote = {"jpg": b"", "png": b"", "t": 0, "hwnd": 0, "note": ""}
 
 
+REMOTE_EXES = tuple(
+    x.strip().lower() for x in os.environ.get(
+        "REMOTE_EXE",
+        "todesk.exe,sunloginclient.exe,rustdesk.exe,anydesk.exe,teamviewer.exe",
+    ).split(",") if x.strip()
+)
+
+_REMOTE_HOSTNAME = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]{2,30}$")
+
+
+def _remote_pids():
+    """PIDs of the remote-desktop tools. Never match by window title alone: an --app
+    window whose page is called "ToDesk ..." would otherwise capture itself."""
+    out = subprocess.run(["tasklist", "/FO", "CSV", "/NH"],
+                         capture_output=True, text=True, errors="replace").stdout
+    pids = set()
+    for line in out.splitlines():
+        parts = [p.strip('"') for p in line.split('","')]
+        if len(parts) >= 2 and parts[0].lower() in REMOTE_EXES:
+            try:
+                pids.add(int(parts[1]))
+            except ValueError:
+                pass
+    return pids
+
+
 def _find_remote_hwnd():
     import ctypes
     import ctypes.wintypes as wt
     u = ctypes.windll.user32
+    pids = _remote_pids()
     found = []
 
     @ctypes.WINFUNCTYPE(ctypes.c_bool, wt.HWND, wt.LPARAM)
     def cb(hwnd, _):
+        pid = wt.DWORD()
+        u.GetWindowThreadProcessId(hwnd, ctypes.byref(pid))
+        if pid.value not in pids:
+            return True
         n = u.GetWindowTextLengthW(hwnd)
-        if n:
-            b = ctypes.create_unicode_buffer(n + 1)
-            u.GetWindowTextW(hwnd, b, n + 1)
-            t = b.value
-            low = t.lower()
-            if "todesk" in low or "laptop-" in low or "desktop-" in low:
-                found.append((hwnd, t))
+        if not n:
+            return True
+        b = ctypes.create_unicode_buffer(n + 1)
+        u.GetWindowTextW(hwnd, b, n + 1)
+        t = b.value.strip()
+        if not t or not u.IsWindowVisible(hwnd):
+            return True
+        r = wt.RECT()
+        u.GetWindowRect(hwnd, ctypes.byref(r))
+        if (r.right - r.left) < 200 or (r.bottom - r.top) < 200:
+            return True
+        found.append((hwnd, t))
         return True
 
     u.EnumWindows(cb, 0)
-    # prefer the session window (its title is the remote machine name, not just "ToDesk")
-    found.sort(key=lambda x: (x[1].strip().lower() == "todesk",))
+    # prefer the session window: its title is the remote machine name, not just "ToDesk"
+    found.sort(key=lambda x: (0 if _REMOTE_HOSTNAME.match(x[1]) else 1, "todesk" in x[1].lower()))
     return (found[0][0], found[0][1]) if found else (None, "")
 
 

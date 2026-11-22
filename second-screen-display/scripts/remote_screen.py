@@ -88,6 +88,8 @@ def main():
                     time.sleep(8)
                 h = find_remote()
             if h:
+                if user32.IsIconic(h):
+                    user32.ShowWindow(h, SW_RESTORE)
                 r = wt.RECT()
                 user32.GetWindowRect(h, ctypes.byref(r))
                 if (r.left, r.top, r.right - r.left, r.bottom - r.top) != SECOND:
