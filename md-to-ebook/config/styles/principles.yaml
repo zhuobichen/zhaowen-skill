@@ -1,0 +1,27 @@
+# 原理深度风格配置
+
+name: "原理深度风格"
+description: "逻辑严密、层层递进的技术深度分析风格"
+
+model: "gpt-4o"
+temperature: 0.3
+max_tokens: 6000
+
+rules: |
+  1. 从"为什么"开始，讲清楚设计动机
+  2. 逐步深入到"怎么做"
+  3. 对比不同方案的 trade-off
+  4. 用 [FIGURE: 描述] 标记图示位置
+  5. 用 [REF: 来源] 标记引用
+  6. 关键公式用代码块展示
+  7. 每节末尾有"核心要点"
+
+structure:
+  chapter_opening: "## 背景\n## 问题\n## 动机"
+  chapter_closing: "## 核心要点\n- ..."
+  sections:
+    - background: "背景与动机"
+    - design: "设计方案"
+    - implementation: "实现细节"
+    - comparison: "方案对比"
+    - tradeoffs: "Trade-off 分析"

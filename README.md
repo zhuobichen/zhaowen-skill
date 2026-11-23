@@ -62,6 +62,7 @@
 | Zotero 文献管理 | [`zotero/`](zotero/) | 用 Zotero 做文献管理、PDF 阅读、引用生成与论文写作：按主题/作者检索条目、读全文与批注、导出引用、配 LaTeX 出参考文献 |
 | 只读副屏 | [`second-screen-display/`](second-screen-display/) | 把旧手机/墨水屏/实体副屏做成**只显示不操作**的第二块屏：本机一个 HTTP 服务喂画面（仪表盘/远端桌面/电子书），设备端只负责显示。涵盖 USB 反向隧道（adb reverse，不依赖网络）、局域网 HTTP、mDNS 固定名字、PrintWindow 抓远端窗口（**最小化即黑图**）、DXGI 与混合显卡下的"假黑"、MIUI 安装/输入门禁、墨水屏转载与屏保路径、CursorKeeper 锁鼠标（自写 ClipCursor 必须 DPI 感知，否则桌面点不动） |
 | Zotero 数据库直连 | [`zotero-db/`](zotero-db/) | 直接操作 Zotero 本地 SQLite：批量导入 PDF、生成 citation key、建全文索引、清理孤儿条目；Zotero API 不可用时的兜底通道 |
+| AI 炼书（md-to-ebook） | [`md-to-ebook/`](md-to-ebook/) | 把 Markdown 素材 + AI 逐章写作 + ReportLab 排版做成一本书：`book.yaml` 写 meta/source/chapters，`scripts/cli.py write` 逐章生成、`build` 合并去重出中文 PDF（A4、simhei、CJK 字间距）。含三本实战配置（Claude Code / IM 工具 / 数字人文）与三种风格。**关键**：源项目的 md2book 七步流水线（analyze/plan/refine/review/export）大部分是 `not_implemented` 占位，本 skill 用的是真正跑通的 write/build/run 链路；已修掉 API key 硬编码、work_dir 硬编码、Windows GBK 控制台遇 emoji 崩溃三个坑 |
 
 ## 借鉴自 Tiangong AI Skills
 

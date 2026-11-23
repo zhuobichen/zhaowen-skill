@@ -269,6 +269,14 @@
       "upstream": null
     },
     {
+      "name": "md-to-ebook",
+      "path": "md-to-ebook/",
+      "display_name": "MD-to-Ebook",
+      "short_description": "AI chapter-by-chapter book writing with ReportLab Chinese PDF typesetting",
+      "ui_metadata": "agents/openai.yaml",
+      "upstream": null
+    },
+    {
       "name": "memory-organizer",
       "path": "memory-organizer/",
       "display_name": "Memory Organizer",

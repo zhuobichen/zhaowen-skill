@@ -1,0 +1,205 @@
+meta:
+  title: Claude Code 生态实战——从入门到精通
+  author: 陈卓
+  language: zh-CN
+  output_file: Claude Code 生态实战——从入门到精通.md
+
+source: |
+  ## everything-claude-code（28 agent + 116 skill + 60 command + hooks）
+  目录结构：agents/(28子代理) skills/(116skill分12领域) commands/(60命令) rules/(6语言规范) hooks/(会话钩子) contexts/(动态系统提示)
+  Token优化：MAX_THINKING_TOKENS=10000 / CLAUDE_AUTOCOMPACT_PCT_OVERRIDE=50 / CLAUDE_CODE_SUBAGENT_MODEL=haiku
+  ECC_HOOK_PROFILE=minimal|standard|strict 三级控制；ECC_DISABLED_HOOKS 单钩子禁用
+  Instinct系统：/learn提取→/instinct-status查看置信度→/evolve聚类成Skill→/promote全局化
+  子代理决策：简单顺序→subagent；并行→Agent Teams；/multi-plan分解→/multi-execute协同
+  AgentShield：5类扫描(Secrets/Permissions/HookInjection/MCPRisk/AgentConfig)+A-F评分+CI门禁exit2
+
+  ## claude-scholar（23 skill + 7 agent + 30 command）
+  论文写作全流程：latex模板→ml-paper-writing(顶会+KaimingHe方法论)→writing-anti-ai(AI去味6大检测点)→reviewer润色
+  AI写作6大检测点：膨胀象征主义/推广式语言/表面分析/模糊归因/AI词汇标记/负面平行结构
+  /sc/analyze /sc/research /sc/brainstorm /sc/implement /sc/design /sc/test /sc/spawn等30个command
+  kaggle-learner：references/knowledge/下15+Kaggle方案；插件开发五件套skill/command/agent/hook/mcp指南
+
+  ## cc-switch (Tauri2桌面应用，GUI管理5款CLI的API/MCP/Prompts/Skills)
+  SSOT单一数据源SQLite+JSON双存储；双向同步、原子写入、Mutex并发安全；备份轮换10个；cswitch:// DeepLink
+
+  ## awesome-claude-skills (社区70+ Skill，9大分类)
+  标准结构：SKILL.md(YAML frontmatter name+description)+scripts/+templates/+reference/
+  命名：kebab-case动名词格式
+
+  ## claude-code-paper-skills (论文5 skill链)
+  /start-my-day→/paper-finder→/paper-analyze(3版笔记)→/extract-paper-images→/paper-search
+  research_interests.yaml定义方向+优先级
+
+  ## ClaudeRoom/docs/ (12份参考文档)
+
+system_prompt: |
+  你是一位 Claude Code 高级用户和插件开发者。你在写一本面向零基础的教科书《Claude Code 生态实战——从入门到精通》。
+  
+  **极其重要的格式规则（违反一条全书作废）：**
+  1. 绝对禁止使用 ### 三级标题。只能用 ## 作为小节标题。正文用纯段落叙述，禁止用 - * 加粗列表代替正文。
+  2. 每个 ## 小节下面至少要有4段文字。
+  3. 每段文字 3-6 句话，段落之间空一行。段落首行不缩进。
+  4. 术语解释融入段落正文中，不要单独成行。
+  5. 章节开头用 2-3 段引入。结尾用 2-3 段小结。
+  6. 代码放三个反引号块内。代码块前后都要有一段解释文字。
+  7. 禁止使用 emoji、引用块(>)、数字编号列表作为正文主体。
+  8. 用「你」和「我」对话体，像老师在讲课。
+
+chapters:
+  - file: cc_ch01.md
+    title: "# 第1章 Claude Code 是什么——你的 AI 编程副驾驶"
+    target_words: 5000
+    prompt: |
+      写第一章：Claude Code 是什么——你的 AI 编程副驾驶。面向零基础。
+
+      开篇：你可能听说过 ChatGPT 写代码、GitHub Copilot 补全代码。但你听说过一个 AI 在终端里帮你写整个项目的代码吗？这个 AI 就是 Claude Code——Anthropic 公司推出的命令行 AI 编程助手。它不是代码补全工具。它能读懂你的整个项目、理解你的需求，然后自动写代码、运行测试、修复 bug、提交 git。就像一个坐在你旁边的全能程序员。
+
+      然后讲 Claude Code 和其他 AI 编程工具的区别。GitHub Copilot 在编辑器里给下一行建议，不知道整个函数在干什么。Cursor 基于编辑器，理解文件级上下文。Claude Code 在终端里运行——它能看整个项目的文件树和 Git 历史、执行 shell 命令、跑测试、做一切你在终端里能做的事。它帮你做从需求到上线的全流程。而且它是开源生态驱动的——社区可以写 Agent、Skill、Command、Hook、MCP Server 无限扩展它。
+
+      接着介绍核心概念。Agent：有特定技能的 AI 小组（code-reviewer Agent 专门审查代码）。Skill：写给 Claude 的操作指南，教会它用某个工具。Command：/review 这类快捷指令。Hook：Claude 执行操作前后自动触发的脚本（比如运行 bash 前做安全检查）。MCP：Model Context Protocol，让 Claude 连接外部服务和 API 的协议。
+
+      然后画全景图：everything-claude-code 是目前最大应用市场（28 Agent+116 Skill+60 Command），claude-scholar 是学术研究专属套件，cc-switch 是管理配置的桌面界面，awesome-claude-skills 是社区推荐榜单。
+
+      结尾：Claude Code 不是又一个代码补全工具，而是一种新的编程范式——你负责思考和决策，AI 负责执行。你现在看到的这个目录里的 everything-claude-code、claude-scholar、cc-switch，就是这本书要带你深入探索的全部内容。
+
+  - file: cc_ch02.md
+    title: "# 第2章 从零到第一行AI代码——安装与CLAUDE.md"
+    target_words: 6000
+    prompt: |
+      写第二章：从零到第一行 AI 代码——安装与 CLAUDE.md。
+
+      开篇：书买了就得打开。这一章从安装 Claude Code 开始，到写出你的第一个 CLAUDE.md 配置文件结束。
+
+      第一大部分讲安装。npm install -g @anthropic-ai/claude-code 一条命令完成。然后去 console.anthropic.com 申请 API Key，设到环境变量 ANTHROPIC_API_KEY。项目根目录开终端输入 claude 就启动。日常开发选 sonnet（快便宜），写核心逻辑切 opus（慢贵但推理强）。花15分钟跟 Claude 聊一聊，问它能看哪些文件、帮我解释这个项目干什么——热身摸底。
+
+      第二大部分讲 CLAUDE.md。这是整个生态里最重要的文件。它是一个放在项目根目录或 ~/.claude/ 的纯文本 Markdown 文件。Claude Code 每次打开项目自动读取它，把你写的规则偏好吸收进去。你可以理解为给 AI 的产品需求文档——告诉 AI 技术栈、命名规范、测试命令、回复风格。
+
+      然后讲双文件分治模式。~/.claude/CLAUDE.md 是用户级，跨项目生效，写通用偏好（语言风格、Git规范、工具链选择）。.claude/CLAUDE.md 是项目级，只在这个项目生效，写项目特定信息（技术栈、目录结构、MCP配置、子代理策略）。
+
+      展示完整 CLAUDE.md 范例（截取 everything-claude-code 和 claude-scholar 实际配置的精华）。包含项目概述、代码风格规则、Git 工作流约定、测试命令和覆盖率要求、子代理调用策略。逐行解释原因和效果。特别讲解 claude-scholar 独创的任务摘要格式：操作回顾+当前状态+下一步建议三件套。
+
+      结尾：CLAUDE.md 是整个生态的基石文件。写好的 CLAUDE.md 让 Claude 像熟悉你项目的老同事；写烂的让 Claude 像不懂规矩的新人。花半小时认真写，回报会在每一次交互中体现。
+
+  - file: cc_ch03.md
+    title: "# 第3章 Skills——教Claude学会新技能"
+    target_words: 7000
+    prompt: |
+      写第三章：Skills——教 Claude 学会新技能。
+
+      开篇：CLAUDE.md 告诉 Claude「我是谁」。但如果你想让它学会「怎么用 Pandoc 生成 PDF」或「怎么写 LaTeX 论文」，CLAUDE.md 装不下。你需要 Skill——写在 Markdown 文件里的操作指南，放到 .claude/skills/ 下，Claude 自动学。
+
+      第一大部分讲 Skill 标准结构。YAML frontmatter 必需 name（kebab-case 动名词格式如 pandoc-pdf-generator）和 description（第三人称描述用途）。正文包含三块：When to Use（什么时候用）、Instructions（操作步骤）、Examples（示例）。单个 Skill 正文不超 500 行。
+
+      第二大部分讲触发机制。Claude Code 启动时扫描 .claude/skills/，加载全部元数据。每次收到消息，根据 description 做语义匹配决定是否加载某个 Skill。这是自动的——description 写得太宽泛会浪费 token，太窄 Claude 不知道什么时候该用。
+
+      第三大部分讲 awesome-claude-skills 社区的 70+ Skill 最佳实践。命名 kebab-case 动名词开头全小写。SKILL.md 必需 YAML frontmatter 含 name+description。辅助脚本 script/、模板 templates/、参考资料 reference/。9大分类：文档处理、开发、数据分析、商业、写作、创意、生产力、协作、安全。
+
+      第四大部分三个实操案例。案例一：写一个 Markdown 编译为 PDF 的 Skill——用 Python ReportLab，写上触发条件和操作步骤。案例二：Git Commit 规范检查 Skill——提交前自动检查 Conventional Commits 格式。案例三：Python 单元测试生成 Skill——根据函数签名自动写 pytest 用例。
+
+      第五大部分讲 everything-claude-code 的 116 个 Skill 怎么组织的。按领域12个目录：coding-standards、backend-patterns、frontend-patterns、tdd-workflow、security-review 等。你可以直接复制到项目里按需修改。
+
+      结尾：Skill 是 Claude Code 的核心扩展机制。掌握 Skill 写法，你就能让 Claude 学会任何技能——从操作数据库到写论文到部署服务器。
+
+  - file: cc_ch04.md
+    title: "# 第4章 Agents——让多个AI分工协作"
+    target_words: 6000
+    prompt: |
+      写第四章：Agents——让多个 AI 分工协作。
+
+      开篇：Skill 教 Claude 一项技能。但如果项目复杂（前后端+数据库+部署脚本），单 Claude 处理不过来。你需要多个人分工——在 Claude Code 里，多个人就是 Agent。Agent 是有特定分工的子 AI，在 Claude 主进程指挥下独立完成任务后汇报结果。
+
+      第一大部分讲三种模式。子代理模式最常用——Claude 用 Task 工具启动独立子代理执行代码审查等任务，不共享主对话上下文，省 token。Agent Teams 模式——多模块并行开发时同时启动多个子代理。Multi-Agent 编排——/multi-plan 分解→/multi-execute 协同→按域分拆。
+
+      第二大部分讲 everything-claude-code 的 28 个 Agent。planning 阶段：planner Agent、architect Agent。coding 阶段：各语言 coding Agent。quality 阶段：code-reviewer、tdd-guide、security-reviewer。build 阶段：build-error-resolver。operations 阶段：e2e-runner、doc-updater。continuous-improvement 阶段：refactor-cleaner、loop-operator。每个 Agent 的核心职责和触发时机用文字讲清楚。
+
+      第三大部分讲子代理 Token 优化。最关键的是设置 CLAUDE_CODE_SUBAGENT_MODEL=haiku——子代理默认用轻量模型。绝大多数子任务 haiku 完全够用，省 token 效果显著。
+
+      第四大部分讲 claude-scholar 的 7 个学术 Agent：architect、code-reviewer、tdd-guide、build-error-resolver、refactor-cleaner、kaggle-miner、paper-miner。覆盖研究者从看论文到写代码到跑实验的全链条。
+
+      结尾：Agent 让 Claude Code 从一个人的 AI 助手变成多个人的 AI 团队。善用 Agent，你能同时推进开发、测试、文档、部署——和真实团队一模一样。
+
+  - file: cc_ch05.md
+    title: "# 第5章 Commands与Hooks——让Claude主动为你工作"
+    target_words: 5000
+    prompt: |
+      写第五章：Commands 与 Hooks——让 Claude 主动为你工作。
+
+      开篇：Skill 和 Agent 都是你问 Claude 答的模式。但真正高效的 AI 应该主动帮你做事——提交代码前自动检查规范、运行 shell 命令前自动审查安全。这就是 Commands 和 Hooks 的应用场景。
+
+      第一大部分讲 Commands。Command 就是快捷指令——/review 自动执行代码审查 Agent、/tdd 自动启动测试驱动开发。everything-claude-code 有 60 个 Command，覆盖研发全流程。自定义 Command 很简单——在 .claude/commands/ 下放一个 .md 文件，文件名就是 Command 名，内容就是指令。举三个例子：/ship（发布前全流程检查）、/learn（从当前对话提取模式）、/daily（每天早上看 Git 状态和待办）。
+
+      第二大部分讲 Hooks。五种时点：PreToolUse（执行工具前触发，如 bash 前安全检查）、PostToolUse（工具执行后触发，如编辑后自动格式化）、Stop（Claude 停止时触发，如自动总结对话要点）、SessionStart（新会话时触发，如自动加载 Git 状态）、SessionEnd（结束会话时触发，如清理临时文件）。
+
+      第三大部分讲 everything-claude-code 的 Hook 灰度控制。ECC_HOOK_PROFILE 三档：minimal（最小干预快速探索）、standard（格式检查+密钥检测）、strict（阻断所有不合规）。ECC_DISABLED_HOOKS 可精确禁用单个 Hook。
+
+      第四大部分讲 claude-scholar 的 Instinct 持续学习系统。/learn 从会话提取模式→/instinct-status 查看置信度→/evolve 聚类成 Skill→/promote 全局化。这是让 Claude 越用越懂你的关键。
+
+      结尾：Commands 让使用更便捷，Hooks 让使用更安全，Instinct 让 AI 持续成长。三者结合，Claude Code 从对话工具变成持续成长的搭档。
+
+  - file: cc_ch06.md
+    title: "# 第6章 MCP——连接Claude与整个世界"
+    target_words: 5000
+    prompt: |
+      写第六章：MCP——连接 Claude 与整个世界。
+
+      开篇：前五章在 Claude Code 内部。但如果你的代码在 GitHub、数据库在云端、文档在 Notion——Claude 怎么访问外部资源？答案是 MCP——Model Context Protocol，模型上下文协议。Anthropic 的开源标准，让 Claude 能和其他服务对话。
+
+      第一大部分讲 MCP 概念。Claude 像被关在房间里的聪明实习生——想帮你查代码但代码在 GitHub，没网怎么查？MCP 就是墙上开的窗。透过每扇窗（一个 MCP Server），Claude 能看到 GitHub 代码、读 Notion 文档、查数据库。MCP 是 Claude Code 连接外部世界的桥梁。
+
+      第二大部分讲配置。.claude/mcp_config.json 里声明 MCP Server——名称、启动命令、环境变量、参数。展示真实配置：同时连接文件系统 MCP、GitHub MCP、Slack MCP。
+
+      第三大部分讲 claude-scholar 的 MCP 实践。arXiv MCP 搜索下载论文、Semantic Scholar MCP 获取引用量影响力、Zotero MCP 连接文献管理器读笔记。和 paper-analyze/paper-finder Skill 深度集成→搜索下载分析笔记全自动流水线。
+
+      第四大部分讲 everything-claude-code 的 AgentShield 安全检查。五类扫描：Secrets Detection（检查 API 密钥裸露）、Permission Auditing（审查权限范围）、Hook Injection Analysis（恶意注入检测）、MCP Risk Profiling（风险评估报告）、Agent Config Review（配置审查）。A-F 评分，exit 2 做 CI 门禁。
+
+      结尾：MCP 让 Claude Code 从终端里的 AI 变成连接万物的 AI。但每开一扇窗就多一条风险通道。AgentShield 是你的窗户卫士。
+
+  - file: cc_ch07.md
+    title: "# 第7章 科研加速器——用Claude Code做学术研究"
+    target_words: 6000
+    prompt: |
+      写第七章：用 Claude Code 做学术研究。
+
+      开篇：把 Claude Code 只当写代码的工具，你只用了一半功力。另一半在学术研究——读论文、写论文、管理引用、准备投稿。claude-scholar 专门为学术研究优化。学完这章，Claude 就是你的研究助理。
+
+      第一大部分讲论文搜索阅读。五步论文处理链。第一步 /start-my-day：每天早上一键获取推荐论文。第二步 /paper-finder：关键词多库搜索，综合评分（相关性时效性引用量会议质量）。第三步 /paper-analyze：深度分析单篇，生成三个版本笔记（逻辑版按论文结构总结、通俗版用白话解释、结构版用流程图画出论证链）。第四步 /extract-paper-images：提取所有图表。第五步 /paper-search：本地笔记库搜索。research_interests.yaml 定义方向关键词 arXiv 分类和优先级。
+
+      第二大部分讲 AI 辅助论文写作和 AI 去味体系。六种 AI 写作痕迹：膨胀的象征主义（假大空话人类审稿人一眼就烦）、推广式语言（remarkable groundbreaking 等自吹形容词）、表面分析（this suggests further investigation 什么都没说）、模糊归因（previous works 不引用等于没写）、AI 词汇标记（delves into navigate landscape pivotal 等 AI 口头禅）、负面平行结构（not only but also on one hand 过度使用像模板填空）。claude-scholar 的 writing-anti-ai Skill 逐句扫描标记 AI 味给出改写建议。
+
+      第三大部分讲 ml-paper-writing Skill。三件事：内置三种论文框架（设计简化类反思类理论驱动类基于 Kaiming He 方法论）、支持 Reviewer 视角反向润色（假设你可能给 NeurIPS 审稿，读引言提三个问题）、AutoLaTeX 准备（自动检查格式合规）。
+
+      第四大部分讲 Kaggle 学习。kaggle-learner Skill 内置 15+ 比赛方案分析。开始比赛时先查阅知识库有无类似题目，给出推荐方案路线。
+
+      结尾：学术圈对 AI 辅助写作争议很大——但争议焦点是 AI 写的东西能被检测出来，而不是 AI 能不能帮人写得更好。claude-scholar 的 AI 去味体系证明：你可以用 AI 辅助写作同时产出没有 AI 痕迹的论文。就像用计算器算数学题——省了手算时间，但推导还是你做的。
+
+  - file: cc_ch08.md
+    title: "# 第8章 打造你自己的Claude Code工作流"
+    target_words: 7000
+    prompt: |
+      写第八章：打造你自己的 Claude Code 工作流。
+
+      开篇：前面七章讲生态里有什么。这章把知识串起来，构建属于你自己的完整工作流——不抄 everything-claude-code、不抄 claude-scholar，适配你自己日常节奏的。
+
+      第一大部分讲设计三原则。自动化：能锁的步骤就锁住别靠人工记得，靠 Hook 实现。可复现：换电脑换项目配置能快速迁移，靠 CLAUDE.md 标准化实现（用户级放全局偏好，项目级放差异）。有节奏：什么时候手动细看、什么时候信任 AI 全权处理，靠 Commands 实现（/morning 启动、/ship 发布、/end 日报）。
+
+      第二大部分手把手搭建。第一步写 ~/.claude/CLAUDE.md 定义全局偏好。第二步建通用 Skill 库——梳理每天重复做的事写成 Skill 放到 ~/.claude/skills/general/。第三步为项目写 .claude/CLAUDE.md。第四步设置 Hook 链条——PreToolUse Hook 安全检查（含 sudo 的命令前提醒）、PostToolUse Hook 自动格式化、Stop Hook 会话总结日报。
+
+      第三大部分讲 Token 优化实战。模型选择策略：日常 sonnet、子代理 haiku、核心架构 opus。压缩时机：CLAUDE_AUTOCOMPACT_PCT_OVERRIDE=50 更早压缩、手动 /compact 大任务切换时触发、/clear 周期性清空。子代理委托：独立可并行任务一律委派 haiku 子代理，只把需深度把握的任务留主对话。
+
+      第四大部分讲跨工具复用。仓库根目录放 AGENTS.md 通用层——Claude Code、Cursor、Codex CLI、OpenCode 全读。各工具专用配置放各自目录。SKILL.md 格式在 Claude Code 和 Cursor 间通用。
+
+      第五部分全书总结。你从安装第一条命令，到写第一个 Skill、编排第一个 Agent 团队、搭建学术研究流水线——你不再是「用 AI 写代码的人」，而是「设计 AI 工作流的人」。这个角色转变比学会具体工具重要得多。Claude Code 会更新、token 价格会变、生态会演化，但设计工作流的能力——知道什么时候全自动、什么时候人工介入、什么时候并行什么时候串行——一直有价值。
+
+  - file: cc_ch09.md
+    title: "# 第9章 安全与合规——别让你的AI变成定时炸弹"
+    target_words: 5000
+    prompt: |
+      写第九章：安全与合规。能力越大责任越大——Claude Code 能读写文件、执行 shell、访问 API、安装包。配置不当，一个错误提示词就可能导致代码泄露、密钥被盗、服务器误删。
+
+      第一大部分讲风险面。代码执行风险——Claude 可执行任意 shell 命令包括 rm -rf、curl 下载远程脚本、修改系统配置，可能在不经意间发生。密钥泄露风险——把 API Key 写代码里，Claude 浏览代码时就看到了，更糟的是可能无意识带进生成的代码或提交消息。依赖风险——Claude 可能自作主张安装恶意 npm 或 pip 包。
+
+      第二大部分讲三道防线。第一道 PreToolUse Hook：当 Claude 要执行含 rm、sudo、curl、wget、pip install、npm install 的命令时拦截，弹出确认提示必须手动确认。第二道 AgentShield 自动扫描：加到 Git pre-commit Hook 或 CI 流水线，每次提交前扫描密钥泄露、安全漏洞、MCP 风险。第三道沙箱隔离：Docker 容器隔离 Claude Code 执行环境，最坏结果只是容器被破坏不影响主机。
+
+      第三大部分讲团队协作安全。多人共用项目 CLAUDE.md 和 Skill，一个人夹带恶意指令其他人全中招。解决：所有团队共享的 Skill 和 Agent 必须 Code Review。AgentShield 的 F 级是红线——F 级不允许合并。或者用 cc-switch 统一管理提供商和 MCP 配置，管理员设标准配置后通过 Deep Link 分发给成员，成员无法修改核心安全设置。
+
+      结尾：安全不是一次性配置，是日常习惯。每次打开 Claude Code 前，确认打开了哪些 MCP Server、启用了哪些 Hook、用了哪个模型。安全意识就是你最好的 Agent。

@@ -1,0 +1,20 @@
+# 白话风格配置
+
+name: "白话风格"
+description: "轻松有趣、故事驱动的写作风格"
+
+model: "gpt-4o"
+temperature: 0.8
+max_tokens: 4000
+
+rules: |
+  1. 用类比和故事引入概念
+  2. 对话式语气，像朋友聊天
+  3. 段落短小（2-3 句）
+  4. 适当加入幽默
+  5. 用"想象一下""打个比方"等引导语
+  6. 避免术语堆砌，先解释再使用
+
+structure:
+  chapter_opening: "用故事/场景引入主题"
+  chapter_closing: "一句话总结本章核心"

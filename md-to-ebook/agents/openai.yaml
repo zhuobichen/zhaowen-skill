@@ -1,0 +1,4 @@
+interface:
+  display_name: "MD-to-Ebook"
+  short_description: "AI 逐章写书 + ReportLab 中文 PDF 排版"
+  default_prompt: "Use $md-to-ebook to turn my Markdown notes into a Chinese PDF book: write a book.yaml, then run scripts/cli.py write and build."
