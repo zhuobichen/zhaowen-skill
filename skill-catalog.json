@@ -2,7 +2,7 @@
   "schema_version": 1,
   "repository": "zhaowen-skill",
   "purpose": "Machine-readable inventory for Skill discovery, validation, and upstream tracking.",
-  "generated_from": "directory scan plus agents/openai.yaml",
+  "generated_from": "directory scan plus agents/openai.yaml; index_only 列出只给上游链接、不在本仓库存放内容的 skill",
   "skills": [
     {
       "name": "abacas-cloud-ops",
@@ -26,7 +26,7 @@
       "display_name": "Academic Plotting",
       "short_description": "Publication-quality ML paper figures: architecture diagrams and data-driven charts",
       "ui_metadata": null,
-      "upstream": null
+      "upstream": "Orchestra-Research/AI-Research-SKILLs@773a52944ba4"
     },
     {
       "name": "agent-dialog_management",
@@ -34,6 +34,14 @@
       "display_name": "Agent Dialog Management",
       "short_description": "Find, inspect, export, and resume agent sessions",
       "ui_metadata": "agents/openai.yaml",
+      "upstream": null
+    },
+    {
+      "name": "air-journal-intro-writing",
+      "path": "air-journal-intro-writing/",
+      "display_name": "Air Journal Intro Writing",
+      "short_description": "Write environmental-journal introductions from segmented evidence",
+      "ui_metadata": null,
       "upstream": null
     },
     {
@@ -61,6 +69,14 @@
       "upstream": "Tencent/BrowserSkill (via bsk bundled snapshot; see UPSTREAM_SOURCES.md)"
     },
     {
+      "name": "bsk-js-extract",
+      "path": "bsk-js-extract/",
+      "display_name": "BSK JS Extract",
+      "short_description": "Read a whole page with one JS evaluate instead of step-by-step clicking",
+      "ui_metadata": null,
+      "upstream": null
+    },
+    {
       "name": "claude-code-message",
       "path": "claude-code-message/",
       "display_name": "Claude Code Message",
@@ -73,86 +89,6 @@
       "path": "claude-usage-billing/",
       "display_name": "Claude Usage & Billing",
       "short_description": "Break down Claude Code tokens and cost by task and subagent into an expandable HTML report",
-      "ui_metadata": "agents/openai.yaml",
-      "upstream": null
-    },
-    {
-      "name": "cnki-advanced-search",
-      "path": "cnki-advanced-search/",
-      "display_name": "CNKI Advanced Search",
-      "short_description": "Run filtered CNKI searches by fields and dates",
-      "ui_metadata": "agents/openai.yaml",
-      "upstream": null
-    },
-    {
-      "name": "cnki-download",
-      "path": "cnki-download/",
-      "display_name": "CNKI Paper Download",
-      "short_description": "Download a CNKI paper PDF or CAJ with login",
-      "ui_metadata": "agents/openai.yaml",
-      "upstream": null
-    },
-    {
-      "name": "cnki-export",
-      "path": "cnki-export/",
-      "display_name": "CNKI Citation Export",
-      "short_description": "Export CNKI citations to Zotero, RIS, or GB",
-      "ui_metadata": "agents/openai.yaml",
-      "upstream": null
-    },
-    {
-      "name": "cnki-journal-index",
-      "path": "cnki-journal-index/",
-      "display_name": "CNKI Journal Indexing",
-      "short_description": "Check CNKI journal indexing and evaluation data",
-      "ui_metadata": "agents/openai.yaml",
-      "upstream": null
-    },
-    {
-      "name": "cnki-journal-search",
-      "path": "cnki-journal-search/",
-      "display_name": "CNKI Journal Search",
-      "short_description": "Find journals by name, ISSN, or CN number",
-      "ui_metadata": "agents/openai.yaml",
-      "upstream": null
-    },
-    {
-      "name": "cnki-journal-toc",
-      "path": "cnki-journal-toc/",
-      "display_name": "CNKI Journal Table of Contents",
-      "short_description": "Browse journal issues and download TOC PDFs",
-      "ui_metadata": "agents/openai.yaml",
-      "upstream": null
-    },
-    {
-      "name": "cnki-navigate-pages",
-      "path": "cnki-navigate-pages/",
-      "display_name": "CNKI Results Navigation",
-      "short_description": "Paginate or sort current CNKI search results",
-      "ui_metadata": "agents/openai.yaml",
-      "upstream": null
-    },
-    {
-      "name": "cnki-paper-detail",
-      "path": "cnki-paper-detail/",
-      "display_name": "CNKI Paper Details",
-      "short_description": "Extract metadata from a CNKI paper page",
-      "ui_metadata": "agents/openai.yaml",
-      "upstream": null
-    },
-    {
-      "name": "cnki-parse-results",
-      "path": "cnki-parse-results/",
-      "display_name": "CNKI Results Parser",
-      "short_description": "Parse CNKI results into structured paper records",
-      "ui_metadata": "agents/openai.yaml",
-      "upstream": null
-    },
-    {
-      "name": "cnki-search",
-      "path": "cnki-search/",
-      "display_name": "CNKI Paper Search",
-      "short_description": "Search CNKI for papers by keyword",
       "ui_metadata": "agents/openai.yaml",
       "upstream": null
     },
@@ -213,12 +149,20 @@
       "upstream": null
     },
     {
+      "name": "dsh_messaging",
+      "path": "dsh_messaging/",
+      "display_name": "DSH Messaging",
+      "short_description": "Drive DeepSeek Harness from the CLI: send, resume sessions, get usage",
+      "ui_metadata": null,
+      "upstream": null
+    },
+    {
       "name": "hv-analysis",
       "path": "hv-analysis/",
       "display_name": "Horizontal-Vertical Analysis",
       "short_description": "Perform structured horizontal-vertical deep research",
       "ui_metadata": "agents/openai.yaml",
-      "upstream": null
+      "upstream": "KKKKhazix/khazix-skills@76fc0f8e8245"
     },
     {
       "name": "job-form-autofill",
@@ -241,8 +185,8 @@
       "path": "khazix-writer/",
       "display_name": "Khazix Long-Form Writer",
       "short_description": "Write long-form Chinese public-account articles",
-      "ui_metadata": "agents/openai.yaml",
-      "upstream": null
+      "ui_metadata": null,
+      "upstream": "KKKKhazix/khazix-skills@76fc0f8e8245"
     },
     {
       "name": "large-doc-ai-review",
@@ -306,7 +250,7 @@
       "display_name": "Nature Figure",
       "short_description": "Submission-grade scientific figures for Nature-family venues in Python or R",
       "ui_metadata": null,
-      "upstream": null
+      "upstream": "Yuan1z0825/nature-skills@c6701dbea29a (snapshot v2.1.0)"
     },
     {
       "name": "obsidian-wiki-workflow",
@@ -341,6 +285,14 @@
       "upstream": null
     },
     {
+      "name": "principle-dissection",
+      "path": "principle-dissection/",
+      "display_name": "Principle Dissection",
+      "short_description": "Break your own artifact into its fundamentals and teach them from zero",
+      "ui_metadata": null,
+      "upstream": null
+    },
+    {
       "name": "process-daily-pm25",
       "path": "process-daily-pm25/",
       "display_name": "Daily PM2.5 Processor",
@@ -354,6 +306,14 @@
       "display_name": "Prompt Auditor",
       "short_description": "Audit PPT prompts against source code and facts",
       "ui_metadata": "agents/openai.yaml",
+      "upstream": null
+    },
+    {
+      "name": "pup-cleanup",
+      "path": "pup-cleanup/",
+      "display_name": "PUP Cleanup",
+      "short_description": "Find and remove adware and pop-up pushers, with autorun and vendor tracing",
+      "ui_metadata": null,
       "upstream": null
     },
     {
@@ -413,18 +373,18 @@
       "upstream": "bradautomates/claude-video@03ceb42f7fa2c4439aca01752118044baabffb8f"
     },
     {
-      "name": "wechat_mp_ops",
-      "path": "wechat_mp_ops/",
-      "display_name": "WeChat Official Account Ops",
-      "short_description": "Edit and validate WeChat Official Account drafts",
-      "ui_metadata": "agents/openai.yaml",
-      "upstream": null
-    },
-    {
       "name": "wechat-claude-code",
       "path": "wechat-claude-code/",
       "display_name": "WeChat Claude Code Bridge",
       "short_description": "Chat with Claude Code through WeChat",
+      "ui_metadata": "agents/openai.yaml",
+      "upstream": "Wechat-ggGitHub/wechat-claude-code@50143077c012"
+    },
+    {
+      "name": "wechat_mp_ops",
+      "path": "wechat_mp_ops/",
+      "display_name": "WeChat Official Account Ops",
+      "short_description": "Edit and validate WeChat Official Account drafts",
       "ui_metadata": "agents/openai.yaml",
       "upstream": null
     },
@@ -443,6 +403,110 @@
       "short_description": "Drive Zhihu in the real browser: search, read questions and answers, vote/save/follow, read the hot list, post ideas (publish actions always confirmed first)",
       "ui_metadata": null,
       "upstream": null
+    },
+    {
+      "name": "zotero",
+      "path": "zotero/",
+      "display_name": "Zotero",
+      "short_description": "Manage Zotero bibliography, PDFs, citations and LaTeX references",
+      "ui_metadata": null,
+      "upstream": null
+    },
+    {
+      "name": "zotero-db",
+      "path": "zotero-db/",
+      "display_name": "Zotero DB",
+      "short_description": "Operate the local Zotero SQLite database directly",
+      "ui_metadata": null,
+      "upstream": null
+    },
+    {
+      "name": "zotero-research",
+      "path": "zotero-research/",
+      "display_name": "Zotero Research",
+      "short_description": "Full-text search your own Zotero library and cite the passages",
+      "ui_metadata": null,
+      "upstream": null
+    },
+    {
+      "name": "zotero-word-citations",
+      "path": "zotero-word-citations/",
+      "display_name": "Zotero Word Citations",
+      "short_description": "Turn plain author-year text into live Zotero fields in Word",
+      "ui_metadata": null,
+      "upstream": null
+    }
+  ],
+  "index_only": [
+    {
+      "name": "cnki-search",
+      "upstream": "cookjohn/cnki-skills@20d65f660456",
+      "license": "none",
+      "reason": "上游无 LICENSE，不再分发副本",
+      "install": "git clone https://github.com/cookjohn/cnki-skills && cp -r skills/ agents/ .claude/"
+    },
+    {
+      "name": "cnki-advanced-search",
+      "upstream": "cookjohn/cnki-skills@20d65f660456",
+      "license": "none",
+      "reason": "上游无 LICENSE，不再分发副本",
+      "install": "git clone https://github.com/cookjohn/cnki-skills && cp -r skills/ agents/ .claude/"
+    },
+    {
+      "name": "cnki-export",
+      "upstream": "cookjohn/cnki-skills@20d65f660456",
+      "license": "none",
+      "reason": "上游无 LICENSE，不再分发副本",
+      "install": "git clone https://github.com/cookjohn/cnki-skills && cp -r skills/ agents/ .claude/"
+    },
+    {
+      "name": "cnki-download",
+      "upstream": "cookjohn/cnki-skills@20d65f660456",
+      "license": "none",
+      "reason": "上游无 LICENSE，不再分发副本",
+      "install": "git clone https://github.com/cookjohn/cnki-skills && cp -r skills/ agents/ .claude/"
+    },
+    {
+      "name": "cnki-journal-index",
+      "upstream": "cookjohn/cnki-skills@20d65f660456",
+      "license": "none",
+      "reason": "上游无 LICENSE，不再分发副本",
+      "install": "git clone https://github.com/cookjohn/cnki-skills && cp -r skills/ agents/ .claude/"
+    },
+    {
+      "name": "cnki-journal-search",
+      "upstream": "cookjohn/cnki-skills@20d65f660456",
+      "license": "none",
+      "reason": "上游无 LICENSE，不再分发副本",
+      "install": "git clone https://github.com/cookjohn/cnki-skills && cp -r skills/ agents/ .claude/"
+    },
+    {
+      "name": "cnki-journal-toc",
+      "upstream": "cookjohn/cnki-skills@20d65f660456",
+      "license": "none",
+      "reason": "上游无 LICENSE，不再分发副本",
+      "install": "git clone https://github.com/cookjohn/cnki-skills && cp -r skills/ agents/ .claude/"
+    },
+    {
+      "name": "cnki-navigate-pages",
+      "upstream": "cookjohn/cnki-skills@20d65f660456",
+      "license": "none",
+      "reason": "上游无 LICENSE，不再分发副本",
+      "install": "git clone https://github.com/cookjohn/cnki-skills && cp -r skills/ agents/ .claude/"
+    },
+    {
+      "name": "cnki-paper-detail",
+      "upstream": "cookjohn/cnki-skills@20d65f660456",
+      "license": "none",
+      "reason": "上游无 LICENSE，不再分发副本",
+      "install": "git clone https://github.com/cookjohn/cnki-skills && cp -r skills/ agents/ .claude/"
+    },
+    {
+      "name": "cnki-parse-results",
+      "upstream": "cookjohn/cnki-skills@20d65f660456",
+      "license": "none",
+      "reason": "上游无 LICENSE，不再分发副本",
+      "install": "git clone https://github.com/cookjohn/cnki-skills && cp -r skills/ agents/ .claude/"
     }
   ]
 }

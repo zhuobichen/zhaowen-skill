@@ -1,4 +1,0 @@
-interface:
-  display_name: "CNKI Paper Search"
-  short_description: "Search CNKI for papers by keyword"
-  default_prompt: "Use $cnki-search to search CNKI for papers about the requested keywords."
