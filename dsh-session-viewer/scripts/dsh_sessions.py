@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
-"""dsh_sessions.py — 读取 / 搜索 / 导出 DeepSeek Harness (DSH) 的本地会话记录。
+"""dsh_sessions.py — 读取 / 搜索 / 导出 / 删除 DeepSeek Harness (DSH) 的本地会话记录。
 
-只读。不联网、不启动 DSH、不改任何会话文件。
+默认只读：不联网、不启动 DSH、不改任何会话文件。
+唯一例外是 `delete` 子命令——它是唯一的写操作，默认只 dry-run，必须显式 --apply 才动盘。
 
 数据源（按其存在与否自动探测）：
   <DSH_HOME>/sessions/**/session.v4.jsonl.zstd     当前版本会话
@@ -16,6 +17,7 @@
   export <id前缀> -o x.md    导出 Markdown
   where <id前缀>             打印文件路径与它在 GUI 侧栏里的分组
   paths                     打印探测到的数据源
+  delete <id前缀> [--apply]  删除会话（默认 dry-run；--with-children 连子代理一起删）
 
 几个必须知道的实现细节：
   1. 会话是 **多帧 zstd 追加写**的。必须用 stream_reader(read_across_frames=True)
@@ -24,6 +26,10 @@
      data.message.content[] 中，按 type 区分 reasoning / text。
   3. 侧栏按会话的 cwd 分组，分组名取自 workspace.json 的 title。
      "会话不见了" 十有八九是它属于另一个分组，而不是被删了。
+  4. 删除没有官方接口（seam 无 delete）：删盘不会自动从 sessionIds 摘掉，
+     会留「点不开的空条目」。所以 delete 先备份、再清登记、再删目录、最后校验悬空。
+     **改完 workspace.json 必须重启 dsh web**；重启前别在侧栏归档/置顶，
+     否则宿主会用内存里的旧数组把改动整份覆盖。
 """
 
 from __future__ import annotations
@@ -61,7 +67,16 @@ def candidate_homes() -> list[str]:
     ):
         if os.path.isdir(os.path.join(guess, "sessions")) and guess not in homes:
             homes.append(guess)
-    return homes
+    # 去重：DSH_HOME 常常就是 ~/.dsh，重复会让每个会话被读两遍，
+    # 进而让 resolve() 报「id 前缀不唯一」（show / export / where 全废）。
+    out, seen = [], set()
+    for h in homes:
+        key = os.path.normcase(os.path.abspath(h))
+        if key in seen:
+            continue
+        seen.add(key)
+        out.append(h)
+    return out
 
 
 def iter_session_files(homes: Iterable[str]) -> list[str]:
@@ -282,7 +297,12 @@ def fmt_time(ts: float) -> str:
 
 def load_all(homes: list[str]) -> list[Session]:
     sessions = []
+    seen_paths: set[str] = set()
     for path in iter_session_files(homes):
+        key = os.path.normcase(os.path.abspath(path))
+        if key in seen_paths:       # 多个 home 覆盖同一目录时不要重复计数
+            continue
+        seen_paths.add(key)
         home = next((h for h in homes if os.path.abspath(path).startswith(os.path.abspath(h))), "")
         try:
             sessions.append(Session(path, home))
@@ -484,6 +504,206 @@ def cmd_paths(args, homes, sessions):
     print(f"\n合计会话 {len(sessions)} 个")
 
 
+# ---------------------------------------------------------------- 删除（唯一的写操作）
+
+def _dir_size(path: str) -> int:
+    total = 0
+    for root, _dirs, files in os.walk(path):
+        for f in files:
+            try:
+                total += os.path.getsize(os.path.join(root, f))
+            except OSError:
+                pass
+    return total
+
+
+def _children_of(sessions: list[Session], sid: str) -> list[Session]:
+    """origin=subagent 的子会话挂在父会话的 head.parentSession 上。"""
+    return [s for s in sessions if (s.head.get("parentSession") or "") == sid]
+
+
+def _sessions_root(home: str) -> str:
+    return os.path.abspath(os.path.join(home, "sessions"))
+
+
+def _assert_inside_home(path: str, homes: Iterable[str]) -> None:
+    """删除前的路径闸门：只允许删探测到的 home 下 sessions/ 里的目录。"""
+    target = os.path.abspath(path)
+    for home in homes:
+        root = _sessions_root(home)
+        try:
+            if os.path.commonpath([target, root]) == root:
+                return
+        except ValueError:      # 不同盘符时 commonpath 会抛
+            continue
+    raise SystemExit(f"拒绝删除：{target} 不在任何已探测的 <DSH_HOME>/sessions 下")
+
+
+def _backup(dirs: dict[str, str], dest: str) -> int:
+    """把若干会话目录压成一个 zip（每个目录单独一个顶层条目）。"""
+    import zipfile
+
+    count = 0
+    with zipfile.ZipFile(dest, "w", zipfile.ZIP_DEFLATED) as zf:
+        for d in dirs:
+            for root, _subs, files in os.walk(d):
+                for name in files:
+                    full = os.path.join(root, name)
+                    rel = os.path.join(os.path.basename(d), os.path.relpath(full, d))
+                    zf.write(full, rel)
+                    count += 1
+    return count
+
+
+def cmd_delete(args, homes, sessions):
+    # 1) 解析目标
+    picked: dict[str, Session] = {}
+    for prefix in args.id:
+        s = resolve(sessions, prefix)
+        picked[s.id] = s
+    for s in list(picked.values()):
+        if args.with_children:
+            for c in _children_of(sessions, s.id):
+                picked[c.id] = c
+
+    plan: list[tuple[Session, str]] = []
+    for s in picked.values():
+        parent = s.head.get("parentSession")
+        reason = f"子代理（父 {_strip_session_prefix(parent)[:8]}）" if parent else "主会话"
+        plan.append((s, reason))
+
+    groups, _paths = workspace_map(homes)
+    arch = archived_ids(homes)
+
+    # 2) 打印计划（dry-run 与 apply 都打）
+    total = 0
+    print(f"目标 {len(plan)} 个会话：")
+    for s, reason in plan:
+        d = os.path.dirname(s.path)
+        size = _dir_size(d)
+        total += size
+        reg = groups.get(s.id, "未登记")
+        extra = " [已归档]" if s.id in arch else ""
+        print(f"  {s.id[:16]}  {size / 1048576:6.2f} MB  {reason}  分组={reg}{extra}")
+    print(f"合计 {total / 1048576:.2f} MB")
+
+    kids = [c for s in picked.values() for c in _children_of(sessions, s.id)
+            if c.id not in picked]
+    if kids:
+        print(f"\n注意：这 {len(kids)} 个子代理会话不在删除范围内，父会话删掉后它们会变孤儿"
+              f"（侧栏不可见、无入口）：")
+        for c in kids[:10]:
+            print(f"  {c.id[:16]}  {_dir_size(os.path.dirname(c.path)) / 1048576:.2f} MB")
+        print("  要一起删就加 --with-children")
+
+    if not args.apply:
+        print("\n[dry-run] 没有改动任何文件。确认无误后加 --apply 执行。")
+        print("提醒：DSH 无官方删除接口，本命令按「备份 → 清登记 → 删目录 → 清缓存 → 校验」的顺序做。")
+        return
+
+    # 3) 路径闸门
+    for s, _ in plan:
+        _assert_inside_home(os.path.dirname(s.path), homes)
+
+    stamp = _dt.datetime.now().strftime("%Y%m%d-%H%M%S")
+    # 4) 备份会话目录
+    if not args.no_backup:
+        dest = os.path.join(args.backup_dir or os.path.expanduser("~"),
+                            f"dsh-deleted-sessions-{stamp}.zip")
+        os.makedirs(os.path.dirname(dest) or ".", exist_ok=True)
+        n = _backup([os.path.dirname(s.path) for s, _ in plan], dest)
+        print(f"\n[1/5] 已备份 {n} 个文件 → {dest}")
+    else:
+        print("\n[1/5] 跳过备份（--no-backup）")
+
+    # 5) 改 workspace.json（先备份原文件）
+    ids = {s.id for s, _ in plan}
+    touched = []
+    for home in homes:
+        wp = os.path.join(home, "storages", "workspace.json")
+        if not os.path.isfile(wp):
+            continue
+        doc = json.load(open(wp, encoding="utf-8"))
+        before = json.dumps(doc, sort_keys=True)
+        if not args.no_backup:
+            import shutil
+            shutil.copy2(wp, f"{wp}.bak-{stamp}-delete")
+        for ws in (doc.get("tables") or {}).get("workspaces", {}).values():
+            ws["sessionIds"] = [x for x in (ws.get("sessionIds") or []) if x not in ids]
+        for key in ("archivedSessionIds", "pinnedSessionIds"):
+            if isinstance((doc.get("global") or {}).get(key), list):
+                doc["global"][key] = [x for x in doc["global"][key] if x not in ids]
+        if json.dumps(doc, sort_keys=True) != before:
+            with open(wp, "w", encoding="utf-8") as f:
+                json.dump(doc, f, ensure_ascii=False, indent=2)
+                f.write("\n")
+            touched.append(wp)
+    print(f"[2/5] 登记表已更新：{len(touched)} 个 workspace.json")
+
+    # 6) 删目录
+    removed, failed = [], []
+    for s, _ in plan:
+        d = os.path.dirname(s.path)
+        try:
+            import shutil
+            shutil.rmtree(d)
+            removed.append(d)
+        except Exception as exc:
+            failed.append((d, str(exc)))
+    print(f"[3/5] 已删除目录 {len(removed)} 个" + (f"，失败 {len(failed)} 个" if failed else ""))
+    for d, err in failed:
+        print(f"     !! {d}: {err}（DSH 可能正开着这个会话）")
+
+    # 7) 删投影缓存
+    cache_dirs = [os.path.join(h, "storages", "session_projcache", "sessions")
+                  for h in homes]
+    cache_dirs = [d for d in cache_dirs if os.path.isdir(d)]
+    n_cache = 0
+    for cd in cache_dirs:
+        for sid in ids:
+            for cand in (f"{sid}.json", f"session-{_strip_session_prefix(sid)}.json"):
+                p = os.path.join(cd, cand)
+                if os.path.isfile(p):
+                    try:
+                        os.remove(p)
+                        n_cache += 1
+                    except OSError:
+                        pass
+    print(f"[4/5] 已清理投影缓存 {n_cache} 个")
+
+    # 8) 校验：登记表里不该再指向不存在的目录
+    dangling = []
+    for home in homes:
+        wp = os.path.join(home, "storages", "workspace.json")
+        if not os.path.isfile(wp):
+            continue
+        try:
+            doc = json.load(open(wp, encoding="utf-8"))
+        except Exception as exc:
+            print(f"     !! workspace.json 解析失败：{exc}")
+            continue
+        root = _sessions_root(home)
+        existing: set[str] = set()
+        if os.path.isdir(root):
+            for slug in os.listdir(root):
+                sp = os.path.join(root, slug)
+                if os.path.isdir(sp):
+                    existing.update(os.listdir(sp))
+        for ws in (doc.get("tables") or {}).get("workspaces", {}).values():
+            for sid in ws.get("sessionIds") or []:
+                if sid not in existing:
+                    dangling.append(sid)
+    print(f"[5/5] 校验：登记悬空条目 {len(dangling)} 个" + ("" if not dangling else " ← 需人工看"))
+    for sid in dangling:
+        print(f"     {sid}")
+    if failed:
+        sys.exit(1)
+
+    print("\n完成。**必须重启 dsh web**，侧栏才会同步：")
+    print("  · 重启前不要在侧栏做归档/置顶——宿主会用内存里的旧数组整份覆盖 workspace.json。")
+    print("  · 想真正腾出磁盘，确认无误后删掉上面那个备份 zip。")
+
+
 # ---------------------------------------------------------------- main
 
 def main(argv=None):
@@ -528,13 +748,21 @@ def main(argv=None):
 
     sub.add_parser("paths", help="打印数据源")
 
+    pd = sub.add_parser("delete", help="删除会话（默认只 dry-run）")
+    pd.add_argument("id", nargs="+", help="会话 id 或前缀（可多个）")
+    pd.add_argument("--apply", action="store_true", help="真的执行（不加只打印计划）")
+    pd.add_argument("--with-children", action="store_true", help="连同子代理会话一起删")
+    pd.add_argument("--backup-dir", help="备份 zip 放哪（默认用户主目录）")
+    pd.add_argument("--no-backup", action="store_true", help="不备份（危险，不建议）")
+
     args = p.parse_args(argv)
     homes = args.home or candidate_homes()
     sessions = load_all(homes)
     if not sessions:
         sys.exit("没找到任何会话；用 `paths` 看看探测到哪些 home，或用 --home 指定。")
     {"list": cmd_list, "search": cmd_search, "show": cmd_show,
-     "export": cmd_export, "where": cmd_where, "paths": cmd_paths}[args.cmd](args, homes, sessions)
+     "export": cmd_export, "where": cmd_where, "paths": cmd_paths,
+     "delete": cmd_delete}[args.cmd](args, homes, sessions)
 
 
 if __name__ == "__main__":

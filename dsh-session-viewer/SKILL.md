@@ -1,14 +1,14 @@
 ---
 name: dsh-session-viewer
-description: 查/读/搜/导出本机 DeepSeek Harness (DSH) 的会话记录——只翻磁盘上的会话文件，不启动 DSH、不联网、不改任何东西。当用户说"我那个会话不见了""找之前聊 XX 的那次对话""看看我和 DSH 聊了什么""把那次会话导出来"时用。也用来回答"DSH 里某句话是哪次说的"。
+description: 查/读/搜/导出/删除本机 DeepSeek Harness (DSH) 的会话记录——只翻磁盘上的会话文件，不启动 DSH、不联网。默认只读；只有 delete 子命令写盘，且默认 dry-run、必须显式 --apply。当用户说"我那个会话不见了""找之前聊 XX 的那次对话""看看我和 DSH 聊了什么""把那次会话导出来""把这个会话删掉"时用。也用来回答"DSH 里某句话是哪次说的"。
 metadata:
   type: skill
 ---
 
-# 看 DSH 的会话（只读）
+# 看/删 DSH 的会话
 
 DSH 的会话全在本机磁盘上，一个会话一个文件。这个 skill 直接读文件，**不需要** DSH 在跑，也不碰 GUI。
-典型场景：侧栏里找不到某个会话了、想全文搜"我当时提过什么"、要把某次对话导成 Markdown。
+典型场景：侧栏里找不到某个会话了、想全文搜"我当时提过什么"、要把某次对话导成 Markdown、要真正删掉某个会话。
 
 ## 一、命令
 
@@ -29,6 +29,9 @@ python $S show afb6b83f --user-only  # 只看用户说了什么（最快回忆�
 python $S show afb6b83f --from 44 --to 62   # 只看第 44–62 轮（长会话里截一段）
 python $S show afb6b83f --tools      # 带工具调用/结果
 python $S export afb6b83f -o x.md    # 导出 Markdown
+python $S delete afb6b83f            # 删除（dry-run，只打印计划）
+python $S delete afb6b83f --apply    # 真删
+python $S delete afb6b83f --with-children --apply   # 连子代理会话一起删
 ```
 
 id 支持前缀（`afb6b83f` / `session-afb6b83f` 都行）。
@@ -66,7 +69,38 @@ id 支持前缀（`afb6b83f` / `session-afb6b83f` 都行）。
 确认没删、只是藏起来的话，告诉用户去 GUI 侧栏切到对应分组即可——**不要**去动
 `workspace.json` 手工"修复"，那个文件被 DSH 持有，写了会被覆盖或引发加载失败。
 
-## 五、分工
+## 五、删除会话（唯一的写操作）
+
+DSH **没有**删除接口（`dsh-session-persistence-jsonl` 的 seam 明确不提供删除）。
+自己删目录的坑是：**删盘不会自动把 id 从 `sessionIds` 摘掉**，侧栏会留一条点不开的空条目。
+`delete` 就是把这个顺序做对：
+
+```
+备份 zip → 从 sessionIds/archived/pinned 摘掉 → 删目录 → 删 projcache → 校验「0 悬空」
+```
+
+```powershell
+python $S delete <id>                       # 默认 dry-run：打印目标、体积、分组、子会话
+python $S delete <id> --apply               # 执行
+python $S delete <id> --with-children --apply   # 连子代理会话一起删
+python $S delete <id> --apply --backup-dir D:\backup   # 指定备份位置
+python $S delete <id> --apply --no-backup   # 不备份（不建议）
+```
+
+**必须知道的四条**
+
+1. **改完 `workspace.json` 要重启 dsh web**，侧栏才同步。宿主持有内存态、写入时整份覆盖。
+2. **重启前别在侧栏做归档/置顶**——那会用内存里的旧数组把这次改动静默覆盖，
+   结果就是"侧栏有条目、点开报错"。
+3. **子代理会话是孤儿陷阱**：`origin=subagent` 的会话不在侧栏，只在父会话的「子代理」里可见。
+   父会话删了它们就既不可见也无入口。dry-run 会把这些列出来，确认后加 `--with-children`。
+   实测一个例子：两个会话各挂 5 / 6 个子会话，父 3.85 MB、子 8.39 MB——**大头在子会话**。
+4. **备份不是免费的**：会话本身是 zstd，再打包几乎不压缩（12.2 MB → 12.12 MB）。
+   确认不打算回滚后，把备份 zip 删掉才真正腾出磁盘。
+
+干完记得校验：脚本最后会打印「登记悬空条目 N 个」，**必须是 0**。
+
+## 六、分工
 
 | 想做 | 用 |
 |---|---|
@@ -74,8 +108,10 @@ id 支持前缀（`afb6b83f` / `session-afb6b83f` 都行）。
 | 从外部给 DSH 发消息、续接会话 | `dsh_messaging` |
 | 查 Claude Code / Codex 的会话 | `agent-dialog_management` |
 
-## 六、边界
+## 七、边界
 
-- 只读：不写会话文件、不改 `workspace.json`、不启停 DSH。
+- **默认只读**：`list` / `search` / `show` / `export` / `where` / `paths` 都不写盘、不启停 DSH。
+- 唯一写操作是 `delete`；不加 `--apply` 永远不动文件，且只允许删探测到的 `<DSH_HOME>/sessions` 下的目录（有路径闸门）。
+- 删除不可逆（DSH 无回收站）；默认先打包备份，但备份包要你自己删才腾出磁盘。
 - 不解析附件二进制；图片/文件只以 `sha256` 占位出现在 `show` 里。
 - 旧版会话的标题在 projcache 里没有，只能靠 `session/title` 事件或首条消息。
