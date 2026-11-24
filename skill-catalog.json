@@ -531,5 +531,7 @@
       "reason": "上游无 LICENSE，不再分发副本",
       "install": "git clone https://github.com/cookjohn/cnki-skills && cp -r skills/ agents/ .claude/"
     }
-  ]
+  ],
+  "license": "MIT",
+  "license_scope": "根许可证只覆盖自制部分（无上游记录的目录与说明文档）；UPSTREAM_SOURCES.md / THIRD_PARTY.md 登记过的目录按各自上游许可证，index_only 里的条目不在本仓库存内容"
 }

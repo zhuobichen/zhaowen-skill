@@ -119,11 +119,19 @@
 
 | 文件 | 作用 |
 |------|------|
+| [`LICENSE`](LICENSE) | 本仓库自制部分的许可证（MIT） |
 | [`UPSTREAM_SOURCES.md`](UPSTREAM_SOURCES.md) | 每个外来 skill 的上游仓库、提交号、迁入方式、许可证、本地改动要点 |
 | [`THIRD_PARTY.md`](THIRD_PARTY.md) | 第三方内容汇总：许可证分组、版权方、不属于任何许可证的部分 |
 | [`INDEXED_SKILLS.md`](INDEXED_SKILLS.md) | 只索引不内置的上游（目前是 CNKI 10 个）与其安装命令 |
 | [`SYNC.md`](SYNC.md) | 每类外来 skill 的同步方式（快照型 / 跟版本型 / 改写型 / bsk 自管） |
 
-本仓库自身内容（无上游记录的目录）暂未声明许可证；外来目录各自带上游 `LICENSE`，不受此影响。
+### 许可证范围
+
+- **自制部分**（没有上游记录的目录、本 README 与各说明文档）：**MIT**，见 [`LICENSE`](LICENSE)。可以自由使用、修改、再分发，保留版权声明与许可文本即可。
+- **第三方目录**（`UPSTREAM_SOURCES.md` / `THIRD_PARTY.md` 里登记过的）：**不适用本仓库的 MIT**，按各自目录内的 `LICENSE` 走——例如 `nature-figure/` 是 Apache-2.0、`academic-plotting/` 与 `khazix-writer/` 等是上游的 MIT（版权方为上游作者）。
+- **只索引、不在本仓库的内容**（CNKI 10 个）：本仓库只提供链接与安装方式，不涉及许可。
+- `nature-figure/assets/figures4papers/` 来自 `ChenLiu-1996/figures4papers`，上游没有许可证，只按目录内 `THIRD_PARTY_NOTICES.md` 作来源标注与研究参考。
+
+> 一句话：**根目录的 MIT 只覆盖我写的东西；别人的东西永远是别人的。**
 
 > 注：`abacas-cloud-ops` 与 `n8n-web-ops` 中的账号密码、内网 IP、webhook ID、认证服务器地址均已替换为 `<占位符>`，迁移到自己的环境时需对应填写。
