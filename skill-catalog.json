@@ -37,6 +37,14 @@
       "upstream": null
     },
     {
+      "name": "session-archaeology",
+      "path": "session-archaeology/",
+      "display_name": "Session Archaeology",
+      "short_description": "Recover sessions and artifacts by execution traces across DSH, Codex and Claude Code",
+      "ui_metadata": "agents/openai.yaml",
+      "upstream": null
+    },
+    {
       "name": "air-journal-intro-writing",
       "path": "air-journal-intro-writing/",
       "display_name": "Air Journal Intro Writing",

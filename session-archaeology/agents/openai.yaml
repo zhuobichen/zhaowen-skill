@@ -1,0 +1,4 @@
+interface:
+  display_name: "Session Archaeology"
+  short_description: "Recover sessions and artifacts by execution traces across DSH, Codex and Claude Code"
+  default_prompt: "Use $session-archaeology when the user remembers doing something in a past AI session but cannot find the session or its output."
