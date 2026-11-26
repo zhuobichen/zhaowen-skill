@@ -20,6 +20,7 @@
 | pup-cleanup | [`pup-cleanup/`](pup-cleanup/) | 清理本机流氓软件/开机弹窗广告：找出推广告的"壳"、用官方卸载器卸、卸不动的走隔离；含自启动普查、登录后执行痕迹、按厂商识别推广家族。 |
 | dsh_messaging | [`dsh_messaging/`](dsh_messaging/) | 用官方 CLI 从外部给 DeepSeek Harness (DSH) 发消息、续接既有会话、拿结构化输出与 token 用量。 |
 | 看 DSH 会话 | [`dsh-session-viewer/`](dsh-session-viewer/) | 只读直翻本机 DSH 会话文件：列会话（带侧栏分组）、全文搜索「我什么时候提过 X」、定位「会话不见了」、按轮次查看、导出 Markdown。含三个必踩坑：多帧 zstd 只解出第一帧、正文在 `data` 里、注入上下文混在 user 消息中 |
+| 豆包会话管理 | [`doubao-session-management/`](doubao-session-management/) | 豆包桌面版会话的导出、时间线、批量删除：CDP 挂 9222 从 DOM 抓正文+`<TIME>`、脱敏 md、来时路 HTML、按"多久没动"批量删（已验证删 270+ 个）。核心坑：正文在云端本地库只有元数据、CDP 连的是隐藏小窗口坐标全负、菜单必须用完整鼠标事件序列触发、删除间隔要够否则 NO_DIALOG |
 | 手机拍照转扫描件 | [`photo-to-scan/`](photo-to-scan/) | 把手机拍的纸页照片变成平直扫描件（扫描全能王那种观感）：自动判 0/90/180/270、纠偏、去阴影黑边、裁成 A4 比例、出 JPG/PNG/多页 PDF，红章与手写保留。纯按经典算法实现（OpenCV 透视 + 投影轮廓纠偏 + 平场去光照 + Sauvola 二值化与彩色层合成），离线可跑；附上游方案调研笔记 |
 | 用 AI 操作手机 | [`android-phone-ops/`](android-phone-ops/) | 配套 `android` MCP 操作模拟器/真机：构建装包、点界面、读层级、截图、**输入中文**、看日志，也包括"帮我在手机上干件事"这类委托。写的是流程与纪律（开工先 `status`+`prepare`、用 `wait_idle` 替 sleep、能按文字就别按坐标、发送/登录类动作先确认），工具清单不重复 MCP 的 README；**禁区**（如 QQ/微信的「空间」）在工具层强制拦截，命中就停手交回给用户 |
 | 概念问答沉淀 | [`kb-capture/`](kb-capture/) | 说一句「存知识库」即把当前对话里的概念性问答沉淀成知识库原子卡片并 push：先 `search` 判重，命中则读全文后合并、未命中则新建；卡片与索引同步放在同一次提交，写盘前做敏感与卡片规范校验 |
