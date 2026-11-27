@@ -373,6 +373,13 @@
       "upstream": null
     },
     {
+      "name": "tailscale-smb-readonly",
+      "path": "tailscale-smb-readonly/",
+      "display_name": "Tailscale + SMB Read-only Share",
+      "short_description": "Mount another Windows PC's folders read-only over Tailscale + SMB: single-letter drive letters, ipn client keeping the backend alive, one-time auth keys and node-identity recovery, New-SmbMapping instead of net use",
+      "ui_metadata": null,
+      "upstream": null
+    },    {
       "name": "tieba",
       "path": "tieba/",
       "display_name": "Baidu Tieba",
