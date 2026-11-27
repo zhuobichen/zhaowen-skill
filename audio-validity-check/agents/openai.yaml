@@ -1,0 +1,4 @@
+interface:
+  display_name: "Audio Validity Check"
+  short_description: "Strictly detect whether a recording contains real speech vs music or noise with Silero VAD and forced transcription"
+  default_prompt: "Use $audio-validity-check when deciding whether a recording has usable speech or whether its original audio can be deleted."

@@ -32,6 +32,7 @@
 | 中石油网申填表 | [`cnpc-job-apply/`](cnpc-job-apply/) | 中石油高校毕业生招聘平台（zhaopin.cnpc.com.cn）校招网申简历填写：browser-act 填表原语、字段 id 清单、维护时间窗口、承诺告知书保存流程、CDP 混用陷阱 |
 | 智能体对话管理 | [`agent-dialog_management/`](agent-dialog_management/) | Claude Code + Codex 对话统一列表/搜索/恢复/导出 |
 | 会话考古 | [`session-archaeology/`](session-archaeology/) | 找回"记得做过但找不到"的会话/产物：按执行痕迹（命令/路径/扩展名/模型名）而非内容词搜索，跨 DSH/Codex/Claude 统计排序并反推产物；含轻量扫描脚本，找到后用正式工具查看 |
+| 录音有效性检测 | [`audio-validity-check/`](audio-validity-check/) | 严格判断录音里有没有真语音（vs 音乐/噪音）：能量粗筛→Silero VAD 神经网判定→关闭 VAD 强制转写终审；含三阶段脚本与"音乐被误判为7分钟语音"的血泪教训，用于决定能否转写/能否删原音频 |
 | Claude 用量与费用分析 | [`claude-usage-billing/`](claude-usage-billing/) | 把 one-hub 账单 CSV + `~/.claude/projects` 日志出成 HTML：主会话与其subagent 合并成"任务"，定位当天最烧钱的会话/子Agent，可展开每个子Agent 的任务指令与最终产出；附子Agent 轨迹持久化结论（关机不丢，真丢只因 30 天清理） |
 | 拆解原理（从零讲基本功） | [`principle-dissection/`](principle-dissection/) | 把你自己刚做完的产物（代码/系统/流程/AI 帮你搭的）拆成「它用到的每一门基本功」并从零讲清：是什么 → 这个领域的标准手段 → 我这项目用的是哪一种（术语先定义、配最小例子）。主体是知识不是「验收」，「能不能判错」只作可选验收。动手前先读学习者基线、跳过已会的。不要用于学别人的材料（用 layered-explainer）/ 拆别人成品（用 reverse-engineer-anything） |
 | 真正搞懂（分层解释法） | [`layered-explainer/`](layered-explainer/) | 两个方向：**A 读**——把看不下去的长输出按理解成本逐级升级（受控语言 ASD-STE100 → 一张图 → 单文件交互 HTML → Manim 视频）；**B 讲**——反过来让你输出、AI 评判（学习阶梯 → 只学最重要的 20% → 当考官一次只问一问 → 一页速查表 → 筛资源 → 费曼法）。每一步都配了失败模式与检查项，含「AI 说你做对了」不算通过 |

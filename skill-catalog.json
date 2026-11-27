@@ -45,6 +45,14 @@
       "upstream": null
     },
     {
+      "name": "audio-validity-check",
+      "path": "audio-validity-check/",
+      "display_name": "Audio Validity Check",
+      "short_description": "Strictly detect whether a recording contains real speech vs music or noise with Silero VAD and forced transcription",
+      "ui_metadata": "agents/openai.yaml",
+      "upstream": null
+    },
+    {
       "name": "air-journal-intro-writing",
       "path": "air-journal-intro-writing/",
       "display_name": "Air Journal Intro Writing",
