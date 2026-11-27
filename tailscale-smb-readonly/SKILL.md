@@ -8,6 +8,11 @@ description: >-
   flags"、net use 传含特殊字符的密码会被 PowerShell 拆坏、映射空闲显示 Disconnected 属正常。
   当用户说「连另一台电脑的共享」「只读访问那台机器的文件」「tailscale 掉线/offline」
   「SMB 映射失败」「invalid key」时用。
+  另含**供方（数据方）**侧的五个只读陷阱：Authenticated Users 默认给写导致"只读"
+  形同虚设、icacls 的 W 含 Synchronize 会挡住目录枚举、自引用 junction 造成遍历
+  死循环（判别特征：CPU 满而磁盘零读）、Stop-Process 不杀子进程、deny 会被后续
+  grant 覆盖。当用户说「共享出去了但他能写」「只读没生效」「icacls 卡住/跑不完」
+  时也用。
 user-invocable: true
 ---
 
@@ -24,7 +29,11 @@ user-invocable: true
 | 只在内网且已能直连 | 可以不走 Tailscale，直接 `\\IP\share` |
 | 对方是 Linux | SMB 也行（samba），但 SSH 更自然 |
 
-只读 = **账号层（ACL 只给读）+ 共享层（share 权限 Read）** 双保险，缺一层都能被绕过。
+只读的真正杠杆是**共享层 share 权限 = Read**：共享权限与 NTFS 权限取**交集**，
+share 给了 Read，就算 NTFS 上是 `Authenticated Users:(F)` 也写不进去（实测）。
+
+反过来「只加一条 ACL 允许读」是**无效的**——默认盘 `Authenticated Users` 本来就给了写，
+详见下方「供方（数据方）视角」第 1 条。
 
 ## 一分钟流程
 
@@ -54,7 +63,7 @@ cmdkey /add:100.x.x.x /user:HOST\roview /pass:***
 
 现成脚本：`scripts/join-and-mount.ps1`（带 `-DryRun` 只检查、`-Unmount` 一键卸载）。
 
-## 七个坑（都是本机真踩过的）
+## 求方七个坑（都是本机真踩过的）
 
 | # | 现象 | 根因 | 处理 |
 |---|---|---|---|
@@ -124,7 +133,124 @@ catch { '删除被拒 OK' }
 - **整盘只读 ≠ 安全**：`RO_C -> C:\` 会把 `C:\Windows`、`Program Files`、整个用户目录都暴露，连浏览器保存的密码、`.ssh`、`.dsh` 都可能在内。**能收窄就收窄到具体目录**。
 - 凭据会**明文进凭据管理器**（`cmdkey`），共享密码常被写在聊天/文档里 —— 用后建议轮换。
 - 撤销要清三处：映射（`Remove-SmbMapping`）、凭据（`cmdkey /delete:<host>`）、供方账号/共享。
-- 共享层权限和 NTFS 权限是两套，**都要设成只读**，只改一处仍可能写入。
+- 共享层与 NTFS 是**交集**关系：`share=Read` 已足以挡住写；而 NTFS 侧单靠「加一条允许读的 ACE」挡不住（默认盘 `Authenticated Users` 已给写）。详见「供方（数据方）视角」。
+
+## 供方（数据方）视角：只读是怎么配出来的
+
+求方踩的是"连不上 / 连上了打不开"；**供方踩的是"我以为只读，其实没只读"**。
+以下五条均在供方机器上实测。
+
+### 供 1：`Authenticated Users` 把"只读"变成摆设（最致命）
+
+用户自建的盘，默认 ACL 通常是这样：
+
+```
+D:\  NT AUTHORITY\Authenticated Users:(OI)(CI)(F)       ← 完全控制
+E:\  NT AUTHORITY\Authenticated Users:(OI)(CI)(IO)(M)   ← 修改
+C:\  NT AUTHORITY\Authenticated Users:(OI)(CI)(IO)(M)   ← 修改
+```
+
+任何新建的本地账号**天然属于** `Authenticated Users`。于是：
+
+> 只加一条「允许读」的 ACE，得到的是**名字叫只读、实际能删库**的账号。
+
+实测对照：`D:\` 上是 `Authenticated Users:(F)`，但经 `RO_D` 共享（share=Read）
+写入照样被拒 —— **共享级 Read 就是那道墙**；反之若 share 给了 `Change`，写入就会成功。
+所以供方的顺序是：**先把 share 设成 Read，NTFS 可以不动**。
+
+### 供 2：`icacls` 的 `W` 含 `Synchronize`，会挡住目录枚举
+
+如果非要在 NTFS 上补 deny，会撞到这个迷惑现象：
+
+```
+Z:\            拒绝访问          ← 根目录列不出来
+Z:\Windows     可读 109 项        ← 子目录却完全正常
+```
+
+原因：`(W)` = `FILE_GENERIC_WRITE`，其中含 **`SYNCHRONIZE`**，而**枚举目录需要它**。
+deny 里带 `(W)` 等于把"列目录"一起禁了。要么别用 `(W)`，要么干脆不 deny。
+
+### 供 3：自引用 junction 让整轮遍历死循环
+
+```
+C:\Users\<u>\AppData\Local\Application Data  →  C:\Users\<u>\AppData\Local
+```
+
+指向**自己的父目录**，任何递归遍历走进去就无限下钻。
+
+判定特征（别误判成"盘大所以慢"）：
+
+```
+CPU 增量 : +49 秒 / 60 秒实际时间   ≈ 82% 单核
+读 I/O   : 0 MB
+```
+
+> **CPU 满 + 磁盘零读 = 内存循环，不是 I/O 慢。** 只看"跑了很久"会无限等下去。
+
+处理：`fsutil reparsepoint delete "<路径>"`（只摘连接点，目标目录数据不动）。
+
+绕过：不要对 profile 整体授权，改为枚举真实顶层目录、跳过 `ReparsePoint` 逐个授：
+
+```powershell
+Get-ChildItem $Profile -Force -Directory | ForEach-Object {
+    if (($_.Attributes -band [System.IO.FileAttributes]::ReparsePoint) -ne 0) { return }
+    if ($_.Name -eq 'AppData') { return }     # AppData 里是缓存与凭据，通常不需要
+    icacls $_.FullName /grant "${Acct}:(OI)(CI)(RX)"
+}
+```
+
+实测：131 个顶层目录，每个 0–16 秒全部完成；而整盘授权 551 GB 跑 20 分钟仍未结束。
+
+### 供 4：`Stop-Process` 不杀子进程，多个 `icacls` 互相拖死
+
+终止父脚本后 `icacls` 变成孤儿继续跑；并发扫同一块盘互相抢锁。
+而且**根目录的 ACE 要等整轮传播结束才写入**，从 ACL 上看像是"没生效"。
+
+```powershell
+Get-Process icacls -ErrorAction SilentlyContinue | Stop-Process -Force
+```
+
+### 供 5：`deny` 会被后续 `/grant` 的传播覆盖
+
+对父目录授权时，传播会重写子目录 DACL，之前下发的 deny **可能消失**。
+实测 `.dsh` / `.ssh` 的 deny 在一次 `/grant` 后没了，目录变成可读。
+**下发 deny 后必须复验，且隔一段时间再验一次**（排除延迟回写）。
+
+### 供方标准流程
+
+> 现成脚本：`scripts/setup-share-readonly.ps1 -Path 'D:\' -ShareName 'RO_D' -Account roview`
+> —— 建账号、建共享、收窄防火墙、并以该账号实测读/写，一步到位（幂等，可重复跑）。
+
+```powershell
+# ① 只读账号（SMB 走密码认证；随机密码即可，不必告诉任何人）
+$pw = -join ((48..57)+(65..90)+(97..122) | Get-Random -Count 20 | ForEach-Object {[char]$_})
+New-LocalUser roview -Password (ConvertTo-SecureString $pw -AsPlainText -Force) -PasswordNeverExpires
+Enable-LocalUser roview
+Get-LocalGroupMember Administrators | Where-Object Name -like '*roview*'   # 必须为空
+
+# ② 共享只给 Read —— 真正的墙
+New-SmbShare -Name RO_D -Path 'D:\' -ReadAccess roview
+
+# ③ 防火墙只对 tailnet 放行（别对局域网/公网敞开）
+Set-NetFirewallRule -DisplayName '文件和打印机共享(SMB-In)' `
+    -RemoteAddress '100.64.0.0/10','fd7a:115c:a1e0::/48' -Enabled True -Profile Any
+
+# ④ 供方自查：以该账号映射到自己的 tailnet 地址，实测读 + 实测写
+$c = "$env:COMPUTERNAME\roview"
+New-SmbMapping -LocalPath Z: -RemotePath '\\<自己的100.x>\RO_D' -UserName $c -Password $pw
+Get-ChildItem Z:\                                                   # 能列
+try { 'x' | Set-Content Z:\__probe.txt } catch { '写入被拒 ← 正确' }
+Remove-SmbMapping -LocalPath Z: -Force
+```
+
+### 供方验收清单
+
+- [ ] `Get-SmbShareAccess`：目标账号只有 `Read`，无 `Change` / `Full`
+- [ ] 目标账号**不在** `Administrators`
+- [ ] 以该账号**实际映射并尝试写入**（不是只看 ACL）
+- [ ] 敏感路径被拒（`.ssh`、`.dsh`、浏览器 `Login Data`、`Cookies`）
+- [ ] 445 只对 `100.64.0.0/10` 放行（局域网里扫不到）
+- [ ] 求方 `tailscale status` 显示 `active; direct`（走 DERP 中转会明显变慢）
 
 ## 排障对照表
 
@@ -142,7 +268,7 @@ catch { '删除被拒 OK' }
 | | SMB（本文） | SSH/SFTP |
 |---|---|---|
 | Windows 供方成本 | 共享 + 权限，无额外服务 | 装 OpenSSH Server、改 sshd_config |
-| 只读强制力 | ACL + share 双权限 | `ForceCommand internal-sftp` + ACL，更硬 |
+| 只读强制力 | **share=Read 即可**（与 NTFS 取交集，绕不过） | `ForceCommand internal-sftp` + NTFS deny，更硬 |
 | 能跑命令 | 否 | 是（除非也锁成 sftp-only） |
 | 限速 | robocopy `/IPG`、QoS | `scp -l`、rsync `--bwlimit` |
 | 适合 | 看/取文件 | 需要 shell 或同步 |
